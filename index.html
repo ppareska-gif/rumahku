@@ -5,12 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
   <title>RumahKu — Manajemen Rumah Tangga & Keluarga</title>
 
-  <!-- Meta Tag PWA agar nyaman dipasang di Layar Utama HP (Add to Home Screen) -->
+  <!-- PWA Manifest & Mobile Web App Meta Tags -->
+  <link rel="manifest" href="./manifest.json" />
+  <meta name="theme-color" content="#059669" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="RumahKu" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="theme-color" content="#059669" />
+
+  <!-- Inline SVG Favicon & Apple Touch Icon (Emerald #059669 Rounded Square + White House Icon) -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23059669'/%3E%3Cpath d='M32 15L14 30h5v18h10V37h6v11h10V30h5L32 15z' fill='%23ffffff'/%3E%3C/svg%3E" />
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23059669'/%3E%3Cpath d='M90 42L38 86h15v52h28v-32h18v32h28V86h15L90 42z' fill='%23ffffff'/%3E%3C/svg%3E" />
 
   <!-- Google Fonts: Plus Jakarta Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -31,19 +36,17 @@
     };
   </script>
 
-  <!-- Lucide Icons CDN -->
+  <!-- Lucide Icons & Chart.js CDN -->
   <script src="https://unpkg.com/lucide@latest"></script>
-
-  <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
-    /* Skala huruf dasar & mode Teks Besar (Ramah Lansia) */
+    /* Skala huruf dasar & mode Teks Besar ramah lansia (html.large-text) */
     html {
       font-size: 16px;
       transition: font-size 0.2s ease;
     }
-    html.font-elderly {
+    html.large-text {
       font-size: 18.5px;
     }
 
@@ -52,9 +55,10 @@
       background-color: #f8fafc;
       color: #0f172a;
       -webkit-tap-highlight-color: transparent;
+      overflow-x: hidden;
     }
 
-    /* Sembunyikan scrollbar pada bar navigasi horizontal di HP */
+    /* Sembunyikan scrollbar horizontal pada bilah tab navigasi mobile */
     .no-scrollbar::-webkit-scrollbar {
       display: none;
     }
@@ -75,7 +79,7 @@
     }
 
     .animate-panel {
-      animation: fadeSlideUp 0.22s ease-out forwards;
+      animation: fadeSlideUp 0.2s ease-out forwards;
     }
   </style>
 </head>
@@ -84,12 +88,12 @@
   <div class="min-h-screen flex flex-col lg:flex-row">
 
     <!-- ================================================================== -->
-    <!-- SIDEBAR NAVIGASI KIRI (DESKTOP & TABLET BESAR: w-64)               -->
+    <!-- SIDEBAR NAVIGASI KIRI (DESKTOP & TABLET BESAR: lg ke atas, w-64)   -->
     <!-- ================================================================== -->
     <aside class="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 bg-white border-r border-slate-200/90 z-30">
       <!-- Brand Header -->
       <div class="p-5 border-b border-slate-100 flex items-center gap-3">
-        <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white shadow-md shadow-emerald-600/20 shrink-0">
+        <div class="w-10 h-10 rounded-2xl bg-emerald-600 flex items-center justify-center text-white shadow-md shadow-emerald-600/20 shrink-0">
           <i data-lucide="home" class="w-5 h-5"></i>
         </div>
         <div>
@@ -98,12 +102,12 @@
         </div>
       </div>
 
-      <!-- Kartu Kode Keluarga & 1-Klik Salin Link -->
+      <!-- Kartu Kode Keluarga & Tombol Salin Link Undangan -->
       <div class="mx-3.5 mt-4 p-3.5 rounded-2xl bg-slate-50 border border-slate-200/90 space-y-2">
         <div class="flex items-center justify-between">
           <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Kode Keluarga</span>
           <span id="sidebarSyncBadge" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800">
-            <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> Menghubungkan
+            <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> Sync
           </span>
         </div>
         <div class="flex items-center justify-between gap-1">
@@ -135,7 +139,7 @@
         <button onclick="switchTab('tagihan')" data-nav="tagihan" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-extrabold transition">
           <span class="flex items-center gap-2.5">
             <i data-lucide="receipt" class="w-4 h-4 shrink-0"></i>
-            <span>Tagihan & Cicilan</span>
+            <span>Tagihan</span>
           </span>
           <span id="badgeUnpaidBillsSidebar" class="hidden px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-extrabold">0</span>
         </button>
@@ -143,7 +147,7 @@
         <button onclick="switchTab('jadwal')" data-nav="jadwal" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-extrabold transition">
           <span class="flex items-center gap-2.5">
             <i data-lucide="calendar-check" class="w-4 h-4 shrink-0"></i>
-            <span>Jadwal & Perawatan</span>
+            <span>Jadwal Rumah</span>
           </span>
         </button>
 
@@ -158,20 +162,25 @@
         <button onclick="switchTab('catatan')" data-nav="catatan" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-extrabold transition">
           <span class="flex items-center gap-2.5">
             <i data-lucide="sticky-note" class="w-4 h-4 shrink-0"></i>
-            <span>Catatan & Brankas</span>
+            <span>Catatan</span>
           </span>
         </button>
 
         <button onclick="switchTab('keluarga')" data-nav="keluarga" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-extrabold transition">
           <span class="flex items-center gap-2.5">
             <i data-lucide="users" class="w-4 h-4 shrink-0"></i>
-            <span>Keluarga & Pengaturan</span>
+            <span>Keluarga</span>
           </span>
         </button>
       </nav>
 
       <!-- Footer Toggle Ukuran Huruf (Teks: Normal / Teks: Besar) -->
-      <div class="p-3.5 border-t border-slate-100">
+      <div class="p-3.5 border-t border-slate-100 space-y-2">
+        <button onclick="triggerPwaInstall()" id="sidebarPwaInstallBtn" class="hidden w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold flex items-center justify-center gap-2 shadow-2xs transition">
+          <i data-lucide="download-cloud" class="w-4 h-4"></i>
+          <span>Pasang Aplikasi</span>
+        </button>
+
         <button onclick="toggleFontScale()" id="sidebarFontToggleBtn" class="w-full py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-amber-50 border border-slate-200 text-xs font-extrabold text-slate-800 flex items-center justify-between transition">
           <span class="flex items-center gap-2">
             <i data-lucide="type" class="w-4 h-4 text-amber-600"></i>
@@ -183,141 +192,177 @@
     </aside>
 
     <!-- ================================================================== -->
-    <!-- AREA UTAMA (HEADER ATAS + KONTEN RESPONSIF)                        -->
+    <!-- AREA UTAMA (STICKY HEADER RESPONSIF + KONTEN 7 MODUL)              -->
     <!-- ================================================================== -->
     <div class="flex-1 lg:pl-64 flex flex-col min-w-0">
 
-      <!-- STICKY TOP HEADER BAR (DESKTOP & MOBILE) -->
+      <!-- STICKY TOP HEADER (ANTI-TUMPANG TINDIH DI LAYAR HP 360px - 412px) -->
       <header class="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-slate-200/90">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2.5">
-          <!-- Brand Mobile / Judul Halaman Desktop + Status Firebase -->
-          <div class="flex items-center gap-2.5 min-w-0">
-            <div class="lg:hidden w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white shadow-xs shrink-0">
-              <i data-lucide="home" class="w-5 h-5"></i>
-            </div>
-            <div class="min-w-0 flex items-center gap-2.5">
-              <span class="lg:hidden text-base font-extrabold text-slate-900">Rumah<span class="text-emerald-600">Ku</span></span>
-              <h2 id="desktopPageTitle" class="hidden lg:block text-lg font-extrabold text-slate-900 truncate">Dashboard Ringkasan</h2>
 
-              <!-- Live Firebase Sync Status Pill -->
-              <button onclick="switchTab('keluarga')" id="headerSyncPill" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-amber-100 text-amber-800 hover:opacity-90 transition shrink-0" title="Klik untuk melihat detail koneksi Firebase">
-                <span id="headerSyncDot" class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-                <span id="headerSyncLabel" class="truncate max-w-[140px] sm:max-w-none">Menyinkronkan...</span>
-              </button>
+        <!-- BARIS ATAS MOBILE (< lg): Dirancang presisi untuk layar 360px ke atas -->
+        <div class="lg:hidden flex items-center justify-between gap-2 px-3 py-2.5">
+          <!-- Sisi Kiri Mobile: Ikon Rumah + Judul RumahKu + Lencana Status Ringkas -->
+          <div class="flex items-center gap-2 min-w-0">
+            <div class="w-8 h-8 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-2xs shrink-0">
+              <i data-lucide="home" class="w-4 h-4"></i>
             </div>
+            <span class="font-bold text-base text-slate-900 shrink-0">Rumah<span class="text-emerald-600">Ku</span></span>
+            <button onclick="switchTab('keluarga')" id="mobileSyncBadge" class="shrink-0 text-[11px] font-medium px-2 py-0.5 rounded-full whitespace-nowrap bg-amber-100 text-amber-800 transition" title="Status Koneksi Cloud">
+              • Lokal
+            </button>
           </div>
 
-          <!-- Kontrol Kanan: Quick "A+ Teks" Toggle & Switcher Profil Anggota Keluarga -->
-          <div class="flex items-center gap-2 shrink-0">
-            <button onclick="toggleFontScale()" id="headerFontToggleBtn" class="min-h-[44px] px-3 py-2 rounded-xl bg-slate-100 hover:bg-amber-50 border border-slate-200 text-xs font-extrabold text-slate-800 transition flex items-center gap-1.5" title="Ubah Ukuran Huruf (Normal / Besar Ramah Lansia)">
-              <span class="text-amber-700 font-black">A+</span>
-              <span id="headerFontLabel">Teks</span>
+          <!-- Sisi Kanan Mobile: Tombol Ukuran Huruf (A+ / A-) + Switcher Profil Keluarga -->
+          <div class="flex items-center gap-1.5 shrink-0">
+            <button onclick="toggleFontScale()" id="mobileFontToggleBtn" class="px-2.5 py-1.5 rounded-lg text-xs font-bold shrink-0 bg-slate-100 hover:bg-amber-50 border border-slate-200 text-slate-800 transition" title="Perbesar / Perkecil Ukuran Huruf">
+              A+
             </button>
 
-            <!-- Switcher Anggota Keluarga Aktif -->
-            <button onclick="openProfileSwitcherModal()" class="min-h-[44px] flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition">
-              <span id="activeMemberBadge" class="w-7 h-7 rounded-lg bg-emerald-600 text-white text-xs font-extrabold flex items-center justify-center shrink-0">AY</span>
-              <div class="text-left">
-                <span id="activeMemberNameHeader" class="block text-xs font-extrabold text-slate-900 leading-tight max-w-[85px] truncate">Ayah</span>
-                <span class="block text-[10px] font-bold text-emerald-700 leading-tight">Ganti User ▾</span>
-              </div>
+            <button onclick="openProfileSwitcherModal()" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold shrink-0 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-slate-900 flex items-center gap-1.5 transition">
+              <span id="mobileActiveMemberAvatar" class="w-5 h-5 rounded-md bg-emerald-600 text-white text-[10px] font-extrabold flex items-center justify-center shrink-0">AY</span>
+              <span id="mobileActiveMemberName" class="max-w-[58px] truncate">Ayah</span>
+              <span class="text-emerald-700">▾</span>
             </button>
           </div>
         </div>
 
-        <!-- BAR NAVIGASI HORIZONTAL UNTUK HP & TABLET (< lg) DENGAN TARGET SENTUH BESAR (min-h-[44px]) -->
-        <div class="lg:hidden border-t border-slate-100 bg-slate-50/95 px-3 py-2 overflow-x-auto no-scrollbar">
-          <div class="flex items-center gap-2 min-w-max">
-            <button onclick="switchTab('beranda')" data-nav="beranda" class="nav-btn-mobile min-h-[44px] px-3.5 py-2 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition">
-              <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
-              <span>Dashboard</span>
+        <!-- BARIS BAWAH MOBILE (< lg): 7 Pill Navigasi Horizontal Scrollable -->
+        <div class="lg:hidden overflow-x-auto no-scrollbar flex gap-1.5 px-3 pb-2.5">
+          <button onclick="switchTab('beranda')" data-nav="beranda" class="nav-btn-mobile min-h-[38px] whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition">
+            <i data-lucide="layout-dashboard" class="w-3.5 h-3.5"></i>
+            <span>Dashboard</span>
+          </button>
+          <button onclick="switchTab('keuangan')" data-nav="keuangan" class="nav-btn-mobile min-h-[38px] whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition">
+            <i data-lucide="wallet" class="w-3.5 h-3.5"></i>
+            <span>Keuangan & Terjadwal</span>
+          </button>
+          <button onclick="switchTab('tagihan')" data-nav="tagihan" class="nav-btn-mobile min-h-[38px] whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition">
+            <i data-lucide="receipt" class="w-3.5 h-3.5"></i>
+            <span>Tagihan</span>
+            <span id="badgeUnpaidBillsMobile" class="hidden px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px]">0</span>
+          </button>
+          <button onclick="switchTab('jadwal')" data-nav="jadwal" class="nav-btn-mobile min-h-[38px] whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition">
+            <i data-lucide="calendar-check" class="w-3.5 h-3.5"></i>
+            <span>Jadwal Rumah</span>
+          </button>
+          <button onclick="switchTab('stok')" data-nav="stok" class="nav-btn-mobile min-h-[38px] whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition">
+            <i data-lucide="shopping-basket" class="w-3.5 h-3.5"></i>
+            <span>Stok & Belanja</span>
+            <span id="badgeLowStockMobile" class="hidden px-1.5 py-0.5 rounded-full bg-rose-500 text-white text-[10px]">0</span>
+          </button>
+          <button onclick="switchTab('catatan')" data-nav="catatan" class="nav-btn-mobile min-h-[38px] whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition">
+            <i data-lucide="sticky-note" class="w-3.5 h-3.5"></i>
+            <span>Catatan</span>
+          </button>
+          <button onclick="switchTab('keluarga')" data-nav="keluarga" class="nav-btn-mobile min-h-[38px] whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition">
+            <i data-lucide="users" class="w-3.5 h-3.5"></i>
+            <span>Keluarga</span>
+          </button>
+        </div>
+
+        <!-- HEADER DESKTOP (lg ke atas) -->
+        <div class="hidden lg:flex max-w-7xl mx-auto px-8 h-16 items-center justify-between gap-4">
+          <div class="flex items-center gap-3 min-w-0">
+            <h2 id="desktopPageTitle" class="text-lg font-extrabold text-slate-900 truncate">Dashboard Ringkasan</h2>
+            <button onclick="switchTab('keluarga')" id="desktopSyncBadge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-800 hover:opacity-90 transition">
+              <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+              <span>Menyinkronkan...</span>
             </button>
-            <button onclick="switchTab('keuangan')" data-nav="keuangan" class="nav-btn-mobile min-h-[44px] px-3.5 py-2 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition">
-              <i data-lucide="wallet" class="w-4 h-4"></i>
-              <span>Keuangan & Terjadwal</span>
+          </div>
+
+          <div class="flex items-center gap-2.5 shrink-0">
+            <button onclick="triggerPwaInstall()" id="desktopPwaInstallBtn" class="hidden min-h-[42px] px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold items-center gap-1.5 shadow-2xs transition">
+              <i data-lucide="download-cloud" class="w-4 h-4"></i>
+              <span>Pasang Aplikasi di HP</span>
             </button>
-            <button onclick="switchTab('tagihan')" data-nav="tagihan" class="nav-btn-mobile min-h-[44px] px-3.5 py-2 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition">
-              <i data-lucide="receipt" class="w-4 h-4"></i>
-              <span>Tagihan & Cicilan</span>
-              <span id="badgeUnpaidBillsMobile" class="hidden px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px]">0</span>
+
+            <button onclick="toggleFontScale()" id="desktopFontToggleBtn" class="min-h-[42px] px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-amber-50 border border-slate-200 text-xs font-extrabold text-slate-800 transition flex items-center gap-1.5">
+              <span class="text-amber-700 font-black">A+</span>
+              <span id="desktopFontLabel">Teks: Normal</span>
             </button>
-            <button onclick="switchTab('jadwal')" data-nav="jadwal" class="nav-btn-mobile min-h-[44px] px-3.5 py-2 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition">
-              <i data-lucide="calendar-check" class="w-4 h-4"></i>
-              <span>Jadwal & Perawatan</span>
-            </button>
-            <button onclick="switchTab('stok')" data-nav="stok" class="nav-btn-mobile min-h-[44px] px-3.5 py-2 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition">
-              <i data-lucide="shopping-basket" class="w-4 h-4"></i>
-              <span>Stok & Belanja</span>
-              <span id="badgeLowStockMobile" class="hidden px-1.5 py-0.5 rounded-full bg-rose-500 text-white text-[10px]">0</span>
-            </button>
-            <button onclick="switchTab('catatan')" data-nav="catatan" class="nav-btn-mobile min-h-[44px] px-3.5 py-2 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition">
-              <i data-lucide="sticky-note" class="w-4 h-4"></i>
-              <span>Catatan & Brankas</span>
-            </button>
-            <button onclick="switchTab('keluarga')" data-nav="keluarga" class="nav-btn-mobile min-h-[44px] px-3.5 py-2 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition">
-              <i data-lucide="users" class="w-4 h-4"></i>
-              <span>Keluarga & Pengaturan</span>
+
+            <button onclick="openProfileSwitcherModal()" class="min-h-[42px] flex items-center gap-2.5 pl-2.5 pr-3.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition">
+              <span id="desktopActiveMemberAvatar" class="w-7 h-7 rounded-lg bg-emerald-600 text-white text-xs font-extrabold flex items-center justify-center shrink-0">AY</span>
+              <div class="text-left">
+                <span id="desktopActiveMemberName" class="block text-xs font-extrabold text-slate-900 leading-tight">Ayah</span>
+                <span class="block text-[10px] font-bold text-emerald-700 leading-tight">Ganti User ▾</span>
+              </div>
             </button>
           </div>
         </div>
       </header>
 
       <!-- ================================================================ -->
-      <!-- KONTEN UTAMA SEMUA HALAMAN                                       -->
+      <!-- KONTEN UTAMA SEMUA 7 MODUL                                       -->
       <!-- ================================================================ -->
-      <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6 space-y-6">
 
-        <!-- Banner Peringatan Firestore Rules (Muncul otomatis hanya jika permission-denied) -->
+        <!-- Banner Instalasi PWA (Muncul otomatis jika browser mendukung beforeinstallprompt) -->
+        <div id="pwaInstallBanner" class="hidden bg-emerald-600 text-white rounded-2xl p-4 shadow-md flex items-center justify-between gap-3">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+              <i data-lucide="smartphone" class="w-5 h-5"></i>
+            </div>
+            <div class="min-w-0">
+              <p class="text-xs sm:text-sm font-extrabold truncate">Pasang RumahKu di Layar Utama HP</p>
+              <p class="text-[11px] text-emerald-100 truncate">Buka layar penuh tanpa bilah browser & lebih cepat</p>
+            </div>
+          </div>
+          <button onclick="triggerPwaInstall()" class="shrink-0 min-h-[40px] px-3.5 py-2 rounded-xl bg-white text-emerald-800 hover:bg-emerald-50 text-xs font-extrabold shadow-2xs transition">
+            Pasang Aplikasi di HP
+          </button>
+        </div>
+
+        <!-- Banner Peringatan Firestore Rules (Muncul otomatis jika permission-denied) -->
         <div id="firestoreRulesWarningBanner" class="hidden bg-amber-50 border-2 border-amber-300 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div class="flex items-start gap-3">
             <i data-lucide="shield-alert" class="w-5 h-5 text-amber-700 shrink-0 mt-0.5"></i>
             <div class="text-xs text-amber-950 space-y-1">
               <p class="font-extrabold">Izin Firestore Database Perlu Diaktifkan di Firebase Console</p>
-              <p>Aplikasi tetap berjalan normal secara lokal, namun agar tersinkronisasi antar-HP di proyek <strong>rumahku-362c4</strong>, buka <strong>Firebase Console → Firestore Database → Rules</strong> dan izinkan baca/tulis pada koleksi <code class="bg-amber-100 px-1.5 py-0.5 rounded font-mono">rumahku_families</code>.</p>
+              <p>Data tersimpan lokal dengan aman. Agar tersinkronisasi antar-HP di proyek <strong>rumahku-362c4</strong>, buka <strong>Firestore Database → Rules</strong> dan izinkan akses koleksi <code class="bg-amber-100 px-1.5 py-0.5 rounded font-mono">rumahku_families</code>.</p>
             </div>
           </div>
-          <button onclick="switchTab('keluarga')" class="shrink-0 px-3.5 py-2 rounded-xl bg-amber-600 text-white text-xs font-extrabold">Lihat Panduan Rules</button>
+          <button onclick="switchTab('keluarga')" class="shrink-0 min-h-[40px] px-3.5 py-2 rounded-xl bg-amber-600 text-white text-xs font-extrabold">Lihat Rules</button>
         </div>
 
         <!-- ============================================================== -->
         <!-- HALAMAN 1: DASHBOARD RINGKASAN                                 -->
         <!-- ============================================================== -->
         <section id="panel-beranda" class="page-panel space-y-6 animate-panel">
-          <!-- Banner Sapaan Personal & Aksi Cepat -->
-          <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-950 rounded-3xl p-6 sm:p-7 text-white shadow-lg flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+          <!-- Banner Sapaan Personal & 4 Aksi Cepat -->
+          <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-950 rounded-3xl p-5 sm:p-7 text-white shadow-lg flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
             <div class="space-y-2">
               <div class="flex flex-wrap items-center gap-2">
                 <span id="dashDateDisplay" class="px-3 py-1 rounded-full bg-white/10 text-emerald-300 text-xs font-bold">Memuat tanggal...</span>
                 <span id="dashActiveRoleBadge" class="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-200 text-xs font-bold">Kepala Keluarga</span>
               </div>
               <h2 id="dashGreetingTitle" class="text-2xl sm:text-3xl font-extrabold tracking-tight">Selamat Datang, Ayah!</h2>
-              <p class="text-sm text-slate-300 max-w-xl">Pantau saldo keluarga, tagihan rutin, jadwal perawatan rumah, dan stok kebutuhan harian secara real-time bersama seluruh anggota keluarga.</p>
+              <p class="text-xs sm:text-sm text-slate-300 max-w-xl">Pantau saldo keluarga, tagihan rutin, jadwal perawatan rumah, dan stok kebutuhan harian secara real-time bersama seluruh anggota keluarga.</p>
             </div>
 
             <!-- 4 Tombol Aksi Cepat -->
             <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-2.5 shrink-0">
-              <button onclick="openQuickTxModal()" class="min-h-[44px] px-4 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md transition">
+              <button onclick="openQuickTxModal()" class="min-h-[44px] px-3.5 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md transition">
                 <i data-lucide="plus-circle" class="w-4 h-4 shrink-0"></i>
                 <span>Catat Transaksi</span>
               </button>
-              <button onclick="openModal('billModal')" class="min-h-[44px] px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition">
+              <button onclick="openModal('billModal')" class="min-h-[44px] px-3.5 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition">
                 <i data-lucide="receipt" class="w-4 h-4 text-amber-300 shrink-0"></i>
                 <span>Tambah Tagihan</span>
               </button>
-              <button onclick="openModal('scheduleModal')" class="min-h-[44px] px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition">
+              <button onclick="openModal('scheduleModal')" class="min-h-[44px] px-3.5 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition">
                 <i data-lucide="calendar-plus" class="w-4 h-4 text-indigo-300 shrink-0"></i>
                 <span>Tambah Agenda</span>
               </button>
-              <button onclick="switchTab('stok')" class="min-h-[44px] px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition">
+              <button onclick="switchTab('stok')" class="min-h-[44px] px-3.5 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition">
                 <i data-lucide="shopping-basket" class="w-4 h-4 text-rose-300 shrink-0"></i>
-                <span>Cek Stok & Belanja</span>
+                <span>Stok & Belanja</span>
               </button>
             </div>
           </div>
 
           <!-- 4 Kartu KPI Utama -->
           <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-            <!-- KPI 1: Saldo Bulan Ini -->
             <div onclick="switchTab('keuangan')" class="cursor-pointer bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs hover:border-emerald-300 transition">
               <div class="flex items-center justify-between">
                 <span class="text-xs font-extrabold uppercase tracking-wider text-slate-500">Saldo Bulan Ini</span>
@@ -329,7 +374,6 @@
               <p id="kpiMonthlySub" class="text-xs font-semibold text-slate-500 mt-1">Masuk Rp 0 • Keluar Rp 0</p>
             </div>
 
-            <!-- KPI 2: Tagihan Belum Lunas -->
             <div onclick="switchTab('tagihan')" class="cursor-pointer bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs hover:border-amber-300 transition">
               <div class="flex items-center justify-between">
                 <span class="text-xs font-extrabold uppercase tracking-wider text-slate-500">Tagihan Belum Lunas</span>
@@ -341,7 +385,6 @@
               <p id="kpiUnpaidBillsCount" class="text-xs font-bold text-amber-700 mt-1">0 tagihan menunggu</p>
             </div>
 
-            <!-- KPI 3: Agenda Terdekat -->
             <div onclick="switchTab('jadwal')" class="cursor-pointer bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs hover:border-indigo-300 transition">
               <div class="flex items-center justify-between">
                 <span class="text-xs font-extrabold uppercase tracking-wider text-slate-500">Agenda Terdekat</span>
@@ -353,7 +396,6 @@
               <p id="kpiUpcomingTaskMeta" class="text-xs font-bold text-indigo-700 mt-1.5">Tidak ada jadwal tertunda</p>
             </div>
 
-            <!-- KPI 4: Stok Menipis -->
             <div onclick="switchTab('stok')" class="cursor-pointer bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs hover:border-rose-300 transition">
               <div class="flex items-center justify-between">
                 <span class="text-xs font-extrabold uppercase tracking-wider text-slate-500">Stok Menipis</span>
@@ -366,9 +408,8 @@
             </div>
           </div>
 
-          <!-- Grid Tengah: Tagihan Mendesak, Transaksi Terjadwal & Grafik Pengeluaran -->
+          <!-- Grid Tengah: Tagihan Mendesak, Transaksi Terjadwal & Grafik Distribusi Pengeluaran -->
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <!-- Kolom Kiri (7 kolom): Tagihan Mendesak + Transaksi Terjadwal Terdekat -->
             <div class="lg:col-span-7 space-y-6">
               <!-- Ringkasan Tagihan Mendesak -->
               <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs">
@@ -387,7 +428,7 @@
                 <div id="dashUrgentBillsList" class="space-y-3"></div>
               </div>
 
-              <!-- Jadwal Transaksi Terjadwal Terdekat -->
+              <!-- Preview Transaksi Terjadwal -->
               <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs">
                 <div class="flex items-center justify-between mb-4">
                   <div class="flex items-center gap-2.5">
@@ -405,7 +446,7 @@
               </div>
             </div>
 
-            <!-- Kolom Kanan (5 kolom): Grafik Distribusi Pengeluaran -->
+            <!-- Grafik Distribusi Pengeluaran -->
             <div class="lg:col-span-5 bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs flex flex-col justify-between">
               <div>
                 <div class="flex items-center justify-between mb-2">
@@ -537,7 +578,7 @@
               </div>
             </div>
 
-            <!-- Riwayat Transaksi dengan Filter Lengkap -->
+            <!-- Riwayat Transaksi dengan Filter Jenis, Kategori & Anggota -->
             <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs space-y-4">
               <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                 <div>
@@ -583,7 +624,7 @@
                 </div>
                 <div>
                   <h3 class="text-base font-extrabold text-indigo-950">Transaksi Rutin & Terjadwal</h3>
-                  <p class="text-xs text-indigo-800 mt-0.5">Jadwalkan gaji bulanan, uang belanja, iuran lingkungan, atau tabungan. Pilih mode <strong>Otomatis Catat saat Jatuh Tempo</strong> atau <strong>Konfirmasi Manual</strong>.</p>
+                  <p class="text-xs text-indigo-800 mt-0.5">Jadwalkan gaji bulanan, uang belanja, iuran lingkungan, atau tabungan. Pilih mode <strong>Otomatis Catat</strong> atau <strong>Konfirmasi Manual</strong>.</p>
                 </div>
               </div>
               <button onclick="openScheduledModal()" class="shrink-0 min-h-[44px] px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-extrabold shadow-xs transition flex items-center justify-center gap-1.5">
@@ -597,12 +638,12 @@
         </section>
 
         <!-- ============================================================== -->
-        <!-- HALAMAN 3: TAGIHAN & CICILAN RUTIN                             -->
+        <!-- HALAMAN 3: TAGIHAN & CICILAN                                   -->
         <!-- ============================================================== -->
         <section id="panel-tagihan" class="page-panel hidden space-y-6 animate-panel">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-              <h2 class="text-2xl font-extrabold text-slate-900">Tagihan & Cicilan Rutin</h2>
+              <h2 class="text-2xl font-extrabold text-slate-900">Tagihan & Cicilan</h2>
               <p class="text-xs sm:text-sm text-slate-500">Pelacakan jatuh tempo otomatis (Listrik PLN, PDAM, WiFi, Cicilan) dan pencatatan pembayaran terintegrasi.</p>
             </div>
             <button onclick="openModal('billModal')" class="self-start sm:self-auto min-h-[44px] px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-extrabold shadow-xs transition flex items-center gap-1.5">
@@ -611,7 +652,6 @@
             </button>
           </div>
 
-          <!-- Filter Status Tagihan -->
           <div class="flex flex-wrap gap-2">
             <button onclick="setBillFilter('all')" data-bill-filter="all" class="bill-filter-btn min-h-[42px] px-4 py-2 rounded-xl text-xs font-extrabold transition">Semua Tagihan</button>
             <button onclick="setBillFilter('unpaid')" data-bill-filter="unpaid" class="bill-filter-btn min-h-[42px] px-4 py-2 rounded-xl text-xs font-extrabold transition">Belum Lunas</button>
@@ -628,7 +668,7 @@
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
               <h2 class="text-2xl font-extrabold text-slate-900">Jadwal & Perawatan Rumah</h2>
-              <p class="text-xs sm:text-sm text-slate-500">Agenda perawatan berkala (Servis AC, Kuras Toren, Ganti Oli, Pajak) & tugas keluarga.</p>
+              <p class="text-xs sm:text-sm text-slate-500">Agenda perawatan berkala (Servis AC, Kuras Toren, Ganti Gas/Galon, Pajak) & tugas keluarga.</p>
             </div>
             <button onclick="openModal('scheduleModal')" class="self-start sm:self-auto min-h-[44px] px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-extrabold shadow-xs transition flex items-center gap-1.5">
               <i data-lucide="plus" class="w-4 h-4"></i>
@@ -636,7 +676,6 @@
             </button>
           </div>
 
-          <!-- Filter Status & Kategori -->
           <div class="flex flex-wrap items-center gap-2">
             <select id="scheduleStatusFilter" onchange="renderSchedulesSection()" class="min-h-[42px] px-3.5 py-2 rounded-xl bg-white border border-slate-300 text-xs font-extrabold text-slate-800">
               <option value="all">Semua Status</option>
@@ -671,7 +710,6 @@
           </div>
 
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <!-- Kolom Kiri (7 kolom): Pelacak Stok Rumah -->
             <div class="lg:col-span-7 space-y-4">
               <div class="flex items-center justify-between">
                 <h3 class="text-base font-extrabold text-slate-900">Persediaan Barang di Rumah</h3>
@@ -680,7 +718,6 @@
               <div id="inventoryGridContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-3.5"></div>
             </div>
 
-            <!-- Kolom Kanan (5 kolom): Daftar Belanja & Selesai Belanja -->
             <div class="lg:col-span-5 bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs space-y-4 self-start">
               <div class="flex items-center justify-between">
                 <div>
@@ -690,7 +727,6 @@
                 <span id="shoppingCountBadge" class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-extrabold">0 item</span>
               </div>
 
-              <!-- Tambah Manual ke Daftar Belanja -->
               <form onsubmit="handleAddShoppingItem(event)" class="space-y-2 pt-2 border-t border-slate-100">
                 <input type="text" id="shopNewName" required placeholder="Tambah item belanja (misal: Telur 1kg)" class="w-full min-h-[42px] px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-semibold" />
                 <div class="grid grid-cols-12 gap-2">
@@ -717,12 +753,12 @@
         </section>
 
         <!-- ============================================================== -->
-        <!-- HALAMAN 6: CATATAN & BRANKAS INFO RUMAH                        -->
+        <!-- HALAMAN 6: CATATAN & INFO PENTING                              -->
         <!-- ============================================================== -->
         <section id="panel-catatan" class="page-panel hidden space-y-6 animate-panel">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-              <h2 class="text-2xl font-extrabold text-slate-900">Catatan & Brankas Info Rumah</h2>
+              <h2 class="text-2xl font-extrabold text-slate-900">Catatan & Info Penting</h2>
               <p class="text-xs sm:text-sm text-slate-500">Simpan ID meteran PLN/PDAM, password WiFi, nomor tukang, dan kontak darurat.</p>
             </div>
             <button onclick="openModal('noteModal')" class="self-start sm:self-auto min-h-[44px] px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-extrabold shadow-xs transition flex items-center gap-1.5">
@@ -731,7 +767,6 @@
             </button>
           </div>
 
-          <!-- Pencarian & Filter Kategori -->
           <div class="flex flex-col sm:flex-row gap-2.5">
             <div class="relative flex-1">
               <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
@@ -751,7 +786,7 @@
         </section>
 
         <!-- ============================================================== -->
-        <!-- HALAMAN 7: KELUARGA, MULTI-USER & PENGATURAN                   -->
+        <!-- HALAMAN 7: KELUARGA & PENGATURAN                               -->
         <!-- ============================================================== -->
         <section id="panel-keluarga" class="page-panel hidden space-y-6 animate-panel">
           <div>
@@ -760,7 +795,7 @@
           </div>
 
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <!-- Kolom Kiri (6 kolom): Manajemen Anggota Keluarga -->
+            <!-- Kolom Kiri: Profil Anggota Keluarga & Pengaturan Tampilan/Backup -->
             <div class="lg:col-span-6 space-y-6">
               <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs space-y-4">
                 <div class="flex items-center justify-between">
@@ -777,9 +812,9 @@
                 <div id="familyMembersList" class="space-y-2.5"></div>
               </div>
 
-              <!-- Pengaturan Tampilan Ramah Lansia & Cadangan Data -->
+              <!-- Aksesibilitas, PWA Install & Cadangan Data -->
               <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs space-y-4">
-                <h3 class="text-base font-extrabold text-slate-900">Aksesibilitas & Cadangan Data</h3>
+                <h3 class="text-base font-extrabold text-slate-900">Tampilan, Aplikasi HP & Cadangan Data</h3>
 
                 <div class="p-3.5 rounded-xl bg-amber-50/80 border border-amber-200 flex items-center justify-between gap-3">
                   <div>
@@ -792,7 +827,18 @@
                   </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2">
+                <!-- Tombol Install PWA di Pengaturan -->
+                <div id="settingsPwaBox" class="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between gap-3">
+                  <div>
+                    <p class="text-xs font-extrabold text-emerald-950">Aplikasi Layar Utama HP (PWA)</p>
+                    <p id="settingsPwaDesc" class="text-[11px] text-emerald-800">Pasang aplikasi ke layar utama untuk akses layar penuh.</p>
+                  </div>
+                  <button onclick="triggerPwaInstall()" id="settingsPwaInstallBtn" class="shrink-0 min-h-[40px] px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold transition">
+                    Pasang Aplikasi di HP
+                  </button>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
                   <button onclick="exportBackupJSON()" class="min-h-[44px] py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-extrabold flex items-center justify-center gap-1.5 transition">
                     <i data-lucide="download" class="w-4 h-4"></i>
                     <span>Unduh Backup</span>
@@ -810,7 +856,7 @@
               </div>
             </div>
 
-            <!-- Kolom Kanan (6 kolom): Status Live Firebase Cloud Sync & Undangan HP -->
+            <!-- Kolom Kanan: Sinkronisasi Cloud Real-time & Kode Keluarga -->
             <div class="lg:col-span-6 space-y-6">
               <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs space-y-4">
                 <div class="flex items-start justify-between gap-2">
@@ -821,7 +867,6 @@
                   <span id="settingsSyncStatusBadge" class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-800">Menghubungkan...</span>
                 </div>
 
-                <!-- Kartu Kode Keluarga & Link Undangan -->
                 <div class="p-4 rounded-2xl bg-emerald-50 border-2 border-dashed border-emerald-300 space-y-3">
                   <div class="flex items-center justify-between">
                     <span class="text-xs font-extrabold text-emerald-900">Kode Keluarga Aktif:</span>
@@ -833,15 +878,14 @@
                       <button onclick="copyFamilyCode()" class="min-h-[40px] px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-extrabold text-slate-800">Salin Kode</button>
                       <button onclick="copyFamilyShareLink()" class="min-h-[40px] px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold flex items-center gap-1">
                         <i data-lucide="share-2" class="w-3.5 h-3.5"></i>
-                        <span>Salin Link Undangan HP</span>
+                        <span>Salin Link WhatsApp</span>
                       </button>
                     </div>
                   </div>
                   <p class="text-[11px] text-emerald-900 leading-relaxed">
-                    Kirimkan <strong>Link Undangan HP</strong> lewat WhatsApp ke anggota keluarga. Saat link dibuka di HP mereka, seluruh data rumah tangga langsung tersinkronisasi otomatis!
+                    Bagikan <strong>Link WhatsApp</strong> di atas ke anggota keluarga. Ketika link dibuka di HP mereka, seluruh data rumah tangga langsung tersinkronisasi secara real-time!
                   </p>
 
-                  <!-- Form Gabung Kode Keluarga dari HP Lain -->
                   <form onsubmit="handleJoinFamilyCode(event)" class="flex gap-2 pt-2 border-t border-emerald-200/70">
                     <input type="text" id="joinFamilyCodeInput" maxlength="6" placeholder="Masukkan 6-digit Kode Keluarga lain" class="flex-1 min-h-[44px] px-3.5 py-2 rounded-xl bg-white border border-emerald-300 text-xs font-extrabold uppercase tracking-widest focus:outline-none" />
                     <button type="submit" class="min-h-[44px] px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-extrabold transition">
@@ -850,14 +894,14 @@
                   </form>
                 </div>
 
-                <!-- Panduan Firestore Security Rules (Selalu membantu jika user pakai Production Mode) -->
+                <!-- Firestore Security Rules Snippet -->
                 <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
                   <div class="flex items-center justify-between">
-                    <span class="text-xs font-extrabold text-slate-800">Aturan Keamanan Firestore (Proyek: rumahku-362c4)</span>
+                    <span class="text-xs font-extrabold text-slate-800">Firestore Rules (Proyek: rumahku-362c4)</span>
                     <button onclick="copyFirestoreRulesSnippet()" class="text-[11px] font-extrabold text-indigo-700 hover:underline">Salin Rules</button>
                   </div>
                   <p class="text-[11px] text-slate-500 leading-relaxed">
-                    Jika status menampilkan <em>Periksa Rules Firestore</em>, pastikan Firestore Database sudah dibuat di Firebase Console dengan rules berikut:
+                    Pastikan aturan keamanan di <strong>Firebase Console → Firestore Database → Rules</strong> mengizinkan koleksi <code class="font-mono text-slate-700">rumahku_families</code>:
                   </p>
                   <pre class="p-3 rounded-xl bg-slate-900 text-emerald-300 font-mono text-[11px] overflow-x-auto leading-relaxed">rules_version = '2';
 service cloud.firestore {
@@ -878,7 +922,7 @@ service cloud.firestore {
   </div>
 
   <!-- ================================================================== -->
-  <!-- MODAL-MODAL INTERAKTIF (TANPA alert / confirm / prompt)            -->
+  <!-- MODAL-MODAL INTERAKTIF                                             -->
   <!-- ================================================================== -->
 
   <!-- 1. Modal Switcher Profil Anggota Keluarga & PIN -->
@@ -887,14 +931,13 @@ service cloud.firestore {
       <div class="flex items-center justify-between mb-4">
         <div>
           <h3 class="text-lg font-extrabold text-slate-900">Pilih Anggota Keluarga</h3>
-          <p class="text-xs text-slate-500">Setiap catatan & transaksi akan diberi label nama pengguna aktif</p>
+          <p class="text-xs text-slate-500">Setiap transaksi & catatan akan ditandai atas nama pengguna aktif</p>
         </div>
         <button onclick="closeModal('profileSwitcherModal')" class="p-2 rounded-xl bg-slate-100 text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
       </div>
 
       <div id="profileSwitcherGrid" class="grid grid-cols-2 gap-3 mb-4"></div>
 
-      <!-- Area Verifikasi PIN 4-Digit -->
       <div id="pinVerificationArea" class="hidden p-4 rounded-2xl bg-slate-100 border border-slate-300 space-y-3 mb-3">
         <p id="pinPromptLabel" class="text-xs font-extrabold text-slate-900 text-center">Masukkan PIN 4-Digit</p>
         <input type="password" inputmode="numeric" maxlength="4" id="pinInputVerify" placeholder="••••" class="w-full py-2.5 text-center text-xl font-extrabold tracking-[0.5em] bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-emerald-600" />
@@ -956,7 +999,7 @@ service cloud.firestore {
     </div>
   </div>
 
-  <!-- 3. Modal Catat Transaksi Cepat dari Dashboard -->
+  <!-- 3. Modal Catat Transaksi Cepat -->
   <div id="quickTxModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
     <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl animate-panel">
       <div class="flex items-center justify-between mb-4">
@@ -1147,7 +1190,7 @@ service cloud.firestore {
       <form onsubmit="handleAddSchedule(event)" class="space-y-3.5">
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">Nama Agenda / Perawatan</label>
-          <input type="text" id="schedItemTitle" required placeholder="Contoh: Servis AC, Kuras Toren, Ganti Oli" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-sm font-semibold" />
+          <input type="text" id="schedItemTitle" required placeholder="Contoh: Servis AC, Kuras Toren, Ganti Gas/Galon" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-sm font-semibold" />
         </div>
         <div class="grid grid-cols-2 gap-2.5">
           <div>
@@ -1167,7 +1210,7 @@ service cloud.firestore {
         <div class="grid grid-cols-2 gap-2.5">
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Tanggal</label>
-            <input type="date" id="schedItemDate" required class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs font-bold" />
+            <input type="date" id="schedItemDate" required class="w-full min-h-[44px] px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs font-bold" />
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Prioritas</label>
@@ -1288,7 +1331,7 @@ service cloud.firestore {
     </div>
   </div>
 
-  <!-- 10. Modal Konfirmasi Universal (Pengganti window.confirm) -->
+  <!-- 10. Modal Konfirmasi Universal (Pengganti confirm()) -->
   <div id="confirmDialogModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
     <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl animate-panel text-center">
       <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto mb-3">
@@ -1307,7 +1350,7 @@ service cloud.firestore {
   <div id="toastContainer" class="fixed bottom-5 right-5 z-[60] flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
 
   <!-- ================================================================== -->
-  <!-- FIREBASE MODULAR SDK v10.14.1 & APPLICATION LOGIC                  -->
+  <!-- FIREBASE MODULAR SDK v10.14.1, PWA SERVICE WORKER & APP LOGIC      -->
   <!-- ================================================================== -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
@@ -1340,10 +1383,10 @@ service cloud.firestore {
       'Lainnya'
     ];
 
-    // ==================== STATE APLIKASI ====================
+    // ==================== STATE APLIKASI & PWA ====================
     let db = null;
     let unsubscribeSnapshot = null;
-    let isCloudConnected = false;
+    let deferredInstallPrompt = null;
 
     let familyCode = '';
     let activeMemberId = 'mem_ayah';
@@ -1367,6 +1410,58 @@ service cloud.firestore {
       shoppingList: [],
       notes: []
     };
+
+    // ==================== PWA SERVICE WORKER & BEFOREINSTALLPROMPT ====================
+    window.addEventListener('load', () => {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js').catch((err) => {
+          console.info('Service Worker belum aktif atau offline:', err?.message || err);
+        });
+      }
+    });
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+
+      const banner = document.getElementById('pwaInstallBanner');
+      const sideBtn = document.getElementById('sidebarPwaInstallBtn');
+      const deskBtn = document.getElementById('desktopPwaInstallBtn');
+
+      if (banner) banner.classList.remove('hidden');
+      if (sideBtn) sideBtn.classList.remove('hidden');
+      if (deskBtn) {
+        deskBtn.classList.remove('hidden');
+        deskBtn.classList.add('inline-flex');
+      }
+      lucide.createIcons();
+    });
+
+    window.addEventListener('appinstalled', () => {
+      deferredInstallPrompt = null;
+      const banner = document.getElementById('pwaInstallBanner');
+      const sideBtn = document.getElementById('sidebarPwaInstallBtn');
+      const deskBtn = document.getElementById('desktopPwaInstallBtn');
+      if (banner) banner.classList.add('hidden');
+      if (sideBtn) sideBtn.classList.add('hidden');
+      if (deskBtn) deskBtn.classList.add('hidden');
+      showToast('Aplikasi RumahKu berhasil terpasang di HP Anda!');
+    });
+
+    async function triggerPwaInstall() {
+      if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
+        const { outcome } = await deferredInstallPrompt.userChoice;
+        if (outcome === 'accepted') {
+          showToast('Memasang RumahKu ke layar utama...');
+        }
+        deferredInstallPrompt = null;
+        const banner = document.getElementById('pwaInstallBanner');
+        if (banner) banner.classList.add('hidden');
+      } else {
+        showToast('Gunakan menu browser "Tambahkan ke layar utama / Install app" untuk memasang.', 'warning');
+      }
+    }
 
     // ==================== HELPER TANGGAL, MATA UANG & KODE KELUARGA ====================
     function getTodayISO() {
@@ -1432,9 +1527,7 @@ service cloud.firestore {
         const url = new URL(window.location.href);
         url.searchParams.set('family', code);
         window.history.replaceState(null, '', url.toString());
-      } catch (e) {
-        // Fallback aman jika dijalankan di lingkungan sandbox tanpa history API penuh
-      }
+      } catch (e) {}
     }
 
     function getFamilyShareURL() {
@@ -1640,16 +1733,7 @@ service cloud.firestore {
           },
           {
             id: generateId('sch'),
-            title: 'Ganti Oli & Cek Pajak Motor',
-            category: 'Kendaraan & Pajak',
-            assigneeId: 'mem_ayah',
-            date: addDaysToISO(today, 9),
-            priority: 'Sedang',
-            completed: false
-          },
-          {
-            id: generateId('sch'),
-            title: 'Bersihkan Lemari Es & Dapur',
+            title: 'Ganti Gas LPG & Cek Stok Galon',
             category: 'Kebersihan',
             assigneeId: 'mem_ibu',
             date: today,
@@ -1744,7 +1828,7 @@ service cloud.firestore {
       try {
         localStorage.setItem(STORAGE_KEYS.DATA, JSON.stringify(appData));
       } catch (e) {
-        console.warn('Gagal menulis ke localStorage:', e);
+        console.warn('Gagal menulis localStorage:', e);
       }
     }
 
@@ -1753,92 +1837,102 @@ service cloud.firestore {
       renderAll();
 
       if (db && familyCode) {
-        updateSyncStatusUI('syncing', 'Menyinkronkan...');
+        updateSyncStatusUI('syncing');
         try {
           const docRef = doc(db, 'rumahku_families', familyCode);
           await setDoc(docRef, {
             ...appData,
             updatedAt: new Date().toISOString()
           });
-          updateSyncStatusUI('connected', 'Cloud Terhubung • rumahku-362c4');
+          updateSyncStatusUI('connected');
         } catch (err) {
           console.error('Firestore write error:', err);
           if (err && err.code === 'permission-denied') {
             handleFirestorePermissionDenied();
           } else {
-            updateSyncStatusUI('local', 'Tersimpan Lokal (Offline)');
+            updateSyncStatusUI('local');
           }
         }
       }
     }
 
     function handleFirestorePermissionDenied() {
-      updateSyncStatusUI('warning', 'Periksa Rules Firestore');
+      updateSyncStatusUI('local');
       const warnBanner = document.getElementById('firestoreRulesWarningBanner');
       if (warnBanner) warnBanner.classList.remove('hidden');
     }
 
-    function updateSyncStatusUI(state, labelText) {
-      isCloudConnected = state === 'connected';
-      const headerPill = document.getElementById('headerSyncPill');
-      const headerDot = document.getElementById('headerSyncDot');
-      const headerLabel = document.getElementById('headerSyncLabel');
+    function updateSyncStatusUI(state) {
+      const mobileBadge = document.getElementById('mobileSyncBadge');
+      const desktopBadge = document.getElementById('desktopSyncBadge');
       const sidebarBadge = document.getElementById('sidebarSyncBadge');
       const settingsBadge = document.getElementById('settingsSyncStatusBadge');
 
       if (state === 'connected') {
-        headerPill.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-emerald-100 text-emerald-800 hover:bg-emerald-200 transition shrink-0';
-        headerDot.className = 'w-2 h-2 rounded-full bg-emerald-600';
-        headerLabel.textContent = labelText || 'Cloud Terhubung • rumahku-362c4';
-
+        if (mobileBadge) {
+          mobileBadge.className = 'shrink-0 text-[11px] font-medium px-2 py-0.5 rounded-full whitespace-nowrap bg-emerald-100 text-emerald-800 transition';
+          mobileBadge.textContent = '• Live';
+        }
+        if (desktopBadge) {
+          desktopBadge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800 hover:bg-emerald-200 transition';
+          desktopBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-600"></span><span>Live • rumahku-362c4</span>`;
+        }
         if (sidebarBadge) {
           sidebarBadge.className = 'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800';
-          sidebarBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span> Cloud Aktif`;
+          sidebarBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span> Live`;
         }
         if (settingsBadge) {
           settingsBadge.className = 'px-2.5 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800';
-          settingsBadge.textContent = 'Cloud Terhubung • rumahku-362c4';
+          settingsBadge.textContent = 'Live • rumahku-362c4';
         }
         const warnBanner = document.getElementById('firestoreRulesWarningBanner');
         if (warnBanner) warnBanner.classList.add('hidden');
       } else if (state === 'syncing') {
-        headerPill.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-amber-100 text-amber-800 transition shrink-0';
-        headerDot.className = 'w-2 h-2 rounded-full bg-amber-500 animate-pulse';
-        headerLabel.textContent = labelText || 'Menyinkronkan...';
-
+        if (mobileBadge) {
+          mobileBadge.className = 'shrink-0 text-[11px] font-medium px-2 py-0.5 rounded-full whitespace-nowrap bg-amber-100 text-amber-800 transition';
+          mobileBadge.textContent = '• Sync';
+        }
+        if (desktopBadge) {
+          desktopBadge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-800 transition';
+          desktopBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span><span>Menyinkronkan...</span>`;
+        }
         if (sidebarBadge) {
           sidebarBadge.className = 'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-800';
-          sidebarBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> Sync...`;
+          sidebarBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> Sync`;
         }
         if (settingsBadge) {
           settingsBadge.className = 'px-2.5 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-800';
           settingsBadge.textContent = 'Menyinkronkan...';
         }
       } else {
-        headerPill.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-amber-100 text-amber-900 hover:bg-amber-200 transition shrink-0';
-        headerDot.className = 'w-2 h-2 rounded-full bg-amber-600';
-        headerLabel.textContent = labelText || 'Mode Lokal';
-
+        if (mobileBadge) {
+          mobileBadge.className = 'shrink-0 text-[11px] font-medium px-2 py-0.5 rounded-full whitespace-nowrap bg-amber-100 text-amber-900 transition';
+          mobileBadge.textContent = '• Lokal';
+        }
+        if (desktopBadge) {
+          desktopBadge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-900 hover:bg-amber-200 transition';
+          desktopBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-600"></span><span>Mode Lokal</span>`;
+        }
         if (sidebarBadge) {
           sidebarBadge.className = 'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-900';
           sidebarBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-600"></span> Lokal`;
         }
         if (settingsBadge) {
           settingsBadge.className = 'px-2.5 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-900';
-          settingsBadge.textContent = labelText || 'Mode Lokal';
+          settingsBadge.textContent = 'Mode Lokal';
         }
       }
     }
 
     async function initFirebaseAutoConnect() {
-      updateSyncStatusUI('syncing', 'Menyinkronkan...');
+      updateSyncStatusUI('syncing');
       try {
         const app = initializeApp(firebaseConfig);
         db = getFirestore(app);
         await subscribeToFamilyDoc(familyCode);
       } catch (err) {
-        console.error('Firebase initialization error:', err);
-        updateSyncStatusUI('local', 'Mode Lokal');
+        console.error('Firebase init error:', err);
+        updateSyncStatusUI('local');
       }
     }
 
@@ -1850,13 +1944,12 @@ service cloud.firestore {
         unsubscribeSnapshot = null;
       }
 
-      updateSyncStatusUI('syncing', 'Menyinkronkan...');
+      updateSyncStatusUI('syncing');
       const docRef = doc(db, 'rumahku_families', code);
 
       try {
         const snap = await getDoc(docRef);
         if (!snap.exists()) {
-          // Perangkat pertama yang membuka Kode Keluarga ini langsung menginisialisasi data cloud
           await setDoc(docRef, {
             ...appData,
             updatedAt: new Date().toISOString()
@@ -1886,7 +1979,7 @@ service cloud.firestore {
               }
 
               saveLocalDataOnly();
-              updateSyncStatusUI('connected', 'Cloud Terhubung • rumahku-362c4');
+              updateSyncStatusUI('connected');
               processAutoScheduledTransactions();
               renderAll();
             }
@@ -1896,7 +1989,7 @@ service cloud.firestore {
             if (error && error.code === 'permission-denied') {
               handleFirestorePermissionDenied();
             } else {
-              updateSyncStatusUI('local', 'Mode Lokal (Offline)');
+              updateSyncStatusUI('local');
             }
           }
         );
@@ -1905,7 +1998,7 @@ service cloud.firestore {
         if (err && err.code === 'permission-denied') {
           handleFirestorePermissionDenied();
         } else {
-          updateSyncStatusUI('local', 'Mode Lokal (Offline)');
+          updateSyncStatusUI('local');
         }
       }
     }
@@ -2070,14 +2163,14 @@ service cloud.firestore {
       ).join('');
     }
 
-    // ==================== FONT SCALE (TEKS NORMAL / TEKS BESAR RAMAH LANSIA) ====================
+    // ==================== FONT SCALE (html.large-text: 18.5px) ====================
     function setFontScale(scale) {
       fontScale = scale;
       localStorage.setItem(STORAGE_KEYS.FONT_SCALE, scale);
       if (scale === 'elderly') {
-        document.documentElement.classList.add('font-elderly');
+        document.documentElement.classList.add('large-text');
       } else {
-        document.documentElement.classList.remove('font-elderly');
+        document.documentElement.classList.remove('large-text');
       }
       updateFontButtonsUI();
     }
@@ -2085,24 +2178,33 @@ service cloud.firestore {
     function toggleFontScale() {
       const next = fontScale === 'normal' ? 'elderly' : 'normal';
       setFontScale(next);
-      showToast(next === 'elderly' ? 'Ukuran huruf: Teks Besar (Ramah Lansia)' : 'Ukuran huruf: Teks Normal');
+      showToast(next === 'elderly' ? 'Ukuran huruf: Teks Besar (18.5px)' : 'Ukuran huruf: Teks Normal');
     }
 
     function updateFontButtonsUI() {
-      const isElderly = fontScale === 'elderly';
-      const sidebarLabel = document.getElementById('sidebarFontToggleLabel');
-      if (sidebarLabel) sidebarLabel.textContent = isElderly ? 'Teks: Besar' : 'Teks: Normal';
+      const isLarge = fontScale === 'elderly';
 
-      const headerLabel = document.getElementById('headerFontLabel');
-      if (headerLabel) headerLabel.textContent = isElderly ? 'Besar' : 'Teks';
+      const mobileBtn = document.getElementById('mobileFontToggleBtn');
+      if (mobileBtn) {
+        mobileBtn.textContent = isLarge ? 'A-' : 'A+';
+        mobileBtn.className = isLarge
+          ? 'px-2.5 py-1.5 rounded-lg text-xs font-bold shrink-0 bg-amber-100 border border-amber-300 text-amber-900 transition'
+          : 'px-2.5 py-1.5 rounded-lg text-xs font-bold shrink-0 bg-slate-100 hover:bg-amber-50 border border-slate-200 text-slate-800 transition';
+      }
+
+      const sidebarLabel = document.getElementById('sidebarFontToggleLabel');
+      if (sidebarLabel) sidebarLabel.textContent = isLarge ? 'Teks: Besar' : 'Teks: Normal';
+
+      const desktopLabel = document.getElementById('desktopFontLabel');
+      if (desktopLabel) desktopLabel.textContent = isLarge ? 'Teks: Besar' : 'Teks: Normal';
 
       const nEl = document.getElementById('settingsFontNormal');
       const eEl = document.getElementById('settingsFontElderly');
       if (nEl && eEl) {
-        nEl.className = !isElderly
+        nEl.className = !isLarge
           ? 'min-h-[40px] px-3 py-1.5 rounded-lg text-xs font-extrabold bg-emerald-600 text-white border border-emerald-600 transition'
           : 'min-h-[40px] px-3 py-1.5 rounded-lg text-xs font-extrabold bg-white text-slate-600 border border-slate-200 transition';
-        eEl.className = isElderly
+        eEl.className = isLarge
           ? 'min-h-[40px] px-3 py-1.5 rounded-lg text-xs font-extrabold bg-emerald-600 text-white border border-emerald-600 transition'
           : 'min-h-[40px] px-3 py-1.5 rounded-lg text-xs font-extrabold bg-white text-slate-600 border border-slate-200 transition';
       }
@@ -2113,21 +2215,21 @@ service cloud.firestore {
       beranda: 'Dashboard Ringkasan',
       keuangan: 'Keuangan & Terjadwal',
       tagihan: 'Tagihan & Cicilan',
-      jadwal: 'Jadwal & Perawatan',
-      stok: 'Stok & Belanja',
-      catatan: 'Catatan & Brankas',
+      jadwal: 'Jadwal & Perawatan Rumah',
+      stok: 'Stok & Daftar Belanja',
+      catatan: 'Catatan & Info Penting',
       keluarga: 'Keluarga & Pengaturan'
     };
 
     function switchTab(tabName, subTab = null) {
       currentTab = tabName;
-      document.getElementById('desktopPageTitle').textContent = PAGE_TITLES[tabName] || 'RumahKu';
+      const deskTitle = document.getElementById('desktopPageTitle');
+      if (deskTitle) deskTitle.textContent = PAGE_TITLES[tabName] || 'RumahKu';
 
       document.querySelectorAll('.page-panel').forEach(p => p.classList.add('hidden'));
       const activePanel = document.getElementById(`panel-${tabName}`);
       if (activePanel) activePanel.classList.remove('hidden');
 
-      // Update Desktop Sidebar Buttons
       document.querySelectorAll('.nav-btn').forEach(btn => {
         const isCurrent = btn.getAttribute('data-nav') === tabName;
         btn.className = isCurrent
@@ -2135,12 +2237,11 @@ service cloud.firestore {
           : 'nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition';
       });
 
-      // Update Mobile Pill Buttons
       document.querySelectorAll('.nav-btn-mobile').forEach(btn => {
         const isCurrent = btn.getAttribute('data-nav') === tabName;
         btn.className = isCurrent
-          ? 'nav-btn-mobile min-h-[44px] px-3.5 py-2 rounded-xl text-xs font-extrabold bg-emerald-600 text-white flex items-center gap-1.5 shadow-2xs transition'
-          : 'nav-btn-mobile min-h-[44px] px-3.5 py-2 rounded-xl text-xs font-bold bg-white text-slate-600 border border-slate-200 flex items-center gap-1.5 transition';
+          ? 'nav-btn-mobile min-h-[38px] whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-extrabold bg-emerald-600 text-white flex items-center gap-1.5 shadow-2xs transition'
+          : 'nav-btn-mobile min-h-[38px] whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200/70 flex items-center gap-1.5 transition';
         if (isCurrent) {
           btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
         }
@@ -2298,7 +2399,7 @@ service cloud.firestore {
     }
 
     function copyFamilyShareLink() {
-      copyTextToClipboard(getFamilyShareURL(), 'Link undangan HP disalin! Buka link ini di HP anggota keluarga.');
+      copyTextToClipboard(getFamilyShareURL(), 'Link undangan HP disalin! Kirim lewat WhatsApp ke anggota keluarga.');
     }
 
     function copyFirestoreRulesSnippet() {
@@ -2357,7 +2458,6 @@ service cloud.firestore {
         year: 'numeric'
       });
 
-      // KPI 1: Saldo Bulan Ini
       const ym = getTodayISO().slice(0, 7);
       const monthTx = appData.transactions.filter(t => t.date.startsWith(ym));
       const inc = monthTx.filter(t => t.type === 'pemasukan').reduce((s, t) => s + Number(t.amount), 0);
@@ -2369,13 +2469,11 @@ service cloud.firestore {
       balEl.className = `text-2xl font-extrabold mt-3 truncate ${bal < 0 ? 'text-rose-600' : 'text-slate-900'}`;
       document.getElementById('kpiMonthlySub').textContent = `Masuk ${formatRupiah(inc)} • Keluar ${formatRupiah(out)}`;
 
-      // KPI 2: Tagihan Belum Lunas
       const unpaidBills = appData.bills.filter(b => !b.isPaid).sort((a, b) => a.dueDate.localeCompare(b.dueDate));
       const unpaidSum = unpaidBills.reduce((s, b) => s + Number(b.amount), 0);
       document.getElementById('kpiUnpaidBillsTotal').textContent = formatRupiah(unpaidSum);
       document.getElementById('kpiUnpaidBillsCount').textContent = `${unpaidBills.length} tagihan belum lunas`;
 
-      // KPI 3: Agenda Terdekat
       const pendingTasks = appData.schedules.filter(s => !s.completed).sort((a, b) => a.date.localeCompare(b.date));
       if (pendingTasks.length > 0) {
         const nextTask = pendingTasks[0];
@@ -2384,17 +2482,15 @@ service cloud.firestore {
         document.getElementById('kpiUpcomingTaskMeta').textContent = `${formatDateIndo(nextTask.date)} • ${assignee ? assignee.name : 'Keluarga'}`;
       } else {
         document.getElementById('kpiUpcomingTaskTitle').textContent = 'Semua Selesai';
-        document.getElementById('kpiUpcomingTaskMeta').textContent = 'Tidak ada agenda tertunda';
+        document.getElementById('kpiUpcomingTaskMeta').textContent = 'Tidak ada jadwal tertunda';
       }
 
-      // KPI 4: Stok Menipis
       const lowStockItems = appData.inventory.filter(i => i.qty <= i.minQty);
       document.getElementById('kpiLowStockCount').textContent = `${lowStockItems.length} Item`;
       document.getElementById('kpiLowStockHint').textContent = lowStockItems.length > 0
         ? lowStockItems.map(i => i.name).slice(0, 2).join(', ')
         : 'Semua persediaan aman';
 
-      // Widget: Tagihan Mendesak
       const urgentEl = document.getElementById('dashUrgentBillsList');
       if (unpaidBills.length === 0) {
         urgentEl.innerHTML = `<p class="text-xs font-bold text-emerald-700 bg-emerald-50 p-3.5 rounded-xl text-center">Semua tagihan bulan ini sudah lunas!</p>`;
@@ -2419,7 +2515,6 @@ service cloud.firestore {
         }).join('');
       }
 
-      // Widget: Transaksi Terjadwal Terdekat
       const activeScheds = appData.scheduledTransactions
         .filter(s => s.active)
         .sort((a, b) => a.nextRunDate.localeCompare(b.nextRunDate));
@@ -2454,7 +2549,6 @@ service cloud.firestore {
         }).join('');
       }
 
-      // Grafik Pengeluaran Dashboard
       renderExpenseDoughnutChart('dashCategoryChart', 'dashChartEmpty', monthTx, (inst) => {
         dashChartInstance = inst;
       }, dashChartInstance);
@@ -2601,7 +2695,6 @@ service cloud.firestore {
 
       const monthTx = appData.transactions.filter(t => t.date.startsWith(selectedMonth));
 
-      // Progress Bar Batas Anggaran
       const budgetContainer = document.getElementById('budgetProgressContainer');
       budgetContainer.innerHTML = BUDGET_CATEGORIES.map(cat => {
         const spent = monthTx
@@ -2638,7 +2731,6 @@ service cloud.firestore {
         finChartInstance = inst;
       }, finChartInstance);
 
-      // Filter Riwayat Transaksi
       const typeF = document.getElementById('filterTxType').value;
       const catF = document.getElementById('filterTxCategory').value;
       const memF = filterMemberSel.value;
@@ -2677,7 +2769,6 @@ service cloud.firestore {
         }).join('');
       }
 
-      // Render Daftar Transaksi Terjadwal
       document.getElementById('finSchedCountPill').textContent = appData.scheduledTransactions.filter(s => s.active).length;
       const schedGrid = document.getElementById('scheduledTransactionsGrid');
       if (appData.scheduledTransactions.length === 0) {
@@ -2846,7 +2937,7 @@ service cloud.firestore {
         return { label: `Terlambat ${Math.abs(diff)} hari`, badge: 'bg-rose-100 text-rose-800', border: 'border-rose-300' };
       }
       if (diff <= 5) {
-        return { label: diff === 0 ? 'Jatuh Tempo Hari Ini' : `Segera H-${diff}`, badge: 'bg-amber-100 text-amber-900', border: 'border-amber-300' };
+        return { label: diff === 0 ? 'Jatuh Tempo Hari Ini' : `Jatuh Tempo H-${diff}`, badge: 'bg-amber-100 text-amber-900', border: 'border-amber-300' };
       }
       return { label: 'Belum Lunas', badge: 'bg-sky-100 text-sky-800', border: 'border-slate-200/90' };
     }
@@ -3104,7 +3195,6 @@ service cloud.firestore {
         `;
       }).join('');
 
-      // Daftar Belanja
       document.getElementById('shoppingCountBadge').textContent = `${appData.shoppingList.length} item`;
       const shopContainer = document.getElementById('shoppingListContainer');
       if (appData.shoppingList.length === 0) {
@@ -3289,7 +3379,7 @@ service cloud.firestore {
       );
     }
 
-    // ==================== CATATAN & BRANKAS INFO RUMAH ====================
+    // ==================== CATATAN & INFO PENTING ====================
     function renderNotesSection() {
       const q = (document.getElementById('noteSearchInput').value || '').toLowerCase().trim();
       const cat = document.getElementById('noteCategoryFilter').value;
@@ -3482,13 +3572,28 @@ service cloud.firestore {
     // ==================== MASTER RENDER ====================
     function renderAll() {
       const member = getActiveMember();
-      document.getElementById('sidebarFamilyCode').textContent = familyCode;
-      document.getElementById('activeMemberNameHeader').textContent = member.name;
-      const badgeEl = document.getElementById('activeMemberBadge');
-      badgeEl.textContent = getInitials(member.name);
-      badgeEl.className = `w-7 h-7 rounded-lg ${getMemberColorClasses(member.color)} text-xs font-extrabold flex items-center justify-center shrink-0`;
+      const initials = getInitials(member.name);
+      const avatarCls = getMemberColorClasses(member.color);
 
-      // Update Badges di Navigasi
+      const sideCode = document.getElementById('sidebarFamilyCode');
+      if (sideCode) sideCode.textContent = familyCode;
+
+      const mobName = document.getElementById('mobileActiveMemberName');
+      const mobAv = document.getElementById('mobileActiveMemberAvatar');
+      if (mobName) mobName.textContent = member.name;
+      if (mobAv) {
+        mobAv.textContent = initials;
+        mobAv.className = `w-5 h-5 rounded-md ${avatarCls} text-[10px] font-extrabold flex items-center justify-center shrink-0`;
+      }
+
+      const deskName = document.getElementById('desktopActiveMemberName');
+      const deskAv = document.getElementById('desktopActiveMemberAvatar');
+      if (deskName) deskName.textContent = member.name;
+      if (deskAv) {
+        deskAv.textContent = initials;
+        deskAv.className = `w-7 h-7 rounded-lg ${avatarCls} text-xs font-extrabold flex items-center justify-center shrink-0`;
+      }
+
       const unpaidCount = appData.bills.filter(b => !b.isPaid).length;
       ['badgeUnpaidBillsSidebar', 'badgeUnpaidBillsMobile'].forEach(id => {
         const el = document.getElementById(id);
@@ -3527,6 +3632,7 @@ service cloud.firestore {
 
     // ==================== EXPOSE KE WINDOW ====================
     Object.assign(window, {
+      triggerPwaInstall,
       switchTab,
       switchFinanceSubTab,
       openModal,
@@ -3585,11 +3691,9 @@ service cloud.firestore {
 
     // ==================== INISIALISASI APLIKASI ====================
     window.addEventListener('DOMContentLoaded', () => {
-      // Muat preferensi ukuran huruf
       const savedScale = localStorage.getItem(STORAGE_KEYS.FONT_SCALE) || 'normal';
       setFontScale(savedScale);
 
-      // Baca Kode Keluarga 6-karakter dari query parameter ?family=XXXXXX atau localStorage
       let urlFamily = null;
       try {
         const params = new URLSearchParams(window.location.search);
@@ -3604,20 +3708,16 @@ service cloud.firestore {
       localStorage.setItem(STORAGE_KEYS.FAMILY_CODE, familyCode);
       syncFamilyCodeToUrl(familyCode);
 
-      // Muat profil anggota aktif & data rumah tangga lokal
       activeMemberId = localStorage.getItem(STORAGE_KEYS.ACTIVE_MEMBER) || 'mem_ayah';
       loadLocalData();
 
-      // Inisialisasi input tanggal
       document.getElementById('txDate').value = getTodayISO();
       document.getElementById('finMonthFilter').value = getTodayISO().slice(0, 7);
 
-      // Proses transaksi terjadwal otomatis & render tampilan awal
       processAutoScheduledTransactions();
       switchFinanceSubTab('riwayat');
       switchTab('beranda');
 
-      // Otomatis hubungkan ke Firebase Firestore proyek rumahku-362c4
       initFirebaseAutoConnect();
     });
   </script>
