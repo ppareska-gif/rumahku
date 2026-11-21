@@ -30,6 +30,21 @@
         extend: {
           fontFamily: {
             sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            theme: {
+              50: 'var(--theme-50)',
+              100: 'var(--theme-100)',
+              200: 'var(--theme-200)',
+              300: 'var(--theme-300)',
+              400: 'var(--theme-400)',
+              500: 'var(--theme-500)',
+              600: 'var(--theme-600)',
+              700: 'var(--theme-700)',
+              800: 'var(--theme-800)',
+              900: 'var(--theme-900)',
+              950: 'var(--theme-950)',
+            }
           }
         }
       }
@@ -41,6 +56,21 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
+    /* Variabel Tema Warna Dinamis (Default: Emerald) */
+    :root {
+      --theme-50: #ecfdf5;
+      --theme-100: #d1fae5;
+      --theme-200: #a7f3d0;
+      --theme-300: #6ee7b7;
+      --theme-400: #34d399;
+      --theme-500: #10b981;
+      --theme-600: #059669;
+      --theme-700: #047857;
+      --theme-800: #065f46;
+      --theme-900: #064e3b;
+      --theme-950: #022c22;
+    }
+
     /* Skala huruf dasar & mode Teks Besar ramah lansia (html.large-text) */
     html {
       font-size: 16px;
@@ -83,7 +113,7 @@
     }
   </style>
 </head>
-<body class="antialiased selection:bg-emerald-200 selection:text-emerald-950">
+<body class="antialiased selection:bg-theme-200 selection:text-theme-950">
 
   <div class="min-h-screen flex flex-col lg:flex-row">
 
@@ -93,11 +123,11 @@
     <aside class="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 bg-white border-r border-slate-200/90 z-30">
       <!-- Brand Header -->
       <div class="p-5 border-b border-slate-100 flex items-center gap-3">
-        <div class="w-10 h-10 rounded-2xl bg-emerald-600 flex items-center justify-center text-white shadow-md shadow-emerald-600/20 shrink-0">
+        <div class="w-10 h-10 rounded-2xl bg-theme-600 flex items-center justify-center text-white shadow-md shadow-theme-600/20 shrink-0 transition-colors">
           <i data-lucide="home" class="w-5 h-5"></i>
         </div>
         <div>
-          <h1 class="text-lg font-extrabold tracking-tight text-slate-900">Rumah<span class="text-emerald-600">Ku</span></h1>
+          <h1 class="text-lg font-extrabold tracking-tight text-slate-900">Rumah<span class="text-theme-600">Ku</span></h1>
           <p class="text-[11px] font-semibold text-slate-500">Asisten Keluarga & Rumah</p>
         </div>
       </div>
@@ -112,7 +142,7 @@
         </div>
         <div class="flex items-center justify-between gap-1">
           <span id="sidebarFamilyCode" class="text-base font-extrabold tracking-widest text-slate-900">------</span>
-          <button onclick="copyFamilyShareLink()" class="px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-extrabold flex items-center gap-1 shadow-2xs transition" title="Salin Link Undangan HP">
+          <button onclick="copyFamilyShareLink()" class="px-2.5 py-1.5 rounded-xl bg-theme-600 hover:bg-theme-700 text-white text-[11px] font-extrabold flex items-center gap-1 shadow-2xs transition" title="Salin Link Undangan HP">
             <i data-lucide="link" class="w-3 h-3"></i>
             <span>Salin Link</span>
           </button>
@@ -166,17 +196,17 @@
           </span>
         </button>
 
-        <button onclick="switchTab('keluarga')" data-nav="keluarga" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-extrabold transition">
+        <button onclick="switchTab('setting')" data-nav="setting" class="nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-extrabold transition">
           <span class="flex items-center gap-2.5">
-            <i data-lucide="users" class="w-4 h-4 shrink-0"></i>
-            <span>Keluarga</span>
+            <i data-lucide="settings" class="w-4 h-4 shrink-0"></i>
+            <span>Setting</span>
           </span>
         </button>
       </nav>
 
       <!-- Footer Toggle Ukuran Huruf (Teks: Normal / Teks: Besar) -->
       <div class="p-3.5 border-t border-slate-100 space-y-2">
-        <button onclick="triggerPwaInstall()" id="sidebarPwaInstallBtn" class="hidden w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold flex items-center justify-center gap-2 shadow-2xs transition">
+        <button onclick="triggerPwaInstall()" id="sidebarPwaInstallBtn" class="hidden w-full py-2.5 px-3 rounded-xl bg-theme-600 hover:bg-theme-700 text-white text-xs font-extrabold flex items-center justify-center gap-2 shadow-2xs transition">
           <i data-lucide="download-cloud" class="w-4 h-4"></i>
           <span>Pasang Aplikasi</span>
         </button>
@@ -186,7 +216,7 @@
             <i data-lucide="type" class="w-4 h-4 text-amber-600"></i>
             <span id="sidebarFontToggleLabel">Teks: Normal</span>
           </span>
-          <span class="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md">Ubah</span>
+          <span class="text-[10px] font-bold text-theme-700 bg-theme-100 px-2 py-0.5 rounded-md">Ubah</span>
         </button>
       </div>
     </aside>
@@ -203,11 +233,11 @@
         <div class="lg:hidden flex items-center justify-between gap-2 px-3 py-2.5">
           <!-- Sisi Kiri Mobile: Ikon Rumah + Judul RumahKu + Lencana Status Ringkas -->
           <div class="flex items-center gap-2 min-w-0">
-            <div class="w-8 h-8 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-2xs shrink-0">
+            <div class="w-8 h-8 rounded-xl bg-theme-600 flex items-center justify-center text-white shadow-2xs shrink-0 transition-colors">
               <i data-lucide="home" class="w-4 h-4"></i>
             </div>
-            <span class="font-bold text-base text-slate-900 shrink-0">Rumah<span class="text-emerald-600">Ku</span></span>
-            <button onclick="switchTab('keluarga')" id="mobileSyncBadge" class="shrink-0 text-[11px] font-medium px-2 py-0.5 rounded-full whitespace-nowrap bg-amber-100 text-amber-800 transition" title="Status Koneksi Cloud">
+            <span class="font-bold text-base text-slate-900 shrink-0">Rumah<span class="text-theme-600">Ku</span></span>
+            <button onclick="switchTab('setting', 'sync')" id="mobileSyncBadge" class="shrink-0 text-[11px] font-medium px-2 py-0.5 rounded-full whitespace-nowrap bg-amber-100 text-amber-800 transition" title="Status Koneksi Cloud">
               • Lokal
             </button>
           </div>
@@ -218,10 +248,10 @@
               A+
             </button>
 
-            <button onclick="openProfileSwitcherModal()" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold shrink-0 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-slate-900 flex items-center gap-1.5 transition">
-              <span id="mobileActiveMemberAvatar" class="w-5 h-5 rounded-md bg-emerald-600 text-white text-[10px] font-extrabold flex items-center justify-center shrink-0">AY</span>
+            <button onclick="openProfileSwitcherModal()" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold shrink-0 bg-theme-50 hover:bg-theme-100 border border-theme-200 text-slate-900 flex items-center gap-1.5 transition">
+              <span id="mobileActiveMemberAvatar" class="w-5 h-5 rounded-md bg-theme-600 text-white text-[10px] font-extrabold flex items-center justify-center shrink-0">AY</span>
               <span id="mobileActiveMemberName" class="max-w-[58px] truncate">Ayah</span>
-              <span class="text-emerald-700">▾</span>
+              <span class="text-theme-700">▾</span>
             </button>
           </div>
         </div>
@@ -254,9 +284,9 @@
             <i data-lucide="sticky-note" class="w-3.5 h-3.5"></i>
             <span>Catatan</span>
           </button>
-          <button onclick="switchTab('keluarga')" data-nav="keluarga" class="nav-btn-mobile min-h-[38px] whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition">
-            <i data-lucide="users" class="w-3.5 h-3.5"></i>
-            <span>Keluarga</span>
+          <button onclick="switchTab('setting')" data-nav="setting" class="nav-btn-mobile min-h-[38px] whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition">
+            <i data-lucide="settings" class="w-3.5 h-3.5"></i>
+            <span>Setting</span>
           </button>
         </div>
 
@@ -264,14 +294,14 @@
         <div class="hidden lg:flex max-w-7xl mx-auto px-8 h-16 items-center justify-between gap-4">
           <div class="flex items-center gap-3 min-w-0">
             <h2 id="desktopPageTitle" class="text-lg font-extrabold text-slate-900 truncate">Dashboard Ringkasan</h2>
-            <button onclick="switchTab('keluarga')" id="desktopSyncBadge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-800 hover:opacity-90 transition">
+            <button onclick="switchTab('setting', 'sync')" id="desktopSyncBadge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-800 hover:opacity-90 transition">
               <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
               <span>Menyinkronkan...</span>
             </button>
           </div>
 
           <div class="flex items-center gap-2.5 shrink-0">
-            <button onclick="triggerPwaInstall()" id="desktopPwaInstallBtn" class="hidden min-h-[42px] px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold items-center gap-1.5 shadow-2xs transition">
+            <button onclick="triggerPwaInstall()" id="desktopPwaInstallBtn" class="hidden min-h-[42px] px-3.5 py-2 rounded-xl bg-theme-600 hover:bg-theme-700 text-white text-xs font-extrabold items-center gap-1.5 shadow-2xs transition">
               <i data-lucide="download-cloud" class="w-4 h-4"></i>
               <span>Pasang Aplikasi di HP</span>
             </button>
@@ -281,11 +311,11 @@
               <span id="desktopFontLabel">Teks: Normal</span>
             </button>
 
-            <button onclick="openProfileSwitcherModal()" class="min-h-[42px] flex items-center gap-2.5 pl-2.5 pr-3.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition">
-              <span id="desktopActiveMemberAvatar" class="w-7 h-7 rounded-lg bg-emerald-600 text-white text-xs font-extrabold flex items-center justify-center shrink-0">AY</span>
+            <button onclick="openProfileSwitcherModal()" class="min-h-[42px] flex items-center gap-2.5 pl-2.5 pr-3.5 py-1.5 rounded-xl bg-theme-50 hover:bg-theme-100 border border-theme-200 transition">
+              <span id="desktopActiveMemberAvatar" class="w-7 h-7 rounded-lg bg-theme-600 text-white text-xs font-extrabold flex items-center justify-center shrink-0">AY</span>
               <div class="text-left">
                 <span id="desktopActiveMemberName" class="block text-xs font-extrabold text-slate-900 leading-tight">Ayah</span>
-                <span class="block text-[10px] font-bold text-emerald-700 leading-tight">Ganti User ▾</span>
+                <span class="block text-[10px] font-bold text-theme-700 leading-tight">Ganti User ▾</span>
               </div>
             </button>
           </div>
@@ -297,23 +327,23 @@
       <!-- ================================================================ -->
       <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6 space-y-6">
 
-        <!-- Banner Instalasi PWA (Muncul otomatis jika browser mendukung beforeinstallprompt) -->
-        <div id="pwaInstallBanner" class="hidden bg-emerald-600 text-white rounded-2xl p-4 shadow-md flex items-center justify-between gap-3">
+        <!-- Banner Instalasi PWA -->
+        <div id="pwaInstallBanner" class="hidden bg-theme-600 text-white rounded-2xl p-4 shadow-md flex items-center justify-between gap-3">
           <div class="flex items-center gap-3 min-w-0">
             <div class="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
               <i data-lucide="smartphone" class="w-5 h-5"></i>
             </div>
             <div class="min-w-0">
               <p class="text-xs sm:text-sm font-extrabold truncate">Pasang RumahKu di Layar Utama HP</p>
-              <p class="text-[11px] text-emerald-100 truncate">Buka layar penuh tanpa bilah browser & lebih cepat</p>
+              <p class="text-[11px] text-theme-100 truncate">Buka layar penuh tanpa bilah browser & lebih cepat</p>
             </div>
           </div>
-          <button onclick="triggerPwaInstall()" class="shrink-0 min-h-[40px] px-3.5 py-2 rounded-xl bg-white text-emerald-800 hover:bg-emerald-50 text-xs font-extrabold shadow-2xs transition">
+          <button onclick="triggerPwaInstall()" class="shrink-0 min-h-[40px] px-3.5 py-2 rounded-xl bg-white text-theme-800 hover:bg-theme-50 text-xs font-extrabold shadow-2xs transition">
             Pasang Aplikasi di HP
           </button>
         </div>
 
-        <!-- Banner Peringatan Firestore Rules (Muncul otomatis jika permission-denied) -->
+        <!-- Banner Peringatan Firestore Rules -->
         <div id="firestoreRulesWarningBanner" class="hidden bg-amber-50 border-2 border-amber-300 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div class="flex items-start gap-3">
             <i data-lucide="shield-alert" class="w-5 h-5 text-amber-700 shrink-0 mt-0.5"></i>
@@ -322,7 +352,7 @@
               <p>Data tersimpan lokal dengan aman. Agar tersinkronisasi antar-HP di proyek <strong>rumahku-362c4</strong>, buka <strong>Firestore Database → Rules</strong> dan izinkan akses koleksi <code class="bg-amber-100 px-1.5 py-0.5 rounded font-mono">rumahku_families</code>.</p>
             </div>
           </div>
-          <button onclick="switchTab('keluarga')" class="shrink-0 min-h-[40px] px-3.5 py-2 rounded-xl bg-amber-600 text-white text-xs font-extrabold">Lihat Rules</button>
+          <button onclick="switchTab('setting', 'sync')" class="shrink-0 min-h-[40px] px-3.5 py-2 rounded-xl bg-amber-600 text-white text-xs font-extrabold">Lihat Rules</button>
         </div>
 
         <!-- ============================================================== -->
@@ -330,29 +360,29 @@
         <!-- ============================================================== -->
         <section id="panel-beranda" class="page-panel space-y-6 animate-panel">
           <!-- Banner Sapaan Personal & 4 Aksi Cepat -->
-          <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-950 rounded-3xl p-5 sm:p-7 text-white shadow-lg flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+          <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-theme-950 rounded-3xl p-5 sm:p-7 text-white shadow-lg flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5 transition-colors">
             <div class="space-y-2">
               <div class="flex flex-wrap items-center gap-2">
-                <span id="dashDateDisplay" class="px-3 py-1 rounded-full bg-white/10 text-emerald-300 text-xs font-bold">Memuat tanggal...</span>
-                <span id="dashActiveRoleBadge" class="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-200 text-xs font-bold">Kepala Keluarga</span>
+                <span id="dashDateDisplay" class="px-3 py-1 rounded-full bg-white/10 text-theme-300 text-xs font-bold">Memuat tanggal...</span>
+                <span id="dashActiveRoleBadge" class="px-3 py-1 rounded-full bg-theme-500/20 text-theme-200 text-xs font-bold">Kepala Keluarga</span>
               </div>
               <h2 id="dashGreetingTitle" class="text-2xl sm:text-3xl font-extrabold tracking-tight">Selamat Datang, Ayah!</h2>
-              <p class="text-xs sm:text-sm text-slate-300 max-w-xl">Pantau saldo keluarga, tagihan rutin, jadwal perawatan rumah, dan stok kebutuhan harian secara real-time bersama seluruh anggota keluarga.</p>
+              <p class="text-xs sm:text-sm text-slate-300 max-w-xl">Pantau saldo rekening & dompet keluarga, tagihan rutin, jadwal perawatan rumah, dan stok kebutuhan harian secara real-time.</p>
             </div>
 
             <!-- 4 Tombol Aksi Cepat -->
             <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-2.5 shrink-0">
-              <button onclick="openQuickTxModal()" class="min-h-[44px] px-3.5 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md transition">
+              <button onclick="openQuickTxModal()" class="min-h-[44px] px-3.5 py-3 rounded-2xl bg-theme-500 hover:bg-theme-400 text-slate-950 font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md transition">
                 <i data-lucide="plus-circle" class="w-4 h-4 shrink-0"></i>
                 <span>Catat Transaksi</span>
+              </button>
+              <button onclick="openTransferModal()" class="min-h-[44px] px-3.5 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition">
+                <i data-lucide="arrow-left-right" class="w-4 h-4 text-theme-300 shrink-0"></i>
+                <span>Transfer Rekening</span>
               </button>
               <button onclick="openModal('billModal')" class="min-h-[44px] px-3.5 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition">
                 <i data-lucide="receipt" class="w-4 h-4 text-amber-300 shrink-0"></i>
                 <span>Tambah Tagihan</span>
-              </button>
-              <button onclick="openModal('scheduleModal')" class="min-h-[44px] px-3.5 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition">
-                <i data-lucide="calendar-plus" class="w-4 h-4 text-indigo-300 shrink-0"></i>
-                <span>Tambah Agenda</span>
               </button>
               <button onclick="switchTab('stok')" class="min-h-[44px] px-3.5 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition">
                 <i data-lucide="shopping-basket" class="w-4 h-4 text-rose-300 shrink-0"></i>
@@ -363,10 +393,10 @@
 
           <!-- 4 Kartu KPI Utama -->
           <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-            <div onclick="switchTab('keuangan')" class="cursor-pointer bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs hover:border-emerald-300 transition">
+            <div onclick="switchTab('keuangan')" class="cursor-pointer bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs hover:border-theme-300 transition">
               <div class="flex items-center justify-between">
-                <span class="text-xs font-extrabold uppercase tracking-wider text-slate-500">Saldo Bulan Ini</span>
-                <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <span class="text-xs font-extrabold uppercase tracking-wider text-slate-500">Arus Kas Bulan Ini</span>
+                <div class="w-10 h-10 rounded-xl bg-theme-50 text-theme-600 flex items-center justify-center">
                   <i data-lucide="wallet" class="w-5 h-5"></i>
                 </div>
               </div>
@@ -408,6 +438,30 @@
             </div>
           </div>
 
+          <!-- Ringkasan Saldo Rekening Bank, Kartu Debit & Dompet -->
+          <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs space-y-3.5">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-theme-100 text-theme-700 flex items-center justify-center">
+                  <i data-lucide="landmark" class="w-4 h-4"></i>
+                </div>
+                <div>
+                  <h3 class="text-base font-extrabold text-slate-900">Rekening Bank, Kartu Debit & Dompet</h3>
+                  <p class="text-xs text-slate-500">Total Saldo Gabungan: <strong id="dashTotalAccountsBalance" class="text-theme-700">Rp 0</strong></p>
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <button onclick="openTransferModal()" class="min-h-[38px] px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-extrabold transition">
+                  ⇄ Transfer
+                </button>
+                <button onclick="switchTab('setting', 'rekening')" class="min-h-[38px] px-3 py-1.5 rounded-xl bg-theme-50 hover:bg-theme-100 text-theme-700 text-xs font-extrabold transition">
+                  Kelola Rekening →
+                </button>
+              </div>
+            </div>
+            <div id="dashAccountsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3"></div>
+          </div>
+
           <!-- Grid Tengah: Tagihan Mendesak, Transaksi Terjadwal & Grafik Distribusi Pengeluaran -->
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <div class="lg:col-span-7 space-y-6">
@@ -423,7 +477,7 @@
                       <p class="text-xs text-slate-500">Segera lunasi sebelum jatuh tempo</p>
                     </div>
                   </div>
-                  <button onclick="switchTab('tagihan')" class="text-xs font-extrabold text-emerald-700 hover:underline">Lihat Semua →</button>
+                  <button onclick="switchTab('tagihan')" class="text-xs font-extrabold text-theme-700 hover:underline">Lihat Semua →</button>
                 </div>
                 <div id="dashUrgentBillsList" class="space-y-3"></div>
               </div>
@@ -454,7 +508,7 @@
                     <h3 class="text-base font-extrabold text-slate-900">Distribusi Pengeluaran</h3>
                     <p class="text-xs text-slate-500">Pengeluaran rumah tangga bulan ini</p>
                   </div>
-                  <button onclick="switchTab('keuangan')" class="text-xs font-extrabold text-emerald-700 hover:underline">Detail</button>
+                  <button onclick="switchTab('keuangan')" class="text-xs font-extrabold text-theme-700 hover:underline">Detail</button>
                 </div>
                 <div class="relative h-64 my-4 flex items-center justify-center">
                   <canvas id="dashCategoryChart"></canvas>
@@ -470,22 +524,25 @@
         </section>
 
         <!-- ============================================================== -->
-        <!-- HALAMAN 2: KEUANGAN & TRANSAKSI TERJADWAL                      -->
+        <!-- HALAMAN 2: KEUANGAN, REKENING & TRANSAKSI TERJADWAL            -->
         <!-- ============================================================== -->
         <section id="panel-keuangan" class="page-panel hidden space-y-6 animate-panel">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h2 class="text-2xl font-extrabold text-slate-900">Keuangan & Terjadwal</h2>
-              <p class="text-xs sm:text-sm text-slate-500">Catat arus kas harian, pantau batas anggaran, dan atur transaksi rutin otomatis.</p>
+              <p class="text-xs sm:text-sm text-slate-500">Catat pemasukan & pengeluaran per kategori, kelola rekening/dompet, dan atur transaksi rutin.</p>
             </div>
 
-            <!-- 2 Sub-Tab Keuangan -->
-            <div class="inline-flex p-1.5 rounded-2xl bg-slate-200/80 self-start">
-              <button onclick="switchFinanceSubTab('riwayat')" id="finSubTab-riwayat" class="min-h-[40px] px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition">
+            <!-- 3 Sub-Tab Keuangan -->
+            <div class="inline-flex flex-wrap p-1.5 rounded-2xl bg-slate-200/80 self-start gap-1">
+              <button onclick="switchFinanceSubTab('riwayat')" id="finSubTab-riwayat" class="min-h-[40px] px-3.5 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition">
                 Transaksi & Anggaran
               </button>
-              <button onclick="switchFinanceSubTab('terjadwal')" id="finSubTab-terjadwal" class="min-h-[40px] px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition flex items-center gap-1.5">
-                <span>Transaksi Terjadwal</span>
+              <button onclick="switchFinanceSubTab('rekening')" id="finSubTab-rekening" class="min-h-[40px] px-3.5 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition">
+                Rekening & Transfer
+              </button>
+              <button onclick="switchFinanceSubTab('terjadwal')" id="finSubTab-terjadwal" class="min-h-[40px] px-3.5 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition flex items-center gap-1.5">
+                <span>Terjadwal</span>
                 <span id="finSchedCountPill" class="px-2 py-0.5 rounded-full bg-indigo-600 text-white text-[11px]">0</span>
               </button>
             </div>
@@ -498,19 +555,19 @@
               <div class="lg:col-span-5 bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs">
                 <div class="flex items-center justify-between mb-4">
                   <h3 class="text-base font-extrabold text-slate-900">Catat Transaksi Baru</h3>
-                  <span id="finFormRecorderBadge" class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 text-xs font-bold">Oleh: Ayah</span>
+                  <span id="finFormRecorderBadge" class="px-2.5 py-1 rounded-lg bg-theme-50 text-theme-800 text-xs font-bold">Oleh: Ayah</span>
                 </div>
 
                 <form onsubmit="handleAddTransaction(event)" class="space-y-3.5">
                   <div class="grid grid-cols-2 gap-2">
                     <label class="cursor-pointer">
-                      <input type="radio" name="txType" value="pengeluaran" checked class="peer sr-only" />
+                      <input type="radio" name="txType" value="pengeluaran" checked onchange="syncTransactionCategoryDropdown('txType', 'txCategory', 'txSubCategory')" class="peer sr-only" />
                       <div class="min-h-[44px] flex items-center justify-center rounded-xl border-2 border-slate-200 text-xs font-extrabold peer-checked:border-rose-500 peer-checked:bg-rose-50 peer-checked:text-rose-700 transition">
                         Pengeluaran (-)
                       </div>
                     </label>
                     <label class="cursor-pointer">
-                      <input type="radio" name="txType" value="pemasukan" class="peer sr-only" />
+                      <input type="radio" name="txType" value="pemasukan" onchange="syncTransactionCategoryDropdown('txType', 'txCategory', 'txSubCategory')" class="peer sr-only" />
                       <div class="min-h-[44px] flex items-center justify-center rounded-xl border-2 border-slate-200 text-xs font-extrabold peer-checked:border-emerald-500 peer-checked:bg-emerald-50 peer-checked:text-emerald-700 transition">
                         Pemasukan (+)
                       </div>
@@ -519,27 +576,30 @@
 
                   <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Nominal (Rp)</label>
-                    <input type="number" id="txAmount" min="100" step="100" required placeholder="Contoh: 150000" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-sm font-extrabold focus:outline-none focus:border-emerald-600" />
+                    <div class="relative">
+                      <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-extrabold text-slate-400">Rp</span>
+                      <input type="text" inputmode="numeric" id="txAmount" oninput="handleRibuanInput(this)" required placeholder="150.000" class="w-full min-h-[44px] pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-base font-extrabold focus:outline-none focus:border-theme-600" />
+                    </div>
                   </div>
 
-                  <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Keterangan</label>
-                    <input type="text" id="txDesc" required placeholder="Contoh: Belanja sayur & lauk mingguan" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-sm font-medium focus:outline-none focus:border-emerald-600" />
-                  </div>
-
-                  <div class="grid grid-cols-2 gap-2.5">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     <div>
-                      <label class="block text-xs font-bold text-slate-700 mb-1">Kategori</label>
-                      <select id="txCategory" class="w-full min-h-[44px] px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs font-bold focus:outline-none">
-                        <option value="Belanja Dapur">Belanja Dapur</option>
-                        <option value="Tagihan & Utilitas">Tagihan & Utilitas</option>
-                        <option value="Perawatan Rumah">Perawatan Rumah</option>
-                        <option value="Transportasi">Transportasi</option>
-                        <option value="Kesehatan">Kesehatan</option>
-                        <option value="Pendidikan">Pendidikan</option>
-                        <option value="Gaji/Pendapatan">Gaji/Pendapatan</option>
-                        <option value="Lainnya">Lainnya</option>
-                      </select>
+                      <div class="flex items-center justify-between mb-1">
+                        <label class="block text-xs font-bold text-slate-700">Kategori</label>
+                        <button type="button" onclick="openQuickCategoryFromForm('txType', 'txCategory')" class="text-[11px] font-extrabold text-theme-700 hover:underline">+ Kategori Baru</button>
+                      </div>
+                      <select id="txCategory" onchange="updateSubCategoryPlaceholder('txType', 'txCategory', 'txSubCategory')" class="w-full min-h-[44px] px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs font-bold focus:outline-none"></select>
+                    </div>
+                    <div>
+                      <label class="block text-xs font-bold text-slate-700 mb-1">Rekening / Kartu / Dompet</label>
+                      <select id="txAccountId" class="w-full min-h-[44px] px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs font-bold focus:outline-none"></select>
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div>
+                      <label class="block text-xs font-bold text-slate-700 mb-1">Sub-Klasifikasi (Opsional)</label>
+                      <input type="text" id="txSubCategory" placeholder="Misal: Sayur, Token Listrik" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs font-semibold focus:outline-none focus:border-theme-600" />
                     </div>
                     <div>
                       <label class="block text-xs font-bold text-slate-700 mb-1">Tanggal</label>
@@ -547,7 +607,12 @@
                     </div>
                   </div>
 
-                  <button type="submit" class="w-full min-h-[46px] py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm shadow-xs transition">
+                  <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Keterangan Transaksi</label>
+                    <input type="text" id="txDesc" required placeholder="Contoh: Belanja sayur & lauk mingguan" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-sm font-medium focus:outline-none focus:border-theme-600" />
+                  </div>
+
+                  <button type="submit" class="w-full min-h-[46px] py-3 rounded-xl bg-theme-600 hover:bg-theme-700 text-white font-extrabold text-sm shadow-xs transition">
                     Simpan Transaksi
                   </button>
                 </form>
@@ -557,52 +622,49 @@
               <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs space-y-5">
                 <div class="flex flex-wrap items-center justify-between gap-2">
                   <div>
-                    <h3 class="text-base font-extrabold text-slate-900">Batas Anggaran & Distribusi</h3>
+                    <h3 class="text-base font-extrabold text-slate-900">Batas Anggaran Pengeluaran</h3>
                     <p class="text-xs text-slate-500">Hijau &lt;75%, Kuning 75–99%, Merah ≥100%</p>
                   </div>
                   <div class="flex items-center gap-2">
                     <input type="month" id="finMonthFilter" onchange="renderFinanceSection()" class="min-h-[40px] px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-300 text-xs font-extrabold text-slate-800" />
-                    <button onclick="openBudgetModal()" class="min-h-[40px] px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition">
-                      Atur Batas
+                    <button onclick="switchTab('setting', 'kategori')" class="min-h-[40px] px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition">
+                      Kelola Kategori & Batas
                     </button>
                   </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
-                  <div class="md:col-span-5 h-48 flex items-center justify-center">
+                  <div class="md:col-span-5 h-52 flex items-center justify-center">
                     <canvas id="finCategoryChart"></canvas>
                     <p id="finChartEmpty" class="hidden text-xs font-semibold text-slate-400 text-center">Belum ada pengeluaran bulan ini.</p>
                   </div>
-                  <div id="budgetProgressContainer" class="md:col-span-7 space-y-3"></div>
+                  <div id="budgetProgressContainer" class="md:col-span-7 space-y-3 max-h-64 overflow-y-auto pr-1"></div>
                 </div>
               </div>
             </div>
 
-            <!-- Riwayat Transaksi dengan Filter Jenis, Kategori & Anggota -->
+            <!-- Riwayat Transaksi dengan Filter Lengkap (Jenis, Kategori, Rekening/Dompet, Anggota) -->
             <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs space-y-4">
-              <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+              <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
                 <div>
                   <h3 class="text-base font-extrabold text-slate-900">Riwayat Transaksi Keluarga</h3>
-                  <p class="text-xs text-slate-500">Filter berdasarkan jenis, kategori, atau anggota keluarga</p>
+                  <p class="text-xs text-slate-500">Filter berdasarkan jenis, kategori, rekening/dompet, atau anggota</p>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   <select id="filterTxType" onchange="renderFinanceSection()" class="min-h-[42px] px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-bold text-slate-700">
                     <option value="all">Semua Jenis</option>
                     <option value="pemasukan">Pemasukan (+)</option>
                     <option value="pengeluaran">Pengeluaran (-)</option>
+                    <option value="transfer">Transfer (⇄)</option>
                   </select>
 
                   <select id="filterTxCategory" onchange="renderFinanceSection()" class="min-h-[42px] px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-bold text-slate-700">
                     <option value="all">Semua Kategori</option>
-                    <option value="Belanja Dapur">Belanja Dapur</option>
-                    <option value="Tagihan & Utilitas">Tagihan & Utilitas</option>
-                    <option value="Perawatan Rumah">Perawatan Rumah</option>
-                    <option value="Transportasi">Transportasi</option>
-                    <option value="Kesehatan">Kesehatan</option>
-                    <option value="Pendidikan">Pendidikan</option>
-                    <option value="Gaji/Pendapatan">Gaji/Pendapatan</option>
-                    <option value="Lainnya">Lainnya</option>
+                  </select>
+
+                  <select id="filterTxAccount" onchange="renderFinanceSection()" class="min-h-[42px] px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-bold text-slate-700">
+                    <option value="all">Semua Rekening/Dompet</option>
                   </select>
 
                   <select id="filterTxMember" onchange="renderFinanceSection()" class="min-h-[42px] px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-bold text-slate-700">
@@ -615,7 +677,34 @@
             </div>
           </div>
 
-          <!-- ==================== SUB-TAB 2B: TRANSAKSI TERJADWAL ==================== -->
+          <!-- ==================== SUB-TAB 2B: REKENING & TRANSFER ANTAR REKENING ==================== -->
+          <div id="finSubView-rekening" class="hidden space-y-6">
+            <div class="bg-theme-50 border border-theme-200 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div class="flex items-start gap-3">
+                <div class="w-10 h-10 rounded-xl bg-theme-600 text-white flex items-center justify-center shrink-0">
+                  <i data-lucide="landmark" class="w-5 h-5"></i>
+                </div>
+                <div>
+                  <h3 class="text-base font-extrabold text-slate-900">Rekening Bank, Kartu Debit, Dompet & E-Wallet</h3>
+                  <p class="text-xs text-slate-600 mt-0.5">Total Saldo Seluruh Akun: <strong id="finTotalAccountsBalance" class="text-theme-700 text-sm">Rp 0</strong></p>
+                </div>
+              </div>
+              <div class="flex flex-wrap gap-2">
+                <button onclick="openTransferModal()" class="min-h-[44px] px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-extrabold flex items-center gap-1.5 transition">
+                  <i data-lucide="arrow-left-right" class="w-4 h-4"></i>
+                  <span>Transfer Antar Rekening</span>
+                </button>
+                <button onclick="openAccountModal()" class="min-h-[44px] px-4 py-2.5 rounded-xl bg-theme-600 hover:bg-theme-700 text-white text-xs sm:text-sm font-extrabold flex items-center gap-1.5 transition">
+                  <i data-lucide="plus" class="w-4 h-4"></i>
+                  <span>Tambah Rekening / Dompet</span>
+                </button>
+              </div>
+            </div>
+
+            <div id="finAccountsGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+          </div>
+
+          <!-- ==================== SUB-TAB 2C: TRANSAKSI TERJADWAL ==================== -->
           <div id="finSubView-terjadwal" class="hidden space-y-6">
             <div class="bg-indigo-50 border border-indigo-200 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div class="flex items-start gap-3">
@@ -624,7 +713,7 @@
                 </div>
                 <div>
                   <h3 class="text-base font-extrabold text-indigo-950">Transaksi Rutin & Terjadwal</h3>
-                  <p class="text-xs text-indigo-800 mt-0.5">Jadwalkan gaji bulanan, uang belanja, iuran lingkungan, atau tabungan. Pilih mode <strong>Otomatis Catat</strong> atau <strong>Konfirmasi Manual</strong>.</p>
+                  <p class="text-xs text-indigo-800 mt-0.5">Jadwalkan gaji bulanan, uang belanja, iuran lingkungan, atau tabungan ke rekening tertentu.</p>
                 </div>
               </div>
               <button onclick="openScheduledModal()" class="shrink-0 min-h-[44px] px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-extrabold shadow-xs transition flex items-center justify-center gap-1.5">
@@ -646,7 +735,7 @@
               <h2 class="text-2xl font-extrabold text-slate-900">Tagihan & Cicilan</h2>
               <p class="text-xs sm:text-sm text-slate-500">Pelacakan jatuh tempo otomatis (Listrik PLN, PDAM, WiFi, Cicilan) dan pencatatan pembayaran terintegrasi.</p>
             </div>
-            <button onclick="openModal('billModal')" class="self-start sm:self-auto min-h-[44px] px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-extrabold shadow-xs transition flex items-center gap-1.5">
+            <button onclick="openModal('billModal')" class="self-start sm:self-auto min-h-[44px] px-4 py-2.5 rounded-xl bg-theme-600 hover:bg-theme-700 text-white text-xs sm:text-sm font-extrabold shadow-xs transition flex items-center gap-1.5">
               <i data-lucide="plus" class="w-4 h-4"></i>
               <span>Tambah Tagihan</span>
             </button>
@@ -726,12 +815,12 @@
                 </div>
                 <span id="shoppingCountBadge" class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-extrabold">0 item</span>
               </div>
-
+              <!-- Tambah Manual ke Daftar Belanja -->
               <form onsubmit="handleAddShoppingItem(event)" class="space-y-2 pt-2 border-t border-slate-100">
                 <input type="text" id="shopNewName" required placeholder="Tambah item belanja (misal: Telur 1kg)" class="w-full min-h-[42px] px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-semibold" />
                 <div class="grid grid-cols-12 gap-2">
                   <input type="number" id="shopNewQty" min="1" value="1" required class="col-span-3 min-h-[42px] px-2.5 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-bold text-center" />
-                  <input type="number" id="shopNewPrice" min="0" step="500" placeholder="Harga (Rp)" required class="col-span-6 min-h-[42px] px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-bold" />
+                  <input type="text" inputmode="numeric" id="shopNewPrice" oninput="handleRibuanInput(this)" placeholder="Harga (Rp)" required class="col-span-6 min-h-[42px] px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-bold" />
                   <button type="submit" class="col-span-3 min-h-[42px] py-2 rounded-xl bg-slate-900 text-white text-xs font-extrabold">+ Add</button>
                 </div>
               </form>
@@ -741,9 +830,9 @@
               <div class="pt-3 border-t border-slate-100 space-y-3">
                 <div class="flex items-center justify-between">
                   <span class="text-xs font-bold text-slate-600">Estimasi Total Belanja:</span>
-                  <span id="shoppingTotalDisplay" class="text-lg font-extrabold text-emerald-700">Rp 0</span>
+                  <span id="shoppingTotalDisplay" class="text-lg font-extrabold text-theme-700">Rp 0</span>
                 </div>
-                <button onclick="openFinishShoppingModal()" class="w-full min-h-[46px] py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm shadow-xs transition flex items-center justify-center gap-2">
+                <button onclick="openFinishShoppingModal()" class="w-full min-h-[46px] py-3 rounded-xl bg-theme-600 hover:bg-theme-700 text-white font-extrabold text-xs sm:text-sm shadow-xs transition flex items-center justify-center gap-2">
                   <i data-lucide="check-circle-2" class="w-4 h-4"></i>
                   <span>Selesai Belanja & Restock</span>
                 </button>
@@ -786,124 +875,193 @@
         </section>
 
         <!-- ============================================================== -->
-        <!-- HALAMAN 7: KELUARGA & PENGATURAN                               -->
+        <!-- HALAMAN 7: SETTING (TEMA, KATEGORI, REKENING, ANGGOTA, SYNC)   -->
         <!-- ============================================================== -->
-        <section id="panel-keluarga" class="page-panel hidden space-y-6 animate-panel">
+        <section id="panel-setting" class="page-panel hidden space-y-6 animate-panel">
           <div>
-            <h2 class="text-2xl font-extrabold text-slate-900">Keluarga & Pengaturan</h2>
-            <p class="text-xs sm:text-sm text-slate-500">Kelola profil anggota keluarga, bagikan link sinkronisasi antar-HP, dan atur cadangan data.</p>
+            <h2 class="text-2xl font-extrabold text-slate-900">Setting & Pengaturan Rumah</h2>
+            <p class="text-xs sm:text-sm text-slate-500">Atur tema warna aplikasi, kategori pemasukan & pengeluaran, rekening/dompet, anggota keluarga, dan sinkronisasi cloud.</p>
           </div>
 
-          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <!-- Kolom Kiri: Profil Anggota Keluarga & Pengaturan Tampilan/Backup -->
-            <div class="lg:col-span-6 space-y-6">
-              <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs space-y-4">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <h3 class="text-base font-extrabold text-slate-900">Profil Anggota Keluarga</h3>
-                    <p class="text-xs text-slate-500">Ketuk profil untuk berpindah pengguna aktif</p>
-                  </div>
-                  <button onclick="openMemberModal()" class="min-h-[42px] px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold flex items-center gap-1.5">
-                    <i data-lucide="user-plus" class="w-4 h-4"></i>
-                    <span>Tambah Anggota</span>
-                  </button>
-                </div>
+          <!-- 5 Sub-Tab Setting -->
+          <div class="overflow-x-auto no-scrollbar pb-1">
+            <div class="inline-flex p-1.5 rounded-2xl bg-slate-200/80 gap-1 min-w-max">
+              <button onclick="switchSettingSubTab('tema')" id="settingSubTab-tema" class="min-h-[40px] px-3.5 py-2 rounded-xl text-xs font-extrabold transition flex items-center gap-1.5">
+                <i data-lucide="palette" class="w-3.5 h-3.5"></i>
+                <span>Tema & Tampilan</span>
+              </button>
+              <button onclick="switchSettingSubTab('kategori')" id="settingSubTab-kategori" class="min-h-[40px] px-3.5 py-2 rounded-xl text-xs font-extrabold transition flex items-center gap-1.5">
+                <i data-lucide="tags" class="w-3.5 h-3.5"></i>
+                <span>Kategori Keuangan</span>
+              </button>
+              <button onclick="switchSettingSubTab('rekening')" id="settingSubTab-rekening" class="min-h-[40px] px-3.5 py-2 rounded-xl text-xs font-extrabold transition flex items-center gap-1.5">
+                <i data-lucide="landmark" class="w-3.5 h-3.5"></i>
+                <span>Rekening & Dompet</span>
+              </button>
+              <button onclick="switchSettingSubTab('anggota')" id="settingSubTab-anggota" class="min-h-[40px] px-3.5 py-2 rounded-xl text-xs font-extrabold transition flex items-center gap-1.5">
+                <i data-lucide="users" class="w-3.5 h-3.5"></i>
+                <span>Anggota Keluarga</span>
+              </button>
+              <button onclick="switchSettingSubTab('sync')" id="settingSubTab-sync" class="min-h-[40px] px-3.5 py-2 rounded-xl text-xs font-extrabold transition flex items-center gap-1.5">
+                <i data-lucide="cloud" class="w-3.5 h-3.5"></i>
+                <span>Sinkronisasi & Backup</span>
+              </button>
+            </div>
+          </div>
 
-                <div id="familyMembersList" class="space-y-2.5"></div>
+          <!-- ==================== SUB-TAB SETTING 1: TEMA & TAMPILAN ==================== -->
+          <div id="settingSubView-tema" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs space-y-4">
+              <div>
+                <h3 class="text-base font-extrabold text-slate-900">Pilih Tema Warna Aplikasi</h3>
+                <p class="text-xs text-slate-500">Ubah nuansa warna tombol, header, sidebar, dan aksen aplikasi sesuai selera keluarga</p>
+              </div>
+              <div id="themeSwatchesGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
+            </div>
+
+            <div class="lg:col-span-5 bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs space-y-4">
+              <h3 class="text-base font-extrabold text-slate-900">Ukuran Huruf & Aplikasi HP</h3>
+
+              <div class="p-3.5 rounded-xl bg-amber-50/80 border border-amber-200 flex items-center justify-between gap-3">
+                <div>
+                  <p class="text-xs font-extrabold text-slate-900">Ukuran Tulisan Layar</p>
+                  <p class="text-[11px] text-slate-600">Perbesar teks agar nyaman dibaca lansia</p>
+                </div>
+                <div class="flex gap-1.5 shrink-0">
+                  <button onclick="setFontScale('normal')" id="settingsFontNormal" class="min-h-[40px] px-3 py-1.5 rounded-lg text-xs font-extrabold border transition">Teks Normal</button>
+                  <button onclick="setFontScale('elderly')" id="settingsFontElderly" class="min-h-[40px] px-3 py-1.5 rounded-lg text-xs font-extrabold border transition">Teks Besar</button>
+                </div>
               </div>
 
-              <!-- Aksesibilitas, PWA Install & Cadangan Data -->
-              <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs space-y-4">
-                <h3 class="text-base font-extrabold text-slate-900">Tampilan, Aplikasi HP & Cadangan Data</h3>
-
-                <div class="p-3.5 rounded-xl bg-amber-50/80 border border-amber-200 flex items-center justify-between gap-3">
-                  <div>
-                    <p class="text-xs font-extrabold text-slate-900">Ukuran Tulisan Layar</p>
-                    <p class="text-[11px] text-slate-600">Perbesar teks agar nyaman dibaca orang tua / lansia</p>
-                  </div>
-                  <div class="flex gap-1.5 shrink-0">
-                    <button onclick="setFontScale('normal')" id="settingsFontNormal" class="min-h-[40px] px-3 py-1.5 rounded-lg text-xs font-extrabold border transition">Teks Normal</button>
-                    <button onclick="setFontScale('elderly')" id="settingsFontElderly" class="min-h-[40px] px-3 py-1.5 rounded-lg text-xs font-extrabold border transition">Teks Besar</button>
-                  </div>
+              <div class="p-3.5 rounded-xl bg-theme-50 border border-theme-200 flex items-center justify-between gap-3">
+                <div>
+                  <p class="text-xs font-extrabold text-slate-900">Aplikasi Layar Utama HP (PWA)</p>
+                  <p class="text-[11px] text-slate-600">Pasang ke layar utama untuk akses layar penuh.</p>
                 </div>
+                <button onclick="triggerPwaInstall()" class="shrink-0 min-h-[40px] px-3.5 py-2 rounded-xl bg-theme-600 hover:bg-theme-700 text-white text-xs font-extrabold transition">
+                  Pasang Aplikasi
+                </button>
+              </div>
+            </div>
+          </div>
 
-                <!-- Tombol Install PWA di Pengaturan -->
-                <div id="settingsPwaBox" class="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between gap-3">
-                  <div>
-                    <p class="text-xs font-extrabold text-emerald-950">Aplikasi Layar Utama HP (PWA)</p>
-                    <p id="settingsPwaDesc" class="text-[11px] text-emerald-800">Pasang aplikasi ke layar utama untuk akses layar penuh.</p>
-                  </div>
-                  <button onclick="triggerPwaInstall()" id="settingsPwaInstallBtn" class="shrink-0 min-h-[40px] px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold transition">
-                    Pasang Aplikasi di HP
-                  </button>
+          <!-- ==================== SUB-TAB SETTING 2: KATEGORI KEUANGAN ==================== -->
+          <div id="settingSubView-kategori" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- Kategori Pemasukan -->
+            <div class="lg:col-span-6 bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs space-y-4">
+              <div class="flex items-center justify-between gap-2">
+                <div>
+                  <h3 class="text-base font-extrabold text-emerald-700">Kategori Pemasukan (+)</h3>
+                  <p class="text-xs text-slate-500">Sumber dana masuk & sub-klasifikasinya</p>
                 </div>
+                <button onclick="openCategoryModal('pemasukan')" class="min-h-[40px] px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold flex items-center gap-1">
+                  <i data-lucide="plus" class="w-4 h-4"></i>
+                  <span>Tambah</span>
+                </button>
+              </div>
+              <div id="incomeCategoriesList" class="space-y-2.5"></div>
+            </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
-                  <button onclick="exportBackupJSON()" class="min-h-[44px] py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-extrabold flex items-center justify-center gap-1.5 transition">
-                    <i data-lucide="download" class="w-4 h-4"></i>
-                    <span>Unduh Backup</span>
-                  </button>
-                  <label class="min-h-[44px] py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-extrabold flex items-center justify-center gap-1.5 cursor-pointer transition">
-                    <i data-lucide="upload" class="w-4 h-4"></i>
-                    <span>Pulihkan JSON</span>
-                    <input type="file" accept=".json,application/json" onchange="importBackupJSON(event)" class="hidden" />
-                  </label>
-                  <button onclick="confirmResetSampleData()" class="min-h-[44px] py-2.5 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-extrabold flex items-center justify-center gap-1.5 transition">
-                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
-                    <span>Reset Contoh</span>
-                  </button>
+            <!-- Kategori Pengeluaran -->
+            <div class="lg:col-span-6 bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs space-y-4">
+              <div class="flex items-center justify-between gap-2">
+                <div>
+                  <h3 class="text-base font-extrabold text-rose-700">Kategori Pengeluaran (-)</h3>
+                  <p class="text-xs text-slate-500">Pos pengeluaran, sub-klasifikasi & batas anggaran</p>
                 </div>
+                <button onclick="openCategoryModal('pengeluaran')" class="min-h-[40px] px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-extrabold flex items-center gap-1">
+                  <i data-lucide="plus" class="w-4 h-4"></i>
+                  <span>Tambah</span>
+                </button>
+              </div>
+              <div id="expenseCategoriesList" class="space-y-2.5"></div>
+            </div>
+          </div>
+
+          <!-- ==================== SUB-TAB SETTING 3: REKENING & DOMPET ==================== -->
+          <div id="settingSubView-rekening" class="hidden space-y-4">
+            <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <h3 class="text-base font-extrabold text-slate-900">Daftar Rekening Bank, Kartu Debit, Dompet & E-Wallet</h3>
+                <p class="text-xs text-slate-500">Kelola klasifikasi akun penyimpanan dana keluarga dan saldo awalnya</p>
+              </div>
+              <div class="flex flex-wrap gap-2">
+                <button onclick="openTransferModal()" class="min-h-[42px] px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-extrabold">
+                  ⇄ Transfer Antar Rekening
+                </button>
+                <button onclick="openAccountModal()" class="min-h-[42px] px-3.5 py-2 rounded-xl bg-theme-600 hover:bg-theme-700 text-white text-xs font-extrabold flex items-center gap-1">
+                  <i data-lucide="plus" class="w-4 h-4"></i>
+                  <span>Tambah Rekening / Dompet</span>
+                </button>
               </div>
             </div>
 
-            <!-- Kolom Kanan: Sinkronisasi Cloud Real-time & Kode Keluarga -->
-            <div class="lg:col-span-6 space-y-6">
-              <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs space-y-4">
-                <div class="flex items-start justify-between gap-2">
-                  <div>
-                    <h3 class="text-base font-extrabold text-slate-900">Sinkronisasi Real-time Antar-HP</h3>
-                    <p class="text-xs text-slate-500">Terhubung ke proyek Firebase: <strong class="text-slate-800">rumahku-362c4</strong></p>
-                  </div>
-                  <span id="settingsSyncStatusBadge" class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-800">Menghubungkan...</span>
+            <div id="settingAccountsGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+          </div>
+
+          <!-- ==================== SUB-TAB SETTING 4: ANGGOTA KELUARGA ==================== -->
+          <div id="settingSubView-anggota" class="hidden max-w-2xl">
+            <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs space-y-4">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h3 class="text-base font-extrabold text-slate-900">Profil Anggota Keluarga</h3>
+                  <p class="text-xs text-slate-500">Ketuk profil untuk berpindah pengguna aktif</p>
                 </div>
+                <button onclick="openMemberModal()" class="min-h-[42px] px-3.5 py-2 rounded-xl bg-theme-600 hover:bg-theme-700 text-white text-xs font-extrabold flex items-center gap-1.5">
+                  <i data-lucide="user-plus" class="w-4 h-4"></i>
+                  <span>Tambah Anggota</span>
+                </button>
+              </div>
 
-                <div class="p-4 rounded-2xl bg-emerald-50 border-2 border-dashed border-emerald-300 space-y-3">
-                  <div class="flex items-center justify-between">
-                    <span class="text-xs font-extrabold text-emerald-900">Kode Keluarga Aktif:</span>
-                    <button onclick="generateNewFamilyCodeAction()" class="text-xs font-bold text-emerald-700 hover:underline">Buat Kode Baru</button>
-                  </div>
-                  <div class="flex flex-wrap items-center justify-between gap-2 bg-white px-4 py-3 rounded-xl border border-emerald-200">
-                    <span id="settingsFamilyCodeText" class="text-xl font-extrabold tracking-[0.22em] text-slate-900">------</span>
-                    <div class="flex gap-1.5">
-                      <button onclick="copyFamilyCode()" class="min-h-[40px] px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-extrabold text-slate-800">Salin Kode</button>
-                      <button onclick="copyFamilyShareLink()" class="min-h-[40px] px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold flex items-center gap-1">
-                        <i data-lucide="share-2" class="w-3.5 h-3.5"></i>
-                        <span>Salin Link WhatsApp</span>
-                      </button>
-                    </div>
-                  </div>
-                  <p class="text-[11px] text-emerald-900 leading-relaxed">
-                    Bagikan <strong>Link WhatsApp</strong> di atas ke anggota keluarga. Ketika link dibuka di HP mereka, seluruh data rumah tangga langsung tersinkronisasi secara real-time!
-                  </p>
+              <div id="familyMembersList" class="space-y-2.5"></div>
+            </div>
+          </div>
 
-                  <form onsubmit="handleJoinFamilyCode(event)" class="flex gap-2 pt-2 border-t border-emerald-200/70">
-                    <input type="text" id="joinFamilyCodeInput" maxlength="6" placeholder="Masukkan 6-digit Kode Keluarga lain" class="flex-1 min-h-[44px] px-3.5 py-2 rounded-xl bg-white border border-emerald-300 text-xs font-extrabold uppercase tracking-widest focus:outline-none" />
-                    <button type="submit" class="min-h-[44px] px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-extrabold transition">
-                      Gabung
+          <!-- ==================== SUB-TAB SETTING 5: SINKRONISASI & BACKUP ==================== -->
+          <div id="settingSubView-sync" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs space-y-4">
+              <div class="flex items-start justify-between gap-2">
+                <div>
+                  <h3 class="text-base font-extrabold text-slate-900">Sinkronisasi Real-time Antar-HP</h3>
+                  <p class="text-xs text-slate-500">Terhubung ke proyek Firebase: <strong class="text-slate-800">rumahku-362c4</strong></p>
+                </div>
+                <span id="settingsSyncStatusBadge" class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-800">Menghubungkan...</span>
+              </div>
+
+              <div class="p-4 rounded-2xl bg-theme-50 border-2 border-dashed border-theme-300 space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-extrabold text-theme-900">Kode Keluarga Aktif:</span>
+                  <button onclick="generateNewFamilyCodeAction()" class="text-xs font-bold text-theme-700 hover:underline">Buat Kode Baru</button>
+                </div>
+                <div class="flex flex-wrap items-center justify-between gap-2 bg-white px-4 py-3 rounded-xl border border-theme-200">
+                  <span id="settingsFamilyCodeText" class="text-xl font-extrabold tracking-[0.22em] text-slate-900">------</span>
+                  <div class="flex gap-1.5">
+                    <button onclick="copyFamilyCode()" class="min-h-[40px] px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-extrabold text-slate-800">Salin Kode</button>
+                    <button onclick="copyFamilyShareLink()" class="min-h-[40px] px-3.5 py-1.5 rounded-lg bg-theme-600 hover:bg-theme-700 text-white text-xs font-extrabold flex items-center gap-1">
+                      <i data-lucide="share-2" class="w-3.5 h-3.5"></i>
+                      <span>Salin Link WhatsApp</span>
                     </button>
-                  </form>
-                </div>
-
-                <!-- Firestore Security Rules Snippet -->
-                <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
-                  <div class="flex items-center justify-between">
-                    <span class="text-xs font-extrabold text-slate-800">Firestore Rules (Proyek: rumahku-362c4)</span>
-                    <button onclick="copyFirestoreRulesSnippet()" class="text-[11px] font-extrabold text-indigo-700 hover:underline">Salin Rules</button>
                   </div>
-                  <p class="text-[11px] text-slate-500 leading-relaxed">
-                    Pastikan aturan keamanan di <strong>Firebase Console → Firestore Database → Rules</strong> mengizinkan koleksi <code class="font-mono text-slate-700">rumahku_families</code>:
-                  </p>
-                  <pre class="p-3 rounded-xl bg-slate-900 text-emerald-300 font-mono text-[11px] overflow-x-auto leading-relaxed">rules_version = '2';
+                </div>
+                <p class="text-[11px] text-theme-900 leading-relaxed">
+                  Bagikan <strong>Link WhatsApp</strong> di atas ke anggota keluarga. Ketika link dibuka di HP mereka, seluruh data rumah tangga langsung tersinkronisasi secara real-time!
+                </p>
+
+                <form onsubmit="handleJoinFamilyCode(event)" class="flex gap-2 pt-2 border-t border-theme-200/70">
+                  <input type="text" id="joinFamilyCodeInput" maxlength="6" placeholder="Masukkan 6-digit Kode Keluarga lain" class="flex-1 min-h-[44px] px-3.5 py-2 rounded-xl bg-white border border-theme-300 text-xs font-extrabold uppercase tracking-widest focus:outline-none" />
+                  <button type="submit" class="min-h-[44px] px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-extrabold transition">
+                    Gabung
+                  </button>
+                </form>
+              </div>
+
+              <!-- Firestore Security Rules Snippet -->
+              <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-extrabold text-slate-800">Firestore Rules (Proyek: rumahku-362c4)</span>
+                  <button onclick="copyFirestoreRulesSnippet()" class="text-[11px] font-extrabold text-indigo-700 hover:underline">Salin Rules</button>
+                </div>
+                <pre class="p-3 rounded-xl bg-slate-900 text-emerald-300 font-mono text-[11px] overflow-x-auto leading-relaxed">rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /rumahku_families/{familyId} {
@@ -911,7 +1069,26 @@ service cloud.firestore {
     }
   }
 }</pre>
-                </div>
+              </div>
+            </div>
+
+            <div class="lg:col-span-5 bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs space-y-4 self-start">
+              <h3 class="text-base font-extrabold text-slate-900">Cadangan & Pemulihan Data (.JSON)</h3>
+              <p class="text-xs text-slate-500">Simpan salinan file JSON ke HP/PC atau pulihkan data kapan saja.</p>
+              <div class="space-y-2.5">
+                <button onclick="exportBackupJSON()" class="w-full min-h-[44px] py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-extrabold flex items-center justify-center gap-2 transition">
+                  <i data-lucide="download" class="w-4 h-4"></i>
+                  <span>Unduh File Backup (.json)</span>
+                </button>
+                <label class="w-full min-h-[44px] py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-extrabold flex items-center justify-center gap-2 cursor-pointer transition">
+                  <i data-lucide="upload" class="w-4 h-4"></i>
+                  <span>Pulihkan Data dari File (.json)</span>
+                  <input type="file" accept=".json,application/json" onchange="importBackupJSON(event)" class="hidden" />
+                </label>
+                <button onclick="confirmResetSampleData()" class="w-full min-h-[44px] py-2.5 px-4 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-extrabold flex items-center justify-center gap-2 transition">
+                  <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                  <span>Reset ke Data Contoh Awal</span>
+                </button>
               </div>
             </div>
           </div>
@@ -947,7 +1124,7 @@ service cloud.firestore {
         </div>
       </div>
 
-      <button onclick="closeModal('profileSwitcherModal'); switchTab('keluarga'); openMemberModal();" class="w-full min-h-[44px] py-2.5 rounded-xl border-2 border-dashed border-slate-300 text-xs font-extrabold text-slate-600 hover:border-emerald-500 hover:text-emerald-700 transition">
+      <button onclick="closeModal('profileSwitcherModal'); switchTab('setting', 'anggota'); openMemberModal();" class="w-full min-h-[44px] py-2.5 rounded-xl border-2 border-dashed border-slate-300 text-xs font-extrabold text-slate-600 hover:border-theme-500 hover:text-theme-700 transition">
         + Tambah Profil Anggota Baru
       </button>
     </div>
@@ -1001,7 +1178,7 @@ service cloud.firestore {
 
   <!-- 3. Modal Catat Transaksi Cepat -->
   <div id="quickTxModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
-    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl animate-panel">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl animate-panel max-h-[92vh] overflow-y-auto">
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-lg font-extrabold text-slate-900">Catat Transaksi Cepat</h3>
         <button onclick="closeModal('quickTxModal')" class="p-2 rounded-xl bg-slate-100 text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
@@ -1009,44 +1186,51 @@ service cloud.firestore {
       <form onsubmit="handleQuickTxSubmit(event)" class="space-y-3.5">
         <div class="grid grid-cols-2 gap-2">
           <label class="cursor-pointer">
-            <input type="radio" name="qTxType" value="pengeluaran" checked class="peer sr-only" />
+            <input type="radio" name="qTxType" value="pengeluaran" checked onchange="syncTransactionCategoryDropdown('qTxType', 'qTxCategory', 'qTxSubCategory')" class="peer sr-only" />
             <div class="min-h-[44px] flex items-center justify-center rounded-xl border-2 border-slate-200 text-xs font-extrabold peer-checked:border-rose-500 peer-checked:bg-rose-50 peer-checked:text-rose-700">Pengeluaran (-)</div>
           </label>
           <label class="cursor-pointer">
-            <input type="radio" name="qTxType" value="pemasukan" class="peer sr-only" />
+            <input type="radio" name="qTxType" value="pemasukan" onchange="syncTransactionCategoryDropdown('qTxType', 'qTxCategory', 'qTxSubCategory')" class="peer sr-only" />
             <div class="min-h-[44px] flex items-center justify-center rounded-xl border-2 border-slate-200 text-xs font-extrabold peer-checked:border-emerald-500 peer-checked:bg-emerald-50 peer-checked:text-emerald-700">Pemasukan (+)</div>
           </label>
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">Nominal (Rp)</label>
-          <input type="number" id="qTxAmount" min="100" step="100" required placeholder="50000" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-base font-extrabold" />
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Keterangan</label>
-          <input type="text" id="qTxDesc" required placeholder="Contoh: Beli buah & susu" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-sm font-medium" />
+          <div class="relative">
+            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-extrabold text-slate-400">Rp</span>
+            <input type="text" inputmode="numeric" id="qTxAmount" oninput="handleRibuanInput(this)" required placeholder="50.000" class="w-full min-h-[44px] pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-base font-extrabold" />
+          </div>
         </div>
         <div class="grid grid-cols-2 gap-2.5">
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Kategori</label>
-            <select id="qTxCategory" class="w-full min-h-[44px] px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs font-bold">
-              <option value="Belanja Dapur">Belanja Dapur</option>
-              <option value="Tagihan & Utilitas">Tagihan & Utilitas</option>
-              <option value="Perawatan Rumah">Perawatan Rumah</option>
-              <option value="Transportasi">Transportasi</option>
-              <option value="Kesehatan">Kesehatan</option>
-              <option value="Pendidikan">Pendidikan</option>
-              <option value="Gaji/Pendapatan">Gaji/Pendapatan</option>
-              <option value="Lainnya">Lainnya</option>
-            </select>
+            <div class="flex items-center justify-between mb-1">
+              <label class="block text-xs font-bold text-slate-700">Kategori</label>
+              <button type="button" onclick="openQuickCategoryFromForm('qTxType', 'qTxCategory')" class="text-[11px] font-extrabold text-theme-700 hover:underline">+ Baru</button>
+            </div>
+            <select id="qTxCategory" onchange="updateSubCategoryPlaceholder('qTxType', 'qTxCategory', 'qTxSubCategory')" class="w-full min-h-[44px] px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs font-bold"></select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Rekening / Dompet</label>
+            <select id="qTxAccountId" class="w-full min-h-[44px] px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs font-bold"></select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Sub-Klasifikasi</label>
+            <input type="text" id="qTxSubCategory" placeholder="Detail klasifikasi..." class="w-full min-h-[44px] px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs font-semibold" />
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Tanggal</label>
             <input type="date" id="qTxDate" required class="w-full min-h-[44px] px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs font-bold" />
           </div>
         </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Keterangan</label>
+          <input type="text" id="qTxDesc" required placeholder="Contoh: Beli buah & susu" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-sm font-medium" />
+        </div>
         <div class="pt-2 flex gap-2">
           <button type="button" onclick="closeModal('quickTxModal')" class="flex-1 min-h-[44px] py-2.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-extrabold">Batal</button>
-          <button type="submit" class="flex-1 min-h-[44px] py-2.5 rounded-xl bg-emerald-600 text-white text-xs font-extrabold">Simpan</button>
+          <button type="submit" class="flex-1 min-h-[44px] py-2.5 rounded-xl bg-theme-600 text-white text-xs font-extrabold">Simpan</button>
         </div>
       </form>
     </div>
@@ -1063,11 +1247,11 @@ service cloud.firestore {
         <input type="hidden" id="editScheduledId" value="" />
         <div class="grid grid-cols-2 gap-2">
           <label class="cursor-pointer">
-            <input type="radio" name="schedType" value="pengeluaran" checked class="peer sr-only" />
+            <input type="radio" name="schedType" value="pengeluaran" checked onchange="syncTransactionCategoryDropdown('schedType', 'schedCategory', 'schedSubCategory')" class="peer sr-only" />
             <div class="min-h-[44px] flex items-center justify-center rounded-xl border-2 border-slate-200 text-xs font-extrabold peer-checked:border-rose-500 peer-checked:bg-rose-50 peer-checked:text-rose-700">Pengeluaran Rutin</div>
           </label>
           <label class="cursor-pointer">
-            <input type="radio" name="schedType" value="pemasukan" class="peer sr-only" />
+            <input type="radio" name="schedType" value="pemasukan" onchange="syncTransactionCategoryDropdown('schedType', 'schedCategory', 'schedSubCategory')" class="peer sr-only" />
             <div class="min-h-[44px] flex items-center justify-center rounded-xl border-2 border-slate-200 text-xs font-extrabold peer-checked:border-emerald-500 peer-checked:bg-emerald-50 peer-checked:text-emerald-700">Pemasukan Rutin</div>
           </label>
         </div>
@@ -1080,20 +1264,22 @@ service cloud.firestore {
         <div class="grid grid-cols-2 gap-2.5">
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Nominal (Rp)</label>
-            <input type="number" id="schedAmount" min="100" step="100" required placeholder="500000" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-sm font-extrabold" />
+            <input type="text" inputmode="numeric" id="schedAmount" oninput="handleRibuanInput(this)" required placeholder="500.000" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-sm font-extrabold" />
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Kategori</label>
-            <select id="schedCategory" class="w-full min-h-[44px] px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs font-bold">
-              <option value="Gaji/Pendapatan">Gaji/Pendapatan</option>
-              <option value="Belanja Dapur">Belanja Dapur</option>
-              <option value="Tagihan & Utilitas">Tagihan & Utilitas</option>
-              <option value="Perawatan Rumah">Perawatan Rumah</option>
-              <option value="Transportasi">Transportasi</option>
-              <option value="Kesehatan">Kesehatan</option>
-              <option value="Pendidikan">Pendidikan</option>
-              <option value="Lainnya">Lainnya</option>
-            </select>
+            <select id="schedCategory" onchange="updateSubCategoryPlaceholder('schedType', 'schedCategory', 'schedSubCategory')" class="w-full min-h-[44px] px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs font-bold"></select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Rekening / Dompet</label>
+            <select id="schedAccountId" class="w-full min-h-[44px] px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs font-bold"></select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Sub-Klasifikasi</label>
+            <input type="text" id="schedSubCategory" placeholder="Opsional..." class="w-full min-h-[44px] px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs font-semibold" />
           </div>
         </div>
 
@@ -1161,7 +1347,7 @@ service cloud.firestore {
         <div class="grid grid-cols-2 gap-2.5">
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Nominal (Rp)</label>
-            <input type="number" id="billAmountInput" min="1000" step="500" required placeholder="450000" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-sm font-extrabold" />
+            <input type="text" inputmode="numeric" id="billAmountInput" oninput="handleRibuanInput(this)" required placeholder="450.000" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-sm font-extrabold" />
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Jatuh Tempo</label>
@@ -1174,7 +1360,7 @@ service cloud.firestore {
         </div>
         <div class="pt-2 flex gap-2">
           <button type="button" onclick="closeModal('billModal')" class="flex-1 min-h-[44px] py-2.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-extrabold">Batal</button>
-          <button type="submit" class="flex-1 min-h-[44px] py-2.5 rounded-xl bg-emerald-600 text-white text-xs font-extrabold">Simpan Tagihan</button>
+          <button type="submit" class="flex-1 min-h-[44px] py-2.5 rounded-xl bg-theme-600 text-white text-xs font-extrabold">Simpan Tagihan</button>
         </div>
       </form>
     </div>
@@ -1257,7 +1443,7 @@ service cloud.firestore {
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">Perkiraan Harga Satuan (Rp)</label>
-          <input type="number" id="stockPriceInput" min="0" step="500" value="25000" required class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-sm font-extrabold" />
+          <input type="text" inputmode="numeric" id="stockPriceInput" oninput="handleRibuanInput(this)" value="25.000" required class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-sm font-extrabold" />
         </div>
         <div class="pt-2 flex gap-2">
           <button type="button" onclick="closeModal('stockModal')" class="flex-1 min-h-[44px] py-2.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-extrabold">Batal</button>
@@ -1269,69 +1455,197 @@ service cloud.firestore {
 
   <!-- 8. Modal Tambah Catatan -->
   <div id="noteModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
-    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl animate-panel">
+  <!-- 9. Modal Tambah / Edit Kategori Pemasukan & Pengeluaran -->
+  <div id="categoryModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl animate-panel max-h-[92vh] overflow-y-auto">
       <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-extrabold text-slate-900">Buat Catatan / Info Rumah</h3>
-        <button onclick="closeModal('noteModal')" class="p-2 rounded-xl bg-slate-100 text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+        <h3 id="categoryModalTitle" class="text-lg font-extrabold text-slate-900">Tambah Kategori Keuangan</h3>
+        <button onclick="closeModal('categoryModal')" class="p-2 rounded-xl bg-slate-100 text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
       </div>
-      <form onsubmit="handleAddNote(event)" class="space-y-3.5">
+      <form onsubmit="handleSaveCategory(event)" class="space-y-3.5">
+        <input type="hidden" id="editCategoryId" value="" />
+        <input type="hidden" id="categoryFlowType" value="pengeluaran" />
+
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Judul Catatan</label>
-          <input type="text" id="noteTitleInput" required placeholder="Contoh: ID PLN & Password WiFi" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-sm font-semibold" />
+          <label class="block text-xs font-bold text-slate-700 mb-1">Nama Kategori</label>
+          <input type="text" id="catNameInput" required placeholder="Contoh: Belanja Dapur, Gaji Utama, Investasi" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-sm font-bold" />
         </div>
+
         <div class="grid grid-cols-2 gap-2.5">
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Kategori</label>
-            <select id="noteCategoryInput" class="w-full min-h-[44px] px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs font-bold">
-              <option value="ID & Tagihan">ID & Tagihan</option>
-              <option value="WiFi & Akun">WiFi & Akun</option>
-              <option value="Kontak Darurat & Tukang">Kontak Darurat & Tukang</option>
-              <option value="Dapur & Resep">Dapur & Resep</option>
-              <option value="Umum">Umum</option>
-            </select>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Ikon / Emoji</label>
+            <input type="text" id="catIconInput" maxlength="4" value="🏷️" required class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-lg text-center font-bold" />
           </div>
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Warna Kartu</label>
-            <select id="noteColorInput" class="w-full min-h-[44px] px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs font-bold">
-              <option value="amber">Kuning Hangat</option>
-              <option value="indigo">Biru Indigo</option>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Warna Lencana</label>
+            <select id="catColorInput" class="w-full min-h-[44px] px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs font-bold">
               <option value="emerald">Hijau Emerald</option>
-              <option value="rose">Merah Lembut</option>
+              <option value="blue">Biru Ocean</option>
+              <option value="indigo">Biru Indigo</option>
+              <option value="amber">Kuning Amber</option>
+              <option value="rose">Merah Rose</option>
+              <option value="teal">Toska Teal</option>
             </select>
           </div>
         </div>
+
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Isi Catatan</label>
-          <textarea id="noteContentInput" rows="4" required placeholder="Tulis ID pelanggan, password WiFi, atau nomor darurat..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-sm"></textarea>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Sub-Klasifikasi / Contoh Detail (Opsional)</label>
+          <input type="text" id="catSubHintInput" placeholder="Contoh: Sayur, lauk, beras, galon, gas" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs font-semibold" />
         </div>
-        <label class="flex items-center gap-2 cursor-pointer">
-          <input type="checkbox" id="notePinnedInput" class="w-4 h-4 accent-emerald-600" />
-          <span class="text-xs font-bold text-slate-700">Pin ke paling atas</span>
-        </label>
+
+        <div id="catBudgetFieldWrap">
+          <label class="block text-xs font-bold text-slate-700 mb-1">Batas Anggaran Bulanan (Rp)</label>
+          <input type="text" inputmode="numeric" id="catBudgetInput" oninput="handleRibuanInput(this)" value="1.000.000" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-sm font-extrabold" />
+        </div>
+
         <div class="pt-2 flex gap-2">
-          <button type="button" onclick="closeModal('noteModal')" class="flex-1 min-h-[44px] py-2.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-extrabold">Batal</button>
-          <button type="submit" class="flex-1 min-h-[44px] py-2.5 rounded-xl bg-emerald-600 text-white text-xs font-extrabold">Simpan Catatan</button>
+          <button type="button" onclick="closeModal('categoryModal')" class="flex-1 min-h-[44px] py-2.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-extrabold">Batal</button>
+          <button type="submit" class="flex-1 min-h-[44px] py-2.5 rounded-xl bg-theme-600 text-white text-xs font-extrabold">Simpan Kategori</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- 9. Modal Atur Batas Anggaran -->
-  <div id="budgetModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
-    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl animate-panel max-h-[90vh] flex flex-col">
-      <div class="flex items-center justify-between mb-3">
-        <h3 class="text-lg font-extrabold text-slate-900">Atur Batas Anggaran Bulanan</h3>
-        <button onclick="closeModal('budgetModal')" class="p-2 rounded-xl bg-slate-100 text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+  <!-- 10. Modal Tambah / Edit Rekening Bank, Kartu Debit & Dompet -->
+  <div id="accountModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl animate-panel max-h-[92vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-4">
+        <h3 id="accountModalTitle" class="text-lg font-extrabold text-slate-900">Tambah Rekening / Dompet</h3>
+        <button onclick="closeModal('accountModal')" class="p-2 rounded-xl bg-slate-100 text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
       </div>
-      <form onsubmit="handleSaveBudgets(event)" id="budgetFieldsList" class="space-y-2.5 overflow-y-auto flex-1 pr-1"></form>
-      <div class="pt-3 mt-3 border-t border-slate-100 flex gap-2">
-        <button type="button" onclick="closeModal('budgetModal')" class="flex-1 min-h-[44px] py-2.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-extrabold">Batal</button>
-        <button type="button" onclick="document.getElementById('budgetFieldsList').requestSubmit()" class="flex-1 min-h-[44px] py-2.5 rounded-xl bg-emerald-600 text-white text-xs font-extrabold">Simpan Batas</button>
+      <form onsubmit="handleSaveAccount(event)" class="space-y-3.5">
+        <input type="hidden" id="editAccountId" value="" />
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Klasifikasi Akun</label>
+          <select id="accClassInput" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs font-extrabold">
+            <option value="Rekening Bank">🏦 Rekening Bank (Tabungan / Giro)</option>
+            <option value="Kartu Debit">💳 Kartu Debit (ATM)</option>
+            <option value="Dompet Tunai">👛 Dompet Tunai / Kas Rumah</option>
+            <option value="E-Wallet / QRIS">📱 E-Wallet / QRIS (GoPay, OVO, DANA)</option>
+            <option value="Kartu Kredit / PayLater">🏷️ Kartu Kredit / PayLater</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Nama Rekening / Kartu / Dompet</label>
+          <input type="text" id="accNameInput" required placeholder="Contoh: BCA Utama, Debit Mandiri, Dompet Ibu" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-sm font-bold" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Bank / Penerbit</label>
+            <input type="text" id="accInstitutionInput" placeholder="Contoh: BCA, Mandiri, Tunai" class="w-full min-h-[44px] px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs font-semibold" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">4 Digit Terakhir / No.</label>
+            <input type="text" maxlength="12" id="accLast4Input" placeholder="Contoh: •••• 4821" class="w-full min-h-[44px] px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs font-semibold" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Pemegang / Pemilik</label>
+            <select id="accOwnerInput" class="w-full min-h-[44px] px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs font-bold"></select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Saldo Awal (Rp)</label>
+            <input type="text" inputmode="numeric" id="accInitialBalanceInput" oninput="handleRibuanInput(this)" value="0" required class="w-full min-h-[44px] px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-sm font-extrabold" />
+          </div>
+        </div>
+
+        <div class="pt-2 flex gap-2">
+          <button type="button" onclick="closeModal('accountModal')" class="flex-1 min-h-[44px] py-2.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-extrabold">Batal</button>
+          <button type="submit" class="flex-1 min-h-[44px] py-2.5 rounded-xl bg-theme-600 text-white text-xs font-extrabold">Simpan Akun</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 11. Modal Transfer Antar Rekening / Dompet -->
+  <div id="transferModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl animate-panel">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-extrabold text-slate-900">Transfer Antar Rekening / Dompet</h3>
+        <button onclick="closeModal('transferModal')" class="p-2 rounded-xl bg-slate-100 text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <form onsubmit="handleAccountTransfer(event)" class="space-y-3.5">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Dari Rekening / Dompet Sumber</label>
+          <select id="trfFromAccount" required class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs font-extrabold"></select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Ke Rekening / Dompet Tujuan</label>
+          <select id="trfToAccount" required class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs font-extrabold"></select>
+        </div>
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Nominal Transfer (Rp)</label>
+            <input type="text" inputmode="numeric" id="trfAmount" oninput="handleRibuanInput(this)" required placeholder="500.000" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-sm font-extrabold" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Tanggal</label>
+            <input type="date" id="trfDate" required class="w-full min-h-[44px] px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs font-bold" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Catatan Transfer (Opsional)</label>
+          <input type="text" id="trfNote" placeholder="Contoh: Tarik tunai ATM / Top up GoPay" class="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs font-semibold" />
+        </div>
+        <div class="pt-2 flex gap-2">
+          <button type="button" onclick="closeModal('transferModal')" class="flex-1 min-h-[44px] py-2.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-extrabold">Batal</button>
+          <button type="submit" class="flex-1 min-h-[44px] py-2.5 rounded-xl bg-theme-600 text-white text-xs font-extrabold">Proses Transfer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 12. Modal Konfirmasi Pembayaran Tagihan (Pilih Rekening Sumber) -->
+  <div id="payBillModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl animate-panel space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-extrabold text-slate-900">Konfirmasi Bayar Tagihan</h3>
+        <button onclick="closeModal('payBillModal')" class="p-1.5 rounded-lg bg-slate-100 text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+      <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
+        <p id="payBillTitleDisplay" class="text-sm font-extrabold text-slate-900">Listrik PLN</p>
+        <p id="payBillAmountDisplay" class="text-lg font-extrabold text-theme-700 mt-0.5">Rp 0</p>
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-slate-700 mb-1">Bayar Menggunakan Rekening / Dompet:</label>
+        <select id="payBillAccountSelect" class="w-full min-h-[44px] px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs font-extrabold"></select>
+      </div>
+      <div class="flex gap-2 pt-1">
+        <button type="button" onclick="closeModal('payBillModal')" class="flex-1 min-h-[44px] py-2.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-extrabold">Batal</button>
+        <button type="button" id="confirmPayBillBtn" class="flex-1 min-h-[44px] py-2.5 rounded-xl bg-theme-600 text-white text-xs font-extrabold">Lunasi Sekarang</button>
       </div>
     </div>
   </div>
 
-  <!-- 10. Modal Konfirmasi Universal (Pengganti confirm()) -->
+  <!-- 13. Modal Konfirmasi Selesai Belanja (Pilih Rekening Sumber) -->
+  <div id="finishShoppingModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl animate-panel space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-extrabold text-slate-900">Selesai Belanja & Restock</h3>
+        <button onclick="closeModal('finishShoppingModal')" class="p-1.5 rounded-lg bg-slate-100 text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+      <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
+        <p id="finishShopSummaryText" class="text-xs font-bold text-slate-600">0 item akan di-restock</p>
+        <p id="finishShopTotalDisplay" class="text-lg font-extrabold text-theme-700 mt-0.5">Rp 0</p>
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-slate-700 mb-1">Sumber Dana Pembayaran:</label>
+        <select id="finishShopAccountSelect" class="w-full min-h-[44px] px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs font-extrabold"></select>
+      </div>
+      <div class="flex gap-2 pt-1">
+        <button type="button" onclick="closeModal('finishShoppingModal')" class="flex-1 min-h-[44px] py-2.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-extrabold">Batal</button>
+        <button type="button" id="confirmFinishShopBtn" class="flex-1 min-h-[44px] py-2.5 rounded-xl bg-theme-600 text-white text-xs font-extrabold">Simpan & Restock</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 14. Modal Konfirmasi Universal (Pengganti confirm()) -->
   <div id="confirmDialogModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
     <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl animate-panel text-center">
       <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto mb-3">
@@ -1350,11 +1664,11 @@ service cloud.firestore {
   <div id="toastContainer" class="fixed bottom-5 right-5 z-[60] flex flex-col gap-2 max-w-sm w-full pointer-events-none px-4 sm:px-0"></div>
 
   <!-- ================================================================== -->
-  <!-- FIREBASE MODULAR SDK v10.14.1, PWA SERVICE WORKER & APP LOGIC      -->
+  <!-- FIREBASE MODULAR SDK v10.12.2, PWA SERVICE WORKER & APP LOGIC      -->
   <!-- ================================================================== -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-    import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     // ==================== KONFIGURASI FIREBASE PROYEK RUMAHKU-362C4 ====================
     const firebaseConfig = {
@@ -1370,18 +1684,73 @@ service cloud.firestore {
       DATA: 'rumahku_362c4_household_data',
       FAMILY_CODE: 'rumahku_362c4_family_code',
       ACTIVE_MEMBER: 'rumahku_362c4_active_member',
-      FONT_SCALE: 'rumahku_362c4_font_scale'
+      FONT_SCALE: 'rumahku_362c4_font_scale',
+      THEME: 'rumahku_362c4_theme_color'
     };
 
-    const BUDGET_CATEGORIES = [
-      'Belanja Dapur',
-      'Tagihan & Utilitas',
-      'Perawatan Rumah',
-      'Transportasi',
-      'Kesehatan',
-      'Pendidikan',
-      'Lainnya'
-    ];
+    // ==================== 6 PALET TEMA WARNA APLIKASI ====================
+    const APP_THEMES = {
+      emerald: {
+        label: 'Emerald Hijau',
+        swatch: '#059669',
+        vars: {
+          '--theme-50': '#ecfdf5', '--theme-100': '#d1fae5', '--theme-200': '#a7f3d0',
+          '--theme-300': '#6ee7b7', '--theme-400': '#34d399', '--theme-500': '#10b981',
+          '--theme-600': '#059669', '--theme-700': '#047857', '--theme-800': '#065f46',
+          '--theme-900': '#064e3b', '--theme-950': '#022c22'
+        }
+      },
+      blue: {
+        label: 'Ocean Biru',
+        swatch: '#2563eb',
+        vars: {
+          '--theme-50': '#eff6ff', '--theme-100': '#dbeafe', '--theme-200': '#bfdbfe',
+          '--theme-300': '#93c5fd', '--theme-400': '#60a5fa', '--theme-500': '#3b82f6',
+          '--theme-600': '#2563eb', '--theme-700': '#1d4ed8', '--theme-800': '#1e40af',
+          '--theme-900': '#1e3a8a', '--theme-950': '#172554'
+        }
+      },
+      indigo: {
+        label: 'Royal Indigo',
+        swatch: '#4f46e5',
+        vars: {
+          '--theme-50': '#eef2ff', '--theme-100': '#e0e7ff', '--theme-200': '#c7d2fe',
+          '--theme-300': '#a5b4fc', '--theme-400': '#818cf8', '--theme-500': '#6366f1',
+          '--theme-600': '#4f46e5', '--theme-700': '#4338ca', '--theme-800': '#3730a3',
+          '--theme-900': '#312e81', '--theme-950': '#1e1b4b'
+        }
+      },
+      rose: {
+        label: 'Rose Merah Muda',
+        swatch: '#e11d48',
+        vars: {
+          '--theme-50': '#fff1f2', '--theme-100': '#ffe4e6', '--theme-200': '#fecdd3',
+          '--theme-300': '#fda4af', '--theme-400': '#fb7185', '--theme-500': '#f43f5e',
+          '--theme-600': '#e11d48', '--theme-700': '#be123c', '--theme-800': '#9f1239',
+          '--theme-900': '#881337', '--theme-950': '#4c0519'
+        }
+      },
+      amber: {
+        label: 'Amber Emas',
+        swatch: '#d97706',
+        vars: {
+          '--theme-50': '#fffbeb', '--theme-100': '#fef3c7', '--theme-200': '#fde68a',
+          '--theme-300': '#fcd34d', '--theme-400': '#fbbf24', '--theme-500': '#f59e0b',
+          '--theme-600': '#d97706', '--theme-700': '#b45309', '--theme-800': '#92400e',
+          '--theme-900': '#78350f', '--theme-950': '#451a03'
+        }
+      },
+      teal: {
+        label: 'Teal Toska',
+        swatch: '#0d9488',
+        vars: {
+          '--theme-50': '#f0fdfa', '--theme-100': '#ccfbf1', '--theme-200': '#99f6e4',
+          '--theme-300': '#5eead4', '--theme-400': '#2dd4bf', '--theme-500': '#14b8a6',
+          '--theme-600': '#0d9488', '--theme-700': '#0f766e', '--theme-800': '#115e59',
+          '--theme-900': '#134e4a', '--theme-950': '#042f2e'
+        }
+      }
+    };
 
     // ==================== STATE APLIKASI & PWA ====================
     let db = null;
@@ -1391,8 +1760,10 @@ service cloud.firestore {
     let familyCode = '';
     let activeMemberId = 'mem_ayah';
     let fontScale = 'normal';
+    let currentTheme = 'emerald';
     let currentTab = 'beranda';
     let currentFinSubTab = 'riwayat';
+    let currentSettingSubTab = 'tema';
     let currentBillFilter = 'all';
     let pendingPinMemberId = null;
 
@@ -1400,10 +1771,13 @@ service cloud.firestore {
     let finChartInstance = null;
 
     let appData = {
+      themeColor: 'emerald',
       members: [],
+      accounts: [],
+      incomeCategories: [],
+      expenseCategories: [],
       transactions: [],
       scheduledTransactions: [],
-      budgets: {},
       bills: [],
       schedules: [],
       inventory: [],
@@ -1411,56 +1785,22 @@ service cloud.firestore {
       notes: []
     };
 
-    // ==================== PWA SERVICE WORKER & BEFOREINSTALLPROMPT ====================
-    window.addEventListener('load', () => {
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js').catch((err) => {
-          console.info('Service Worker belum aktif atau offline:', err?.message || err);
-        });
-      }
-    });
+    // ==================== PEMISAH RIBUAN OTOMATIS (1.500.000) ====================
+    function formatRibuanString(rawVal) {
+      const digits = String(rawVal ?? '').replace(/\D/g, '');
+      if (!digits) return '';
+      return digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    }
 
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredInstallPrompt = e;
+    function parseRibuan(formattedVal) {
+      if (typeof formattedVal === 'number') return formattedVal;
+      const digits = String(formattedVal ?? '').replace(/\D/g, '');
+      return digits ? Number(digits) : 0;
+    }
 
-      const banner = document.getElementById('pwaInstallBanner');
-      const sideBtn = document.getElementById('sidebarPwaInstallBtn');
-      const deskBtn = document.getElementById('desktopPwaInstallBtn');
-
-      if (banner) banner.classList.remove('hidden');
-      if (sideBtn) sideBtn.classList.remove('hidden');
-      if (deskBtn) {
-        deskBtn.classList.remove('hidden');
-        deskBtn.classList.add('inline-flex');
-      }
-      lucide.createIcons();
-    });
-
-    window.addEventListener('appinstalled', () => {
-      deferredInstallPrompt = null;
-      const banner = document.getElementById('pwaInstallBanner');
-      const sideBtn = document.getElementById('sidebarPwaInstallBtn');
-      const deskBtn = document.getElementById('desktopPwaInstallBtn');
-      if (banner) banner.classList.add('hidden');
-      if (sideBtn) sideBtn.classList.add('hidden');
-      if (deskBtn) deskBtn.classList.add('hidden');
-      showToast('Aplikasi RumahKu berhasil terpasang di HP Anda!');
-    });
-
-    async function triggerPwaInstall() {
-      if (deferredInstallPrompt) {
-        deferredInstallPrompt.prompt();
-        const { outcome } = await deferredInstallPrompt.userChoice;
-        if (outcome === 'accepted') {
-          showToast('Memasang RumahKu ke layar utama...');
-        }
-        deferredInstallPrompt = null;
-        const banner = document.getElementById('pwaInstallBanner');
-        if (banner) banner.classList.add('hidden');
-      } else {
-        showToast('Gunakan menu browser "Tambahkan ke layar utama / Install app" untuk memasang.', 'warning');
-      }
+    function handleRibuanInput(inputEl) {
+      if (!inputEl) return;
+      inputEl.value = formatRibuanString(inputEl.value);
     }
 
     // ==================== HELPER TANGGAL, MATA UANG & KODE KELUARGA ====================
@@ -1577,24 +1917,96 @@ service cloud.firestore {
       return appData.members.find(m => m.id === id) || null;
     }
 
+    function getAccountById(id) {
+      return appData.accounts.find(a => a.id === id) || null;
+    }
+
+    function getAccountClassIcon(classification) {
+      const map = {
+        'Rekening Bank': '🏦',
+        'Kartu Debit': '💳',
+        'Dompet Tunai': '👛',
+        'E-Wallet / QRIS': '📱',
+        'Kartu Kredit / PayLater': '🏷️'
+      };
+      return map[classification] || '💳';
+    }
+
+    function computeAccountBalance(accountId) {
+      const acc = getAccountById(accountId);
+      if (!acc) return 0;
+      let bal = Number(acc.initialBalance) || 0;
+      appData.transactions.forEach(tx => {
+        const amt = Number(tx.amount) || 0;
+        if (tx.type === 'pemasukan' && tx.accountId === accountId) {
+          bal += amt;
+        } else if (tx.type === 'pengeluaran' && tx.accountId === accountId) {
+          bal -= amt;
+        } else if (tx.type === 'transfer') {
+          if (tx.accountId === accountId) bal -= amt;
+          if (tx.toAccountId === accountId) bal += amt;
+        }
+      });
+      return bal;
+    }
+
+    function getDefaultCategories() {
+      return {
+        incomeCategories: [
+          { id: 'cat_inc_1', name: 'Gaji Utama', icon: '💼', color: 'emerald', subHint: 'Gaji bulanan, tunjangan tetap' },
+          { id: 'cat_inc_2', name: 'Bonus & THR', icon: '🎁', color: 'amber', subHint: 'Bonus kinerja, THR, insentif' },
+          { id: 'cat_inc_3', name: 'Usaha / Sampingan', icon: '🏪', color: 'blue', subHint: 'Freelance, dagang, komisi' },
+          { id: 'cat_inc_4', name: 'Hasil Investasi / Bunga', icon: '📈', color: 'indigo', subHint: 'Dividen, deposito, bagi hasil' },
+          { id: 'cat_inc_5', name: 'Pemasukan Lainnya', icon: '💰', color: 'teal', subHint: 'Hadiah, refund, penjualan barang' }
+        ],
+        expenseCategories: [
+          { id: 'cat_exp_1', name: 'Belanja Dapur & Sembako', icon: '🛒', color: 'emerald', budget: 2500000, subHint: 'Sayur, lauk, beras, galon, gas' },
+          { id: 'cat_exp_2', name: 'Listrik, Air & Internet', icon: '⚡', color: 'amber', budget: 1500000, subHint: 'PLN, PDAM, WiFi, pulsa' },
+          { id: 'cat_exp_3', name: 'Cicilan & KPR', icon: '🏦', color: 'rose', budget: 3500000, subHint: 'KPR rumah, cicilan kendaraan' },
+          { id: 'cat_exp_4', name: 'Transportasi & BBM', icon: '⛽', color: 'blue', budget: 1000000, subHint: 'Bensin, tol, parkir, servis' },
+          { id: 'cat_exp_5', name: 'Pendidikan & Anak', icon: '🎓', color: 'indigo', budget: 1500000, subHint: 'SPP, les, buku, perlengkapan' },
+          { id: 'cat_exp_6', name: 'Kesehatan & Obat', icon: '🩺', color: 'rose', budget: 750000, subHint: 'Dokter, apotek, vitamin, BPJS' },
+          { id: 'cat_exp_7', name: 'Perawatan Rumah', icon: '🛠️', color: 'teal', budget: 800000, subHint: 'Servis AC, kuras toren, tukang' },
+          { id: 'cat_exp_8', name: 'Zakat & Sedekah', icon: '🤲', color: 'emerald', budget: 500000, subHint: 'Infaq, zakat, santunan' },
+          { id: 'cat_exp_9', name: 'Hiburan & Jajan', icon: '☕', color: 'amber', budget: 750000, subHint: 'Makan luar, kopi, rekreasi' }
+        ]
+      };
+    }
+
+    function getDefaultAccounts() {
+      return [
+        { id: 'acc_bca', classification: 'Rekening Bank', name: 'Rekening Utama BCA', institution: 'Bank BCA', last4: '•••• 4821', ownerId: 'mem_ayah', initialBalance: 8500000 },
+        { id: 'acc_debit_ibu', classification: 'Kartu Debit', name: 'Debit Belanja Mandiri', institution: 'Bank Mandiri', last4: '•••• 9014', ownerId: 'mem_ibu', initialBalance: 3200000 },
+        { id: 'acc_tunai', classification: 'Dompet Tunai', name: 'Kas Tunai & Dompet Rumah', institution: 'Tunai', last4: 'Brankas/Dompet', ownerId: 'mem_ibu', initialBalance: 1250000 },
+        { id: 'acc_ewallet', classification: 'E-Wallet / QRIS', name: 'GoPay & QRIS Keluarga', institution: 'GoPay', last4: '0812-xxxx', ownerId: 'mem_ayah', initialBalance: 850000 }
+      ];
+    }
+
     // ==================== DATA CONTOH AWAL ====================
     function createSampleData() {
       const today = getTodayISO();
       const ym = today.slice(0, 7);
+      const defs = getDefaultCategories();
 
       return {
+        themeColor: 'emerald',
         members: [
           { id: 'mem_ayah', name: 'Ayah', role: 'Kepala Keluarga', color: 'emerald', pin: '' },
           { id: 'mem_ibu', name: 'Ibu', role: 'Pengelola Rumah', color: 'indigo', pin: '' },
           { id: 'mem_kakak', name: 'Kakak', role: 'Anggota Keluarga', color: 'sky', pin: '' },
           { id: 'mem_nenek', name: 'Nenek', role: 'Orang Tua / Lansia', color: 'amber', pin: '' }
         ],
+        accounts: getDefaultAccounts(),
+        incomeCategories: defs.incomeCategories,
+        expenseCategories: defs.expenseCategories,
         transactions: [
           {
             id: generateId('tx'),
             type: 'pemasukan',
             amount: 12500000,
-            category: 'Gaji/Pendapatan',
+            category: 'Gaji Utama',
+            subCategory: 'Gaji Pokok & Tunjangan',
+            accountId: 'acc_bca',
             date: `${ym}-01`,
             desc: 'Gaji Bulanan Ayah',
             createdBy: 'mem_ayah'
@@ -1603,7 +2015,9 @@ service cloud.firestore {
             id: generateId('tx'),
             type: 'pengeluaran',
             amount: 1450000,
-            category: 'Belanja Dapur',
+            category: 'Belanja Dapur & Sembako',
+            subCategory: 'Sembako & Lauk Mingguan',
+            accountId: 'acc_debit_ibu',
             date: `${ym}-04`,
             desc: 'Belanja Sembako & Sayur Mingguan',
             createdBy: 'mem_ibu'
@@ -1612,7 +2026,9 @@ service cloud.firestore {
             id: generateId('tx'),
             type: 'pengeluaran',
             amount: 600000,
-            category: 'Transportasi',
+            category: 'Transportasi & BBM',
+            subCategory: 'Pertamax & E-Toll',
+            accountId: 'acc_ewallet',
             date: `${ym}-07`,
             desc: 'Isi BBM Mobil & E-Toll',
             createdBy: 'mem_ayah'
@@ -1621,7 +2037,9 @@ service cloud.firestore {
             id: generateId('tx'),
             type: 'pengeluaran',
             amount: 350000,
-            category: 'Kesehatan',
+            category: 'Kesehatan & Obat',
+            subCategory: 'Vitamin & P3K',
+            accountId: 'acc_tunai',
             date: `${ym}-10`,
             desc: 'Vitamin Nenek & Kotak P3K',
             createdBy: 'mem_ibu'
@@ -1633,7 +2051,9 @@ service cloud.firestore {
             title: 'Gaji Bulanan Utama',
             type: 'pemasukan',
             amount: 12500000,
-            category: 'Gaji/Pendapatan',
+            category: 'Gaji Utama',
+            subCategory: 'Transfer Payroll',
+            accountId: 'acc_bca',
             frequency: 'monthly',
             nextRunDate: addMonthsToISO(`${ym}-01`, 1),
             mode: 'auto',
@@ -1645,35 +2065,16 @@ service cloud.firestore {
             title: 'Iuran Keamanan & Sampah Lingkungan',
             type: 'pengeluaran',
             amount: 150000,
-            category: 'Tagihan & Utilitas',
+            category: 'Listrik, Air & Internet',
+            subCategory: 'Iuran RT/RW',
+            accountId: 'acc_tunai',
             frequency: 'monthly',
             nextRunDate: today,
             mode: 'manual',
             memberId: 'mem_ibu',
             active: true
-          },
-          {
-            id: generateId('stx'),
-            title: 'Tabungan Dana Pendidikan Anak',
-            type: 'pengeluaran',
-            amount: 1000000,
-            category: 'Pendidikan',
-            frequency: 'monthly',
-            nextRunDate: addDaysToISO(today, 5),
-            mode: 'auto',
-            memberId: 'mem_ayah',
-            active: true
           }
         ],
-        budgets: {
-          'Belanja Dapur': 2500000,
-          'Tagihan & Utilitas': 2000000,
-          'Perawatan Rumah': 800000,
-          'Transportasi': 1000000,
-          'Kesehatan': 700000,
-          'Pendidikan': 1500000,
-          'Lainnya': 1200000
-        },
         bills: [
           {
             id: generateId('bill'),
@@ -1730,23 +2131,13 @@ service cloud.firestore {
             date: addDaysToISO(today, 4),
             priority: 'Sedang',
             completed: false
-          },
-          {
-            id: generateId('sch'),
-            title: 'Ganti Gas LPG & Cek Stok Galon',
-            category: 'Kebersihan',
-            assigneeId: 'mem_ibu',
-            date: today,
-            priority: 'Sedang',
-            completed: false
           }
         ],
         inventory: [
           { id: generateId('inv'), name: 'Galon Air Mineral 19L', qty: 1, minQty: 2, unit: 'galon', estPrice: 21000 },
           { id: generateId('inv'), name: 'Tabung Gas LPG 12kg', qty: 1, minQty: 1, unit: 'tabung', estPrice: 215000 },
           { id: generateId('inv'), name: 'Beras Premium 5kg', qty: 2, minQty: 1, unit: 'karung', estPrice: 76000 },
-          { id: generateId('inv'), name: 'Minyak Goreng 2L', qty: 1, minQty: 1, unit: 'pouch', estPrice: 36000 },
-          { id: generateId('inv'), name: 'Sabun Cuci Piring', qty: 2, minQty: 1, unit: 'botol', estPrice: 15000 }
+          { id: generateId('inv'), name: 'Minyak Goreng 2L', qty: 1, minQty: 1, unit: 'pouch', estPrice: 36000 }
         ],
         shoppingList: [
           {
@@ -1756,14 +2147,6 @@ service cloud.firestore {
             price: 21000,
             checked: false,
             linkedInventoryName: 'Galon Air Mineral 19L'
-          },
-          {
-            id: generateId('shop'),
-            name: 'Telur Ayam Negeri 1kg',
-            qty: 1,
-            price: 29000,
-            checked: false,
-            linkedInventoryName: ''
           }
         ],
         notes: [
@@ -1784,18 +2167,38 @@ service cloud.firestore {
             pinned: true,
             content: 'SSID: RumahKu_5G\nPassword: KeluargaBahagia2026!',
             createdBy: 'mem_kakak'
-          },
-          {
-            id: generateId('note'),
-            title: 'Kontak Darurat & Tukang Langganan',
-            category: 'Kontak Darurat & Tukang',
-            color: 'emerald',
-            pinned: false,
-            content: 'Pak Joko (Servis AC): 0812-3456-7890\nMas Andri (Pompa & Ledeng): 0857-9876-5432\nPos Satpam Komplek: 0274-555123',
-            createdBy: 'mem_ibu'
           }
         ]
       };
+    }
+
+    function normalizeAppData(rawObj) {
+      const sample = createSampleData();
+      const defs = getDefaultCategories();
+      const normalized = {
+        themeColor: rawObj.themeColor || currentTheme || 'emerald',
+        members: Array.isArray(rawObj.members) && rawObj.members.length ? rawObj.members : sample.members,
+        accounts: Array.isArray(rawObj.accounts) && rawObj.accounts.length ? rawObj.accounts : getDefaultAccounts(),
+        incomeCategories: Array.isArray(rawObj.incomeCategories) && rawObj.incomeCategories.length ? rawObj.incomeCategories : defs.incomeCategories,
+        expenseCategories: Array.isArray(rawObj.expenseCategories) && rawObj.expenseCategories.length ? rawObj.expenseCategories : defs.expenseCategories,
+        transactions: Array.isArray(rawObj.transactions) ? rawObj.transactions : [],
+        scheduledTransactions: Array.isArray(rawObj.scheduledTransactions) ? rawObj.scheduledTransactions : [],
+        bills: Array.isArray(rawObj.bills) ? rawObj.bills : [],
+        schedules: Array.isArray(rawObj.schedules) ? rawObj.schedules : [],
+        inventory: Array.isArray(rawObj.inventory) ? rawObj.inventory : [],
+        shoppingList: Array.isArray(rawObj.shoppingList) ? rawObj.shoppingList : [],
+        notes: Array.isArray(rawObj.notes) ? rawObj.notes : []
+      };
+
+      // Migrasi batas anggaran lama (jika ada) ke expenseCategories
+      if (rawObj.budgets && typeof rawObj.budgets === 'object') {
+        normalized.expenseCategories = normalized.expenseCategories.map(cat => ({
+          ...cat,
+          budget: rawObj.budgets[cat.name] !== undefined ? Number(rawObj.budgets[cat.name]) : (Number(cat.budget) || 0)
+        }));
+      }
+
+      return normalized;
     }
 
     // ==================== PENYIMPANAN LOKAL & FIREBASE REAL-TIME SYNC ====================
@@ -1803,18 +2206,7 @@ service cloud.firestore {
       try {
         const raw = localStorage.getItem(STORAGE_KEYS.DATA);
         if (raw) {
-          const parsed = JSON.parse(raw);
-          appData = {
-            members: Array.isArray(parsed.members) && parsed.members.length ? parsed.members : createSampleData().members,
-            transactions: Array.isArray(parsed.transactions) ? parsed.transactions : [],
-            scheduledTransactions: Array.isArray(parsed.scheduledTransactions) ? parsed.scheduledTransactions : [],
-            budgets: parsed.budgets || createSampleData().budgets,
-            bills: Array.isArray(parsed.bills) ? parsed.bills : [],
-            schedules: Array.isArray(parsed.schedules) ? parsed.schedules : [],
-            inventory: Array.isArray(parsed.inventory) ? parsed.inventory : [],
-            shoppingList: Array.isArray(parsed.shoppingList) ? parsed.shoppingList : [],
-            notes: Array.isArray(parsed.notes) ? parsed.notes : []
-          };
+          appData = normalizeAppData(JSON.parse(raw));
         } else {
           appData = createSampleData();
           saveLocalDataOnly();
@@ -1961,17 +2353,11 @@ service cloud.firestore {
           (snapshot) => {
             if (snapshot.exists()) {
               const cloud = snapshot.data();
-              appData = {
-                members: Array.isArray(cloud.members) && cloud.members.length ? cloud.members : appData.members,
-                transactions: Array.isArray(cloud.transactions) ? cloud.transactions : [],
-                scheduledTransactions: Array.isArray(cloud.scheduledTransactions) ? cloud.scheduledTransactions : [],
-                budgets: cloud.budgets || appData.budgets,
-                bills: Array.isArray(cloud.bills) ? cloud.bills : [],
-                schedules: Array.isArray(cloud.schedules) ? cloud.schedules : [],
-                inventory: Array.isArray(cloud.inventory) ? cloud.inventory : [],
-                shoppingList: Array.isArray(cloud.shoppingList) ? cloud.shoppingList : [],
-                notes: Array.isArray(cloud.notes) ? cloud.notes : []
-              };
+              appData = normalizeAppData(cloud);
+
+              if (cloud.themeColor && APP_THEMES[cloud.themeColor]) {
+                applyAppTheme(cloud.themeColor, false);
+              }
 
               if (!appData.members.some(m => m.id === activeMemberId)) {
                 activeMemberId = appData.members[0].id;
@@ -1994,13 +2380,46 @@ service cloud.firestore {
           }
         );
       } catch (err) {
-        console.error('Firestore getDoc/setDoc error:', err);
-        if (err && err.code === 'permission-denied') {
-          handleFirestorePermissionDenied();
-        } else {
-          updateSyncStatusUI('local');
-        }
+    // ==================== TEMA WARNA DINAMIS ====================
+    function applyAppTheme(themeKey, persistToCloud = true) {
+      const chosen = APP_THEMES[themeKey] ? themeKey : 'emerald';
+      currentTheme = chosen;
+      appData.themeColor = chosen;
+      localStorage.setItem(STORAGE_KEYS.THEME, chosen);
+
+      const palette = APP_THEMES[chosen];
+      const root = document.documentElement;
+      Object.entries(palette.vars).forEach(([cssVar, val]) => {
+        root.style.setProperty(cssVar, val);
+      });
+
+      const metaTheme = document.querySelector('meta[name="theme-color"]');
+      if (metaTheme) metaTheme.setAttribute('content', palette.swatch);
+
+      if (persistToCloud) {
+        commitDataChanges();
+      } else {
+        renderThemeSwatches();
       }
+    }
+
+    function renderThemeSwatches() {
+      const grid = document.getElementById('themeSwatchesGrid');
+      if (!grid) return;
+      grid.innerHTML = Object.entries(APP_THEMES).map(([key, info]) => {
+        const active = key === currentTheme;
+        return `
+          <button type="button" onclick="applyAppTheme('${key}', true)" class="p-3.5 rounded-2xl border-2 ${active ? 'border-slate-900 bg-slate-50 shadow-xs' : 'border-slate-200 bg-white hover:border-slate-300'} flex items-center gap-3 text-left transition">
+            <span class="w-8 h-8 rounded-xl shrink-0 shadow-inner flex items-center justify-center text-white text-xs font-extrabold" style="background-color: ${info.swatch};">
+              ${active ? '✓' : ''}
+            </span>
+            <div class="min-w-0">
+              <p class="text-xs font-extrabold text-slate-900 truncate">${escapeHTML(info.label)}</p>
+              <p class="text-[10px] font-semibold text-slate-500">${active ? 'Aktif' : 'Pilih Tema'}</p>
+            </div>
+          </button>
+        `;
+      }).join('');
     }
 
     // ==================== TRANSAKSI TERJADWAL ENGINE ====================
@@ -2024,6 +2443,8 @@ service cloud.firestore {
             type: stx.type,
             amount: Number(stx.amount),
             category: stx.category,
+            subCategory: stx.subCategory || '',
+            accountId: stx.accountId || (appData.accounts[0]?.id || ''),
             date: today,
             desc: `[Terjadwal] ${stx.title}`,
             createdBy: stx.memberId || activeMemberId
@@ -2058,6 +2479,8 @@ service cloud.firestore {
         type: stx.type,
         amount: Number(stx.amount),
         category: stx.category,
+        subCategory: stx.subCategory || '',
+        accountId: stx.accountId || (appData.accounts[0]?.id || ''),
         date: today,
         desc: `[Terjadwal] ${stx.title}`,
         createdBy: stx.memberId || activeMemberId
@@ -2218,7 +2641,7 @@ service cloud.firestore {
       jadwal: 'Jadwal & Perawatan Rumah',
       stok: 'Stok & Daftar Belanja',
       catatan: 'Catatan & Info Penting',
-      keluarga: 'Keluarga & Pengaturan'
+      setting: 'Setting & Pengaturan Rumah'
     };
 
     function switchTab(tabName, subTab = null) {
@@ -2233,14 +2656,14 @@ service cloud.firestore {
       document.querySelectorAll('.nav-btn').forEach(btn => {
         const isCurrent = btn.getAttribute('data-nav') === tabName;
         btn.className = isCurrent
-          ? 'nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-extrabold bg-emerald-50 text-emerald-700 transition'
+          ? 'nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-extrabold bg-theme-50 text-theme-700 transition'
           : 'nav-btn w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition';
       });
 
       document.querySelectorAll('.nav-btn-mobile').forEach(btn => {
         const isCurrent = btn.getAttribute('data-nav') === tabName;
         btn.className = isCurrent
-          ? 'nav-btn-mobile min-h-[38px] whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-extrabold bg-emerald-600 text-white flex items-center gap-1.5 shadow-2xs transition'
+          ? 'nav-btn-mobile min-h-[38px] whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-extrabold bg-theme-600 text-white flex items-center gap-1.5 shadow-2xs transition'
           : 'nav-btn-mobile min-h-[38px] whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200/70 flex items-center gap-1.5 transition';
         if (isCurrent) {
           btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
@@ -2250,196 +2673,297 @@ service cloud.firestore {
       if (tabName === 'keuangan' && subTab) {
         switchFinanceSubTab(subTab);
       }
+      if (tabName === 'setting' && subTab) {
+        switchSettingSubTab(subTab);
+      }
 
       renderAll();
     }
 
     function switchFinanceSubTab(sub) {
       currentFinSubTab = sub;
-      ['riwayat', 'terjadwal'].forEach(key => {
+      ['riwayat', 'rekening', 'terjadwal'].forEach(key => {
         const btn = document.getElementById(`finSubTab-${key}`);
         const view = document.getElementById(`finSubView-${key}`);
+        if (!btn || !view) return;
         const active = key === sub;
         btn.className = active
-          ? 'min-h-[40px] px-4 py-2 rounded-xl text-xs sm:text-sm font-extrabold bg-white text-slate-900 shadow-2xs transition flex items-center gap-1.5'
-          : 'min-h-[40px] px-4 py-2 rounded-xl text-xs sm:text-sm font-bold text-slate-600 hover:text-slate-900 transition flex items-center gap-1.5';
+          ? 'min-h-[40px] px-3.5 py-2 rounded-xl text-xs sm:text-sm font-extrabold bg-white text-slate-900 shadow-2xs transition flex items-center gap-1.5'
+          : 'min-h-[40px] px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold text-slate-600 hover:text-slate-900 transition flex items-center gap-1.5';
         view.classList.toggle('hidden', !active);
       });
       renderFinanceSection();
     }
 
-    // ==================== MULTI-USER SWITCHER & CRUD ====================
-    function openProfileSwitcherModal() {
-      pendingPinMemberId = null;
-      document.getElementById('pinVerificationArea').classList.add('hidden');
-      const grid = document.getElementById('profileSwitcherGrid');
-      grid.innerHTML = appData.members.map(m => {
-        const isCurrent = m.id === activeMemberId;
-        const badgeCls = getMemberColorClasses(m.color);
-        return `
-          <button onclick="attemptSwitchMember('${m.id}')" class="p-3.5 rounded-2xl border-2 ${isCurrent ? 'border-emerald-600 bg-emerald-50/70' : 'border-slate-200 bg-slate-50 hover:border-emerald-300'} flex flex-col items-center text-center transition">
-            <div class="w-11 h-11 rounded-2xl ${badgeCls} font-extrabold text-sm flex items-center justify-center mb-2">
-              ${getInitials(m.name)}
-            </div>
-            <span class="text-sm font-extrabold text-slate-900">${escapeHTML(m.name)}</span>
-            <span class="text-[11px] font-semibold text-slate-500">${escapeHTML(m.role)}</span>
-            ${m.pin ? '<span class="mt-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold">Pakai PIN</span>' : ''}
-          </button>
-        `;
-      }).join('');
-      openModal('profileSwitcherModal');
+    function switchSettingSubTab(sub) {
+      currentSettingSubTab = sub;
+      ['tema', 'kategori', 'rekening', 'anggota', 'sync'].forEach(key => {
+        const btn = document.getElementById(`settingSubTab-${key}`);
+        const view = document.getElementById(`settingSubView-${key}`);
+        if (!btn || !view) return;
+        const active = key === sub;
+        btn.className = active
+          ? 'min-h-[40px] px-3.5 py-2 rounded-xl text-xs font-extrabold bg-white text-slate-900 shadow-2xs transition flex items-center gap-1.5'
+          : 'min-h-[40px] px-3.5 py-2 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 transition flex items-center gap-1.5';
+        view.classList.toggle('hidden', !active);
+      });
+      renderSettingSection();
     }
 
-    function attemptSwitchMember(memberId) {
-      const m = getMemberById(memberId);
-      if (!m) return;
-      if (m.pin && m.pin.length === 4 && m.id !== activeMemberId) {
-        pendingPinMemberId = memberId;
-        document.getElementById('pinPromptLabel').textContent = `Masukkan PIN 4-Digit untuk ${m.name}`;
-        document.getElementById('pinInputVerify').value = '';
-        document.getElementById('pinVerificationArea').classList.remove('hidden');
-        document.getElementById('pinInputVerify').focus();
+    // ==================== KATEGORI PEMASUKAN & PENGELUARAN DINAMIS ====================
+    function populateAccountSelect(selectId, selectedId = '') {
+      const sel = document.getElementById(selectId);
+      if (!sel) return;
+      sel.innerHTML = appData.accounts.map(acc => {
+        const bal = computeAccountBalance(acc.id);
+        return `<option value="${acc.id}" ${acc.id === selectedId ? 'selected' : ''}>${getAccountClassIcon(acc.classification)} ${escapeHTML(acc.name)} (${formatRupiah(bal)})</option>`;
+      }).join('');
+    }
+
+    function syncTransactionCategoryDropdown(radioGroupName, selectId, subInputId, preselectName = '') {
+      const checkedRadio = document.querySelector(`input[name="${radioGroupName}"]:checked`);
+      const flowType = checkedRadio ? checkedRadio.value : 'pengeluaran';
+      const list = flowType === 'pemasukan' ? appData.incomeCategories : appData.expenseCategories;
+      const sel = document.getElementById(selectId);
+      if (!sel) return;
+
+      const currentVal = preselectName || sel.value;
+      sel.innerHTML = list.map(cat =>
+        `<option value="${escapeHTML(cat.name)}" ${cat.name === currentVal ? 'selected' : ''}>${escapeHTML(cat.icon)} ${escapeHTML(cat.name)}</option>`
+      ).join('');
+
+      updateSubCategoryPlaceholder(radioGroupName, selectId, subInputId);
+    }
+
+    function updateSubCategoryPlaceholder(radioGroupName, selectId, subInputId) {
+      const subInput = document.getElementById(subInputId);
+      const sel = document.getElementById(selectId);
+      if (!subInput || !sel) return;
+      const checkedRadio = document.querySelector(`input[name="${radioGroupName}"]:checked`);
+      const flowType = checkedRadio ? checkedRadio.value : 'pengeluaran';
+      const list = flowType === 'pemasukan' ? appData.incomeCategories : appData.expenseCategories;
+      const found = list.find(c => c.name === sel.value);
+      subInput.placeholder = found && found.subHint ? `Misal: ${found.subHint}` : 'Detail sub-klasifikasi...';
+    }
+
+    let pendingCategoryTarget = null;
+    function openQuickCategoryFromForm(radioGroupName, selectId) {
+      const checkedRadio = document.querySelector(`input[name="${radioGroupName}"]:checked`);
+      const flowType = checkedRadio ? checkedRadio.value : 'pengeluaran';
+      pendingCategoryTarget = { radioGroupName, selectId };
+      openCategoryModal(flowType);
+    }
+
+    function openCategoryModal(flowType, editId = '') {
+      document.getElementById('categoryFlowType').value = flowType;
+      document.getElementById('editCategoryId').value = editId;
+      const budgetWrap = document.getElementById('catBudgetFieldWrap');
+      budgetWrap.classList.toggle('hidden', flowType !== 'pengeluaran');
+
+      if (editId) {
+        const list = flowType === 'pemasukan' ? appData.incomeCategories : appData.expenseCategories;
+        const cat = list.find(c => c.id === editId);
+        if (!cat) return;
+        document.getElementById('categoryModalTitle').textContent = `Edit Kategori ${flowType === 'pemasukan' ? 'Pemasukan' : 'Pengeluaran'}`;
+        document.getElementById('catNameInput').value = cat.name;
+        document.getElementById('catIconInput').value = cat.icon || '🏷️';
+        document.getElementById('catColorInput').value = cat.color || 'emerald';
+        document.getElementById('catSubHintInput').value = cat.subHint || '';
+        document.getElementById('catBudgetInput').value = formatRibuanString(cat.budget || 0);
+      } else {
+        document.getElementById('categoryModalTitle').textContent = `Tambah Kategori ${flowType === 'pemasukan' ? 'Pemasukan' : 'Pengeluaran'}`;
+        document.getElementById('catNameInput').value = '';
+        document.getElementById('catIconInput').value = flowType === 'pemasukan' ? '💰' : '🛍️';
+        document.getElementById('catColorInput').value = flowType === 'pemasukan' ? 'emerald' : 'rose';
+        document.getElementById('catSubHintInput').value = '';
+        document.getElementById('catBudgetInput').value = '1.000.000';
+      }
+      openModal('categoryModal');
+    }
+
+    function handleSaveCategory(e) {
+      e.preventDefault();
+      const flowType = document.getElementById('categoryFlowType').value;
+      const editId = document.getElementById('editCategoryId').value;
+      const name = document.getElementById('catNameInput').value.trim();
+      const icon = document.getElementById('catIconInput').value.trim() || '🏷️';
+      const color = document.getElementById('catColorInput').value;
+      const subHint = document.getElementById('catSubHintInput').value.trim();
+      const budget = parseRibuan(document.getElementById('catBudgetInput').value);
+
+      if (!name) return;
+
+      const targetKey = flowType === 'pemasukan' ? 'incomeCategories' : 'expenseCategories';
+      if (editId) {
+        appData[targetKey] = appData[targetKey].map(c =>
+          c.id === editId ? { ...c, name, icon, color, subHint, ...(flowType === 'pengeluaran' ? { budget } : {}) } : c
+        );
+        showToast(`Kategori "${name}" diperbarui!`);
+      } else {
+        appData[targetKey].push({
+          id: generateId(flowType === 'pemasukan' ? 'cat_inc' : 'cat_exp'),
+          name,
+          icon,
+          color,
+          subHint,
+          ...(flowType === 'pengeluaran' ? { budget } : {})
+        });
+        showToast(`Kategori "${name}" ditambahkan!`);
+      }
+
+      closeModal('categoryModal');
+      commitDataChanges();
+
+      if (pendingCategoryTarget) {
+        const { radioGroupName, selectId } = pendingCategoryTarget;
+        syncTransactionCategoryDropdown(radioGroupName, selectId, selectId === 'txCategory' ? 'txSubCategory' : 'qTxSubCategory', name);
+        pendingCategoryTarget = null;
+      }
+    }
+
+    function deleteCategoryAction(flowType, catId) {
+      const targetKey = flowType === 'pemasukan' ? 'incomeCategories' : 'expenseCategories';
+      if (appData[targetKey].length <= 1) {
+        showToast('Minimal harus ada 1 kategori aktif.', 'warning');
         return;
       }
-      completeMemberSwitch(memberId);
+      const cat = appData[targetKey].find(c => c.id === catId);
+      openConfirmDialog(
+        `Hapus Kategori "${cat?.name || ''}"?`,
+        'Kategori akan dihapus dari daftar pilihan transaksi baru.',
+        () => {
+          appData[targetKey] = appData[targetKey].filter(c => c.id !== catId);
+          commitDataChanges();
+          showToast('Kategori dihapus.');
+        }
+      );
     }
 
-    function cancelPinCheck() {
-      pendingPinMemberId = null;
-      document.getElementById('pinVerificationArea').classList.add('hidden');
-    }
+    // ==================== REKENING BANK, KARTU DEBIT & DOMPET ====================
+    function openAccountModal(editId = '') {
+      populateMemberSelect('accOwnerInput', activeMemberId);
+      document.getElementById('editAccountId').value = editId;
 
-    function verifyMemberPin() {
-      const m = getMemberById(pendingPinMemberId);
-      if (!m) return;
-      const val = document.getElementById('pinInputVerify').value.trim();
-      if (val === m.pin) {
-        completeMemberSwitch(m.id);
+      if (editId) {
+        const acc = getAccountById(editId);
+        if (!acc) return;
+        document.getElementById('accountModalTitle').textContent = 'Edit Rekening / Dompet';
+        document.getElementById('accClassInput').value = acc.classification;
+        document.getElementById('accNameInput').value = acc.name;
+        document.getElementById('accInstitutionInput').value = acc.institution || '';
+        document.getElementById('accLast4Input').value = acc.last4 || '';
+        document.getElementById('accOwnerInput').value = acc.ownerId || activeMemberId;
+        document.getElementById('accInitialBalanceInput').value = formatRibuanString(acc.initialBalance || 0);
       } else {
-        showToast('PIN salah! Silakan coba lagi.', 'error');
-        document.getElementById('pinInputVerify').value = '';
+        document.getElementById('accountModalTitle').textContent = 'Tambah Rekening / Dompet';
+        document.getElementById('accClassInput').value = 'Rekening Bank';
+        document.getElementById('accNameInput').value = '';
+        document.getElementById('accInstitutionInput').value = '';
+        document.getElementById('accLast4Input').value = '';
+        document.getElementById('accInitialBalanceInput').value = '0';
       }
+      openModal('accountModal');
     }
 
-    function completeMemberSwitch(memberId) {
-      activeMemberId = memberId;
-      localStorage.setItem(STORAGE_KEYS.ACTIVE_MEMBER, memberId);
-      closeModal('profileSwitcherModal');
-      renderAll();
-      const m = getActiveMember();
-      showToast(`Beralih ke profil ${m.name}`);
-    }
-
-    function openMemberModal(memberId = '') {
-      document.getElementById('editMemberId').value = memberId;
-      if (memberId) {
-        const m = getMemberById(memberId);
-        if (!m) return;
-        document.getElementById('memberModalTitle').textContent = 'Edit Profil Anggota';
-        document.getElementById('memberNameInput').value = m.name;
-        document.getElementById('memberRoleInput').value = m.role;
-        document.getElementById('memberColorInput').value = m.color || 'emerald';
-        document.getElementById('memberPinInput').value = m.pin || '';
-      } else {
-        document.getElementById('memberModalTitle').textContent = 'Tambah Anggota Keluarga';
-        document.getElementById('memberNameInput').value = '';
-        document.getElementById('memberRoleInput').value = 'Anggota Keluarga';
-        document.getElementById('memberColorInput').value = 'indigo';
-        document.getElementById('memberPinInput').value = '';
-      }
-      openModal('memberModal');
-    }
-
-    function handleSaveMember(e) {
+    function handleSaveAccount(e) {
       e.preventDefault();
-      const editId = document.getElementById('editMemberId').value;
-      const name = document.getElementById('memberNameInput').value.trim();
-      const role = document.getElementById('memberRoleInput').value;
-      const color = document.getElementById('memberColorInput').value;
-      const pin = document.getElementById('memberPinInput').value.trim();
+      const editId = document.getElementById('editAccountId').value;
+      const classification = document.getElementById('accClassInput').value;
+      const name = document.getElementById('accNameInput').value.trim();
+      const institution = document.getElementById('accInstitutionInput').value.trim();
+      const last4 = document.getElementById('accLast4Input').value.trim();
+      const ownerId = document.getElementById('accOwnerInput').value;
+      const initialBalance = parseRibuan(document.getElementById('accInitialBalanceInput').value);
+
       if (!name) return;
 
       if (editId) {
-        appData.members = appData.members.map(m => m.id === editId ? { ...m, name, role, color, pin } : m);
-        showToast(`Profil ${name} diperbarui.`);
+        appData.accounts = appData.accounts.map(a =>
+          a.id === editId ? { ...a, classification, name, institution, last4, ownerId, initialBalance } : a
+        );
+        showToast(`Akun "${name}" diperbarui!`);
       } else {
-        const newM = { id: generateId('mem'), name, role, color, pin };
-        appData.members.push(newM);
-        activeMemberId = newM.id;
-        localStorage.setItem(STORAGE_KEYS.ACTIVE_MEMBER, activeMemberId);
-        showToast(`Anggota ${name} ditambahkan!`);
+        appData.accounts.push({
+          id: generateId('acc'),
+          classification,
+          name,
+          institution,
+          last4,
+          ownerId,
+          initialBalance
+        });
+        showToast(`Akun "${name}" berhasil ditambahkan!`);
       }
-      closeModal('memberModal');
+
+      closeModal('accountModal');
       commitDataChanges();
     }
 
-    function deleteMemberAction(memberId) {
-      if (appData.members.length <= 1) {
-        showToast('Minimal harus ada 1 anggota keluarga.', 'warning');
+    function deleteAccountAction(accId) {
+      if (appData.accounts.length <= 1) {
+        showToast('Minimal harus ada 1 rekening atau dompet aktif.', 'warning');
         return;
       }
-      const m = getMemberById(memberId);
+      const acc = getAccountById(accId);
       openConfirmDialog(
-        `Hapus Profil ${m?.name || ''}?`,
-        'Profil anggota ini akan dihapus dari daftar keluarga.',
+        `Hapus Akun "${acc?.name || ''}"?`,
+        'Akun ini akan dihapus dari daftar rekening/dompet.',
         () => {
-          appData.members = appData.members.filter(x => x.id !== memberId);
-          if (activeMemberId === memberId) {
-            activeMemberId = appData.members[0].id;
-            localStorage.setItem(STORAGE_KEYS.ACTIVE_MEMBER, activeMemberId);
-          }
+          appData.accounts = appData.accounts.filter(a => a.id !== accId);
           commitDataChanges();
-          showToast('Profil anggota dihapus.');
+          showToast('Akun dihapus.');
         }
       );
     }
 
-    function copyFamilyCode() {
-      copyTextToClipboard(familyCode, `Kode Keluarga ${familyCode} disalin!`);
-    }
-
-    function copyFamilyShareLink() {
-      copyTextToClipboard(getFamilyShareURL(), 'Link undangan HP disalin! Kirim lewat WhatsApp ke anggota keluarga.');
-    }
-
-    function copyFirestoreRulesSnippet() {
-      const snippet = `rules_version = '2';\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    match /rumahku_families/{familyId} {\n      allow read, write: if true;\n    }\n  }\n}`;
-      copyTextToClipboard(snippet, 'Kode Firestore Rules berhasil disalin!');
-    }
-
-    function generateNewFamilyCodeAction() {
-      openConfirmDialog(
-        'Buat Kode Keluarga Baru?',
-        'Anda akan membuat ruang keluarga baru di cloud dengan kode 6-karakter yang baru.',
-        () => {
-          familyCode = generateSixCharCode();
-          localStorage.setItem(STORAGE_KEYS.FAMILY_CODE, familyCode);
-          syncFamilyCodeToUrl(familyCode);
-          if (db) subscribeToFamilyDoc(familyCode);
-          renderAll();
-          showToast(`Kode Keluarga baru dibuat: ${familyCode}`);
-        }
-      );
-    }
-
-    function handleJoinFamilyCode(e) {
-      e.preventDefault();
-      const inputCode = document.getElementById('joinFamilyCodeInput').value.trim().toUpperCase();
-      if (inputCode.length !== 6) {
-        showToast('Kode Keluarga harus 6 karakter.', 'warning');
+    function openTransferModal() {
+      if (appData.accounts.length < 2) {
+        showToast('Tambahkan minimal 2 rekening/dompet untuk melakukan transfer.', 'warning');
         return;
       }
-      familyCode = inputCode;
-      localStorage.setItem(STORAGE_KEYS.FAMILY_CODE, familyCode);
-      syncFamilyCodeToUrl(familyCode);
-      document.getElementById('joinFamilyCodeInput').value = '';
-      if (db) {
-        subscribeToFamilyDoc(familyCode);
-        showToast(`Menghubungkan ke Kode Keluarga ${familyCode}...`);
-      } else {
-        renderAll();
-        showToast(`Kode keluarga aktif: ${familyCode}`);
+      populateAccountSelect('trfFromAccount', appData.accounts[0]?.id);
+      populateAccountSelect('trfToAccount', appData.accounts[1]?.id || appData.accounts[0]?.id);
+      document.getElementById('trfAmount').value = '';
+      document.getElementById('trfDate').value = getTodayISO();
+      document.getElementById('trfNote').value = '';
+      openModal('transferModal');
+    }
+
+    function handleAccountTransfer(e) {
+      e.preventDefault();
+      const fromId = document.getElementById('trfFromAccount').value;
+      const toId = document.getElementById('trfToAccount').value;
+      const amount = parseRibuan(document.getElementById('trfAmount').value);
+      const date = document.getElementById('trfDate').value;
+      const note = document.getElementById('trfNote').value.trim();
+
+      if (fromId === toId) {
+        showToast('Rekening sumber dan tujuan tidak boleh sama.', 'warning');
+        return;
       }
+      if (!amount || amount <= 0) {
+        showToast('Masukkan nominal transfer yang valid.', 'warning');
+        return;
+      }
+
+      const fromAcc = getAccountById(fromId);
+      const toAcc = getAccountById(toId);
+      appData.transactions.unshift({
+        id: generateId('tx'),
+        type: 'transfer',
+        amount,
+        category: 'Transfer Antar Rekening',
+        subCategory: `${fromAcc?.name || ''} → ${toAcc?.name || ''}`,
+        accountId: fromId,
+        toAccountId: toId,
+        date,
+        desc: note || `Transfer: ${fromAcc?.name || ''} ke ${toAcc?.name || ''}`,
+        createdBy: activeMemberId
+      });
+
+      closeModal('transferModal');
+      commitDataChanges();
+      showToast(`Transfer ${formatRupiah(amount)} berhasil dicatat!`);
     }
 
     // ==================== RENDER DASHBOARD RINGKASAN ====================
@@ -2469,6 +2993,26 @@ service cloud.firestore {
       balEl.className = `text-2xl font-extrabold mt-3 truncate ${bal < 0 ? 'text-rose-600' : 'text-slate-900'}`;
       document.getElementById('kpiMonthlySub').textContent = `Masuk ${formatRupiah(inc)} • Keluar ${formatRupiah(out)}`;
 
+      // Render Kartu Saldo Rekening & Dompet di Dashboard
+      let totalAllAccounts = 0;
+      const dashAccGrid = document.getElementById('dashAccountsGrid');
+      dashAccGrid.innerHTML = appData.accounts.map(acc => {
+        const curBal = computeAccountBalance(acc.id);
+        totalAllAccounts += curBal;
+        const owner = getMemberById(acc.ownerId);
+        return `
+          <div onclick="switchTab('keuangan', 'rekening')" class="cursor-pointer p-3.5 rounded-xl bg-slate-50 hover:bg-theme-50/60 border border-slate-200/90 transition">
+            <div class="flex items-center justify-between gap-1">
+              <span class="text-[11px] font-extrabold text-slate-500 truncate">${getAccountClassIcon(acc.classification)} ${escapeHTML(acc.classification)}</span>
+              ${owner ? `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-white border border-slate-200 text-slate-600">${escapeHTML(owner.name)}</span>` : ''}
+            </div>
+            <p class="text-xs font-extrabold text-slate-900 mt-1 truncate">${escapeHTML(acc.name)}</p>
+            <p class="text-base font-extrabold ${curBal < 0 ? 'text-rose-600' : 'text-theme-700'} mt-1 truncate">${formatRupiah(curBal)}</p>
+          </div>
+        `;
+      }).join('');
+      document.getElementById('dashTotalAccountsBalance').textContent = formatRupiah(totalAllAccounts);
+
       const unpaidBills = appData.bills.filter(b => !b.isPaid).sort((a, b) => a.dueDate.localeCompare(b.dueDate));
       const unpaidSum = unpaidBills.reduce((s, b) => s + Number(b.amount), 0);
       document.getElementById('kpiUnpaidBillsTotal').textContent = formatRupiah(unpaidSum);
@@ -2493,7 +3037,7 @@ service cloud.firestore {
 
       const urgentEl = document.getElementById('dashUrgentBillsList');
       if (unpaidBills.length === 0) {
-        urgentEl.innerHTML = `<p class="text-xs font-bold text-emerald-700 bg-emerald-50 p-3.5 rounded-xl text-center">Semua tagihan bulan ini sudah lunas!</p>`;
+        urgentEl.innerHTML = `<p class="text-xs font-bold text-theme-700 bg-theme-50 p-3.5 rounded-xl text-center">Semua tagihan bulan ini sudah lunas!</p>`;
       } else {
         urgentEl.innerHTML = unpaidBills.slice(0, 3).map(bill => {
           const st = getBillStatusInfo(bill);
@@ -2507,7 +3051,7 @@ service cloud.firestore {
                 <p class="text-sm font-extrabold text-slate-900 mt-1 truncate">${escapeHTML(bill.name)}</p>
                 <p class="text-xs font-bold text-slate-600">${formatRupiah(bill.amount)}</p>
               </div>
-              <button onclick="payBillAction('${bill.id}')" class="shrink-0 min-h-[40px] px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold transition">
+              <button onclick="payBillAction('${bill.id}')" class="shrink-0 min-h-[40px] px-3.5 py-2 rounded-xl bg-theme-600 hover:bg-theme-700 text-white text-xs font-extrabold transition">
                 Bayar
               </button>
             </div>
@@ -2614,16 +3158,21 @@ service cloud.firestore {
     function openQuickTxModal() {
       document.getElementById('qTxDate').value = getTodayISO();
       document.getElementById('qTxAmount').value = '';
+      document.getElementById('qTxSubCategory').value = '';
       document.getElementById('qTxDesc').value = '';
+      syncTransactionCategoryDropdown('qTxType', 'qTxCategory', 'qTxSubCategory');
+      populateAccountSelect('qTxAccountId', appData.accounts[0]?.id);
       openModal('quickTxModal');
     }
 
     function handleQuickTxSubmit(e) {
       e.preventDefault();
       const type = document.querySelector('input[name="qTxType"]:checked').value;
-      const amount = Number(document.getElementById('qTxAmount').value);
+      const amount = parseRibuan(document.getElementById('qTxAmount').value);
       const desc = document.getElementById('qTxDesc').value.trim();
       const category = document.getElementById('qTxCategory').value;
+      const subCategory = document.getElementById('qTxSubCategory').value.trim();
+      const accountId = document.getElementById('qTxAccountId').value;
       const date = document.getElementById('qTxDate').value;
       if (!amount || !desc) return;
 
@@ -2632,6 +3181,8 @@ service cloud.firestore {
         type,
         amount,
         category,
+        subCategory,
+        accountId,
         date,
         desc,
         createdBy: activeMemberId
@@ -2645,9 +3196,11 @@ service cloud.firestore {
     function handleAddTransaction(e) {
       e.preventDefault();
       const type = document.querySelector('input[name="txType"]:checked').value;
-      const amount = Number(document.getElementById('txAmount').value);
+      const amount = parseRibuan(document.getElementById('txAmount').value);
       const desc = document.getElementById('txDesc').value.trim();
       const category = document.getElementById('txCategory').value;
+      const subCategory = document.getElementById('txSubCategory').value.trim();
+      const accountId = document.getElementById('txAccountId').value;
       const date = document.getElementById('txDate').value;
       if (!amount || !desc) return;
 
@@ -2656,6 +3209,8 @@ service cloud.firestore {
         type,
         amount,
         category,
+        subCategory,
+        accountId,
         date,
         desc,
         createdBy: activeMemberId
@@ -2663,6 +3218,8 @@ service cloud.firestore {
 
       e.target.reset();
       document.getElementById('txDate').value = getTodayISO();
+      syncTransactionCategoryDropdown('txType', 'txCategory', 'txSubCategory');
+      populateAccountSelect('txAccountId', accountId);
       commitDataChanges();
       showToast('Transaksi tersimpan ke riwayat keluarga!');
     }
@@ -2670,7 +3227,7 @@ service cloud.firestore {
     function deleteTransactionAction(id) {
       openConfirmDialog(
         'Hapus Transaksi Ini?',
-        'Catatan transaksi akan dihapus secara permanen.',
+        'Catatan transaksi akan dihapus dan saldo rekening akan disesuaikan ulang.',
         () => {
           appData.transactions = appData.transactions.filter(t => t.id !== id);
           commitDataChanges();
@@ -2683,10 +3240,35 @@ service cloud.firestore {
       const member = getActiveMember();
       document.getElementById('finFormRecorderBadge').textContent = `Oleh: ${member.name}`;
 
+      // Sinkronisasi dropdown kategori & rekening pada form inline Keuangan
+      syncTransactionCategoryDropdown('txType', 'txCategory', 'txSubCategory');
+      const prevFormAcc = document.getElementById('txAccountId').value;
+      populateAccountSelect('txAccountId', prevFormAcc || appData.accounts[0]?.id);
+
       const monthInput = document.getElementById('finMonthFilter');
       if (!monthInput.value) monthInput.value = getTodayISO().slice(0, 7);
       const selectedMonth = monthInput.value;
 
+      // Isi filter Kategori gabungan (Pemasukan + Pengeluaran)
+      const filterCatSel = document.getElementById('filterTxCategory');
+      const prevCat = filterCatSel.value || 'all';
+      const allCatNames = [
+        ...appData.expenseCategories.map(c => c.name),
+        ...appData.incomeCategories.map(c => c.name),
+        'Transfer Antar Rekening'
+      ];
+      filterCatSel.innerHTML = `<option value="all">Semua Kategori</option>` +
+        [...new Set(allCatNames)].map(cName => `<option value="${escapeHTML(cName)}">${escapeHTML(cName)}</option>`).join('');
+      filterCatSel.value = allCatNames.includes(prevCat) ? prevCat : 'all';
+
+      // Isi filter Rekening / Dompet
+      const filterAccSel = document.getElementById('filterTxAccount');
+      const prevAcc = filterAccSel.value || 'all';
+      filterAccSel.innerHTML = `<option value="all">Semua Rekening/Dompet</option>` +
+        appData.accounts.map(a => `<option value="${a.id}">${escapeHTML(a.name)}</option>`).join('');
+      filterAccSel.value = appData.accounts.some(a => a.id === prevAcc) ? prevAcc : 'all';
+
+      // Isi filter Anggota
       const filterMemberSel = document.getElementById('filterTxMember');
       const prevMember = filterMemberSel.value || 'all';
       filterMemberSel.innerHTML = `<option value="all">Semua Anggota</option>` +
@@ -2695,12 +3277,13 @@ service cloud.firestore {
 
       const monthTx = appData.transactions.filter(t => t.date.startsWith(selectedMonth));
 
+      // Progress Bar Batas Anggaran berdasarkan expenseCategories dinamis
       const budgetContainer = document.getElementById('budgetProgressContainer');
-      budgetContainer.innerHTML = BUDGET_CATEGORIES.map(cat => {
+      budgetContainer.innerHTML = appData.expenseCategories.map(cat => {
         const spent = monthTx
-          .filter(t => t.type === 'pengeluaran' && t.category === cat)
+          .filter(t => t.type === 'pengeluaran' && t.category === cat.name)
           .reduce((s, t) => s + Number(t.amount), 0);
-        const limit = Number(appData.budgets[cat]) || 0;
+        const limit = Number(cat.budget) || 0;
         const pct = limit > 0 ? Math.round((spent / limit) * 100) : (spent > 0 ? 100 : 0);
         const barWidth = Math.min(pct, 100);
 
@@ -2716,9 +3299,9 @@ service cloud.firestore {
 
         return `
           <div>
-            <div class="flex items-center justify-between text-xs mb-1">
-              <span class="font-bold text-slate-800">${escapeHTML(cat)}</span>
-              <span class="font-extrabold ${txtColor}">${formatRupiah(spent)} / ${formatRupiah(limit)} (${pct}%)</span>
+            <div class="flex items-center justify-between text-xs mb-1 gap-2">
+              <span class="font-bold text-slate-800 truncate">${escapeHTML(cat.icon)} ${escapeHTML(cat.name)}</span>
+              <span class="font-extrabold ${txtColor} shrink-0">${formatRupiah(spent)} / ${formatRupiah(limit)} (${pct}%)</span>
             </div>
             <div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
               <div class="h-full ${barColor} rounded-full transition-all" style="width: ${barWidth}%"></div>
@@ -2731,12 +3314,19 @@ service cloud.firestore {
         finChartInstance = inst;
       }, finChartInstance);
 
+      // Filter Riwayat Transaksi
       const typeF = document.getElementById('filterTxType').value;
-      const catF = document.getElementById('filterTxCategory').value;
+      const catF = filterCatSel.value;
+      const accF = filterAccSel.value;
       const memF = filterMemberSel.value;
 
       const filtered = monthTx
-        .filter(t => (typeF === 'all' || t.type === typeF) && (catF === 'all' || t.category === catF) && (memF === 'all' || t.createdBy === memF))
+        .filter(t =>
+          (typeF === 'all' || t.type === typeF) &&
+          (catF === 'all' || t.category === catF) &&
+          (accF === 'all' || t.accountId === accF || t.toAccountId === accF) &&
+          (memF === 'all' || t.createdBy === memF)
+        )
         .sort((a, b) => b.date.localeCompare(a.date));
 
       const historyEl = document.getElementById('transactionHistoryList');
@@ -2745,20 +3335,29 @@ service cloud.firestore {
       } else {
         historyEl.innerHTML = filtered.map(tx => {
           const isInc = tx.type === 'pemasukan';
+          const isTrf = tx.type === 'transfer';
           const creator = getMemberById(tx.createdBy);
+          const acc = getAccountById(tx.accountId);
+          const toAcc = tx.toAccountId ? getAccountById(tx.toAccountId) : null;
+
+          const amountColor = isTrf ? 'text-indigo-600' : isInc ? 'text-emerald-600' : 'text-rose-600';
+          const amountSign = isTrf ? '⇄' : isInc ? '+' : '-';
+
           return `
             <div class="py-3.5 flex items-center justify-between gap-3">
               <div class="min-w-0 flex-1">
                 <div class="flex flex-wrap items-center gap-1.5 mb-1">
                   <span class="px-2 py-0.5 rounded-md bg-slate-100 text-[11px] font-bold text-slate-700">${escapeHTML(tx.category)}</span>
-                  ${creator ? `<span class="px-2 py-0.5 rounded-md bg-emerald-50 text-[11px] font-extrabold text-emerald-800">Oleh ${escapeHTML(creator.name)}</span>` : ''}
+                  ${tx.subCategory ? `<span class="px-2 py-0.5 rounded-md bg-indigo-50 text-[11px] font-bold text-indigo-700">${escapeHTML(tx.subCategory)}</span>` : ''}
+                  ${acc ? `<span class="px-2 py-0.5 rounded-md bg-amber-50 text-[11px] font-bold text-amber-800">${getAccountClassIcon(acc.classification)} ${escapeHTML(acc.name)}${toAcc ? ` → ${escapeHTML(toAcc.name)}` : ''}</span>` : ''}
+                  ${creator ? `<span class="px-2 py-0.5 rounded-md bg-theme-50 text-[11px] font-extrabold text-theme-800">Oleh ${escapeHTML(creator.name)}</span>` : ''}
                   <span class="text-xs text-slate-400">${formatDateIndo(tx.date)}</span>
                 </div>
                 <p class="text-sm font-extrabold text-slate-900 truncate">${escapeHTML(tx.desc)}</p>
               </div>
               <div class="flex items-center gap-2.5 shrink-0">
-                <span class="text-sm font-extrabold ${isInc ? 'text-emerald-600' : 'text-rose-600'}">
-                  ${isInc ? '+' : '-'} ${formatRupiah(tx.amount)}
+                <span class="text-sm font-extrabold ${amountColor}">
+                  ${amountSign} ${formatRupiah(tx.amount)}
                 </span>
                 <button onclick="deleteTransactionAction('${tx.id}')" class="p-2 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50" title="Hapus">
                   <i data-lucide="trash-2" class="w-4 h-4"></i>
@@ -2769,6 +3368,41 @@ service cloud.firestore {
         }).join('');
       }
 
+      // Render Sub-Tab 2B: Kartu Rekening & Dompet
+      let totalAllAcc = 0;
+      const finAccGrid = document.getElementById('finAccountsGrid');
+      if (finAccGrid) {
+        finAccGrid.innerHTML = appData.accounts.map(acc => {
+          const curBal = computeAccountBalance(acc.id);
+          totalAllAcc += curBal;
+          const owner = getMemberById(acc.ownerId);
+          return `
+            <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs flex flex-col justify-between space-y-3">
+              <div>
+                <div class="flex items-start justify-between gap-2">
+                  <span class="px-2.5 py-0.5 rounded-full bg-theme-50 text-theme-800 text-[11px] font-extrabold">
+                    ${getAccountClassIcon(acc.classification)} ${escapeHTML(acc.classification)}
+                  </span>
+                  <div class="flex gap-1">
+                    <button onclick="openAccountModal('${acc.id}')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-extrabold text-slate-700">Edit</button>
+                    <button onclick="deleteAccountAction('${acc.id}')" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                  </div>
+                </div>
+                <h4 class="text-base font-extrabold text-slate-900 mt-2">${escapeHTML(acc.name)}</h4>
+                <p class="text-xs font-semibold text-slate-500">${escapeHTML(acc.institution || '-')} ${acc.last4 ? `• ${escapeHTML(acc.last4)}` : ''} ${owner ? `• ${escapeHTML(owner.name)}` : ''}</p>
+              </div>
+              <div class="pt-3 border-t border-slate-100 flex items-baseline justify-between">
+                <span class="text-[11px] font-bold text-slate-400">Saldo Saat Ini</span>
+                <span class="text-lg font-extrabold ${curBal < 0 ? 'text-rose-600' : 'text-theme-700'}">${formatRupiah(curBal)}</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+        const totalEl = document.getElementById('finTotalAccountsBalance');
+        if (totalEl) totalEl.textContent = formatRupiah(totalAllAcc);
+      }
+
+      // Render Daftar Transaksi Terjadwal
       document.getElementById('finSchedCountPill').textContent = appData.scheduledTransactions.filter(s => s.active).length;
       const schedGrid = document.getElementById('scheduledTransactionsGrid');
       if (appData.scheduledTransactions.length === 0) {
@@ -2777,6 +3411,7 @@ service cloud.firestore {
         schedGrid.innerHTML = appData.scheduledTransactions.map(stx => {
           const isInc = stx.type === 'pemasukan';
           const m = getMemberById(stx.memberId);
+          const acc = getAccountById(stx.accountId);
           return `
             <div class="bg-white rounded-2xl border ${stx.active ? 'border-slate-200/90' : 'border-slate-200 opacity-65'} p-5 shadow-2xs space-y-3">
               <div class="flex items-start justify-between gap-2">
@@ -2794,14 +3429,14 @@ service cloud.firestore {
                     ${isInc ? '+' : '-'} ${formatRupiah(stx.amount)}
                   </p>
                 </div>
-                <button onclick="toggleScheduledActive('${stx.id}')" class="min-h-[36px] px-2.5 py-1 rounded-lg text-xs font-extrabold border ${stx.active ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-slate-100 border-slate-300 text-slate-600'}">
+                <button onclick="toggleScheduledActive('${stx.id}')" class="min-h-[36px] px-2.5 py-1 rounded-lg text-xs font-extrabold border ${stx.active ? 'bg-theme-50 border-theme-200 text-theme-700' : 'bg-slate-100 border-slate-300 text-slate-600'}">
                   ${stx.active ? 'Aktif' : 'Nonaktif'}
                 </button>
               </div>
 
               <div class="text-xs font-semibold text-slate-500 space-y-0.5">
                 <p>Eksekusi Berikutnya: <strong class="text-slate-800">${formatDateIndo(stx.nextRunDate)}</strong></p>
-                <p>Kategori: ${escapeHTML(stx.category)} ${m ? `• Anggota: ${escapeHTML(m.name)}` : ''}</p>
+                <p>Kategori: ${escapeHTML(stx.category)} ${acc ? `• Akun: ${escapeHTML(acc.name)}` : ''} ${m ? `• ${escapeHTML(m.name)}` : ''}</p>
               </div>
 
               <div class="pt-3 border-t border-slate-100 flex items-center gap-2">
@@ -2823,6 +3458,7 @@ service cloud.firestore {
 
     function openScheduledModal(editId = '') {
       populateMemberSelect('schedMemberSelect', activeMemberId);
+      populateAccountSelect('schedAccountId', appData.accounts[0]?.id);
       document.getElementById('editScheduledId').value = editId;
 
       if (editId) {
@@ -2830,17 +3466,22 @@ service cloud.firestore {
         if (!stx) return;
         document.getElementById('scheduledModalTitle').textContent = 'Edit Transaksi Terjadwal';
         document.querySelector(`input[name="schedType"][value="${stx.type}"]`).checked = true;
+        syncTransactionCategoryDropdown('schedType', 'schedCategory', 'schedSubCategory', stx.category);
         document.getElementById('schedTitle').value = stx.title;
-        document.getElementById('schedAmount').value = stx.amount;
-        document.getElementById('schedCategory').value = stx.category;
+        document.getElementById('schedAmount').value = formatRibuanString(stx.amount);
+        document.getElementById('schedSubCategory').value = stx.subCategory || '';
+        document.getElementById('schedAccountId').value = stx.accountId || (appData.accounts[0]?.id || '');
         document.getElementById('schedFrequency').value = stx.frequency;
         document.getElementById('schedNextDate').value = stx.nextRunDate;
         document.querySelector(`input[name="schedMode"][value="${stx.mode}"]`).checked = true;
         document.getElementById('schedMemberSelect').value = stx.memberId || activeMemberId;
       } else {
         document.getElementById('scheduledModalTitle').textContent = 'Buat Transaksi Terjadwal';
+        document.querySelector('input[name="schedType"][value="pengeluaran"]').checked = true;
+        syncTransactionCategoryDropdown('schedType', 'schedCategory', 'schedSubCategory');
         document.getElementById('schedTitle').value = '';
         document.getElementById('schedAmount').value = '';
+        document.getElementById('schedSubCategory').value = '';
         document.getElementById('schedFrequency').value = 'monthly';
         document.getElementById('schedNextDate').value = getTodayISO();
       }
@@ -2852,8 +3493,10 @@ service cloud.firestore {
       const editId = document.getElementById('editScheduledId').value;
       const type = document.querySelector('input[name="schedType"]:checked').value;
       const title = document.getElementById('schedTitle').value.trim();
-      const amount = Number(document.getElementById('schedAmount').value);
+      const amount = parseRibuan(document.getElementById('schedAmount').value);
       const category = document.getElementById('schedCategory').value;
+      const subCategory = document.getElementById('schedSubCategory').value.trim();
+      const accountId = document.getElementById('schedAccountId').value;
       const frequency = document.getElementById('schedFrequency').value;
       const nextRunDate = document.getElementById('schedNextDate').value;
       const mode = document.querySelector('input[name="schedMode"]:checked').value;
@@ -2863,7 +3506,7 @@ service cloud.firestore {
 
       if (editId) {
         appData.scheduledTransactions = appData.scheduledTransactions.map(s =>
-          s.id === editId ? { ...s, type, title, amount, category, frequency, nextRunDate, mode, memberId } : s
+          s.id === editId ? { ...s, type, title, amount, category, subCategory, accountId, frequency, nextRunDate, mode, memberId } : s
         );
         showToast('Jadwal transaksi diperbarui.');
       } else {
@@ -2873,6 +3516,8 @@ service cloud.firestore {
           title,
           amount,
           category,
+          subCategory,
+          accountId,
           frequency,
           nextRunDate,
           mode,
@@ -3003,7 +3648,7 @@ service cloud.firestore {
     function handleAddBill(e) {
       e.preventDefault();
       const name = document.getElementById('billNameInput').value.trim();
-      const amount = Number(document.getElementById('billAmountInput').value);
+      const amount = parseRibuan(document.getElementById('billAmountInput').value);
       const dueDate = document.getElementById('billDueDateInput').value;
       const note = document.getElementById('billNoteInput').value.trim();
       if (!name || !amount || !dueDate) return;
@@ -3021,6 +3666,53 @@ service cloud.firestore {
       closeModal('billModal');
       commitDataChanges();
       showToast('Tagihan baru ditambahkan!');
+    }
+
+    function payBillAction(billId) {
+      const bill = appData.bills.find(b => b.id === billId);
+      if (!bill) return;
+
+      document.getElementById('payBillTitleDisplay').textContent = bill.name;
+      document.getElementById('payBillAmountDisplay').textContent = formatRupiah(bill.amount);
+      populateAccountSelect('payBillAccountSelect', appData.accounts[0]?.id);
+
+      document.getElementById('confirmPayBillBtn').onclick = () => {
+        const chosenAccountId = document.getElementById('payBillAccountSelect').value;
+        const utilityCat = appData.expenseCategories.find(c => c.name.toLowerCase().includes('listrik'))?.name
+          || appData.expenseCategories[0]?.name
+          || 'Tagihan & Utilitas';
+
+        bill.isPaid = true;
+        bill.paidBy = activeMemberId;
+
+        appData.transactions.unshift({
+          id: generateId('tx'),
+          type: 'pengeluaran',
+          amount: Number(bill.amount),
+          category: utilityCat,
+          subCategory: 'Tagihan Rutin',
+          accountId: chosenAccountId,
+          date: getTodayISO(),
+          desc: `Bayar Tagihan: ${bill.name}`,
+          createdBy: activeMemberId
+        });
+
+        appData.bills.push({
+          id: generateId('bill'),
+          name: bill.name,
+          amount: bill.amount,
+          dueDate: addMonthsToISO(bill.dueDate, 1),
+          note: bill.note,
+          isPaid: false,
+          paidBy: ''
+        });
+
+        closeModal('payBillModal');
+        commitDataChanges();
+        showToast(`Tagihan "${bill.name}" lunas & saldo rekening terpotong!`);
+      };
+
+      openModal('payBillModal');
     }
 
     function payBillAction(billId) {
@@ -3250,7 +3942,7 @@ service cloud.firestore {
       const qty = Math.max(0, Number(document.getElementById('stockQtyInput').value));
       const minQty = Math.max(0, Number(document.getElementById('stockMinInput').value));
       const unit = document.getElementById('stockUnitInput').value.trim() || 'pcs';
-      const estPrice = Math.max(0, Number(document.getElementById('stockPriceInput').value));
+      const estPrice = parseRibuan(document.getElementById('stockPriceInput').value);
       if (!name) return;
 
       appData.inventory.push({ id: generateId('inv'), name, qty, minQty, unit, estPrice });
@@ -3265,6 +3957,7 @@ service cloud.firestore {
         });
       }
       e.target.reset();
+      document.getElementById('stockPriceInput').value = '25.000';
       closeModal('stockModal');
       commitDataChanges();
       showToast(`"${name}" ditambahkan ke Stok.`);
@@ -3307,7 +4000,7 @@ service cloud.firestore {
       e.preventDefault();
       const name = document.getElementById('shopNewName').value.trim();
       const qty = Math.max(1, Number(document.getElementById('shopNewQty').value));
-      const price = Math.max(0, Number(document.getElementById('shopNewPrice').value));
+      const price = parseRibuan(document.getElementById('shopNewPrice').value);
       if (!name) return;
 
       const invMatch = appData.inventory.find(i => i.name.toLowerCase() === name.toLowerCase());
@@ -3344,155 +4037,141 @@ service cloud.firestore {
       const purchased = checked.length > 0 ? checked : appData.shoppingList;
       const total = purchased.reduce((s, i) => s + (Number(i.qty) * Number(i.price)), 0);
 
-      openConfirmDialog(
-        `Selesai Belanja (${formatRupiah(total)})?`,
-        `${purchased.length} barang akan otomatis mengisi ulang stok di rumah dan total belanja dicatat ke Keuangan (Belanja Dapur).`,
-        () => {
-          const purchasedIds = new Set(purchased.map(p => p.id));
+      document.getElementById('finishShopSummaryText').textContent = `${purchased.length} item akan otomatis mengisi ulang stok di rumah`;
+      document.getElementById('finishShopTotalDisplay').textContent = formatRupiah(total);
+      populateAccountSelect('finishShopAccountSelect', appData.accounts[0]?.id);
 
-          appData.inventory = appData.inventory.map(inv => {
-            const match = purchased.find(
-              p => (p.linkedInventoryName || p.name).toLowerCase() === inv.name.toLowerCase()
-            );
-            if (match) {
-              return { ...inv, qty: Number(inv.qty) + Number(match.qty) };
-            }
-            return inv;
-          });
+      document.getElementById('confirmFinishShopBtn').onclick = () => {
+        const chosenAccountId = document.getElementById('finishShopAccountSelect').value;
+        const purchasedIds = new Set(purchased.map(p => p.id));
+        const dapurCat = appData.expenseCategories.find(c => c.name.toLowerCase().includes('belanja'))?.name
+          || appData.expenseCategories[0]?.name
+          || 'Belanja Dapur & Sembako';
 
-          if (total > 0) {
-            appData.transactions.unshift({
-              id: generateId('tx'),
-              type: 'pengeluaran',
-              amount: total,
-              category: 'Belanja Dapur',
-              date: getTodayISO(),
-              desc: `Belanja Kebutuhan Rumah (${purchased.length} item)`,
-              createdBy: activeMemberId
-            });
+        appData.inventory = appData.inventory.map(inv => {
+          const match = purchased.find(
+            p => (p.linkedInventoryName || p.name).toLowerCase() === inv.name.toLowerCase()
+          );
+          if (match) {
+            return { ...inv, qty: Number(inv.qty) + Number(match.qty) };
           }
+          return inv;
+        });
 
-          appData.shoppingList = appData.shoppingList.filter(s => !purchasedIds.has(s.id));
-          commitDataChanges();
-          showToast('Belanja selesai! Stok otomatis bertambah & tercatat di Keuangan.');
+        if (total > 0) {
+          appData.transactions.unshift({
+            id: generateId('tx'),
+            type: 'pengeluaran',
+            amount: total,
+            category: dapurCat,
+            subCategory: 'Restock Kebutuhan Rumah',
+            accountId: chosenAccountId,
+            date: getTodayISO(),
+            desc: `Belanja Kebutuhan Rumah (${purchased.length} item)`,
+            createdBy: activeMemberId
+          });
         }
-      );
+
+        appData.shoppingList = appData.shoppingList.filter(s => !purchasedIds.has(s.id));
+        closeModal('finishShoppingModal');
+        commitDataChanges();
+        showToast('Belanja selesai! Stok bertambah & saldo rekening terpotong.');
+      };
+
+      openModal('finishShoppingModal');
     }
 
     // ==================== CATATAN & INFO PENTING ====================
     function renderNotesSection() {
-      const q = (document.getElementById('noteSearchInput').value || '').toLowerCase().trim();
-      const cat = document.getElementById('noteCategoryFilter').value;
+    // ==================== SETTING RENDER (TEMA, KATEGORI, REKENING, ANGGOTA, SYNC) ====================
+    function renderSettingSection() {
+      renderThemeSwatches();
 
-      const list = appData.notes
-        .filter(n => (cat === 'all' || n.category === cat) && (!q || n.title.toLowerCase().includes(q) || n.content.toLowerCase().includes(q)))
-        .sort((a, b) => (a.pinned === b.pinned ? 0 : a.pinned ? -1 : 1));
-
-      const colorStyles = {
-        amber: 'bg-amber-50 border-amber-200',
-        indigo: 'bg-indigo-50 border-indigo-200',
-        emerald: 'bg-emerald-50 border-emerald-200',
-        rose: 'bg-rose-50 border-rose-200'
-      };
-
-      const grid = document.getElementById('notesGridContainer');
-      if (list.length === 0) {
-        grid.innerHTML = `<div class="md:col-span-3 bg-white rounded-2xl border border-slate-200 p-8 text-center text-xs font-bold text-slate-400">Tidak ada catatan ditemukan.</div>`;
-        return;
+      // Render Kategori Pemasukan
+      const incListEl = document.getElementById('incomeCategoriesList');
+      if (incListEl) {
+        incListEl.innerHTML = appData.incomeCategories.map(cat => `
+          <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <span class="w-9 h-9 rounded-xl bg-emerald-100 text-base flex items-center justify-center shrink-0">${escapeHTML(cat.icon)}</span>
+              <div class="min-w-0">
+                <p class="text-xs font-extrabold text-slate-900 truncate">${escapeHTML(cat.name)}</p>
+                <p class="text-[11px] text-slate-500 truncate">${escapeHTML(cat.subHint || 'Tanpa sub-klasifikasi')}</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-1 shrink-0">
+              <button onclick="openCategoryModal('pemasukan', '${cat.id}')" class="px-2.5 py-1.5 rounded-lg bg-white border border-slate-300 text-xs font-extrabold text-slate-700">Edit</button>
+              <button onclick="deleteCategoryAction('pemasukan', '${cat.id}')" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+            </div>
+          </div>
+        `).join('');
       }
 
-      grid.innerHTML = list.map(note => {
-        const bg = colorStyles[note.color] || 'bg-white border-slate-200';
-        const author = getMemberById(note.createdBy);
-        return `
-          <div class="rounded-2xl border-2 ${bg} p-5 shadow-2xs flex flex-col justify-between space-y-3">
-            <div>
+      // Render Kategori Pengeluaran
+      const expListEl = document.getElementById('expenseCategoriesList');
+      if (expListEl) {
+        expListEl.innerHTML = appData.expenseCategories.map(cat => `
+          <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <span class="w-9 h-9 rounded-xl bg-rose-100 text-base flex items-center justify-center shrink-0">${escapeHTML(cat.icon)}</span>
+              <div class="min-w-0">
+                <p class="text-xs font-extrabold text-slate-900 truncate">${escapeHTML(cat.name)}</p>
+                <p class="text-[11px] text-slate-500 truncate">Anggaran: <strong class="text-slate-700">${formatRupiah(cat.budget || 0)}</strong> ${cat.subHint ? `• ${escapeHTML(cat.subHint)}` : ''}</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-1 shrink-0">
+              <button onclick="openCategoryModal('pengeluaran', '${cat.id}')" class="px-2.5 py-1.5 rounded-lg bg-white border border-slate-300 text-xs font-extrabold text-slate-700">Edit</button>
+              <button onclick="deleteCategoryAction('pengeluaran', '${cat.id}')" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // Render Rekening & Dompet di Setting
+      const setAccGrid = document.getElementById('settingAccountsGrid');
+      if (setAccGrid) {
+        setAccGrid.innerHTML = appData.accounts.map(acc => {
+          const curBal = computeAccountBalance(acc.id);
+          const owner = getMemberById(acc.ownerId);
+          return `
+            <div class="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs space-y-3">
               <div class="flex items-start justify-between gap-2">
-                <span class="px-2.5 py-0.5 rounded-md bg-white/85 text-[11px] font-extrabold text-slate-700">${escapeHTML(note.category)}</span>
-                <div class="flex items-center gap-1">
-                  <button onclick="toggleNotePin('${note.id}')" class="p-1.5 rounded-lg bg-white/80 text-amber-600" title="Pin ke Atas">
-                    <i data-lucide="pin" class="w-4 h-4 ${note.pinned ? 'fill-amber-500' : ''}"></i>
-                  </button>
-                  <button onclick="copyNoteAction('${note.id}')" class="px-2.5 py-1 rounded-lg bg-slate-900 text-white text-[11px] font-extrabold">
-                    Salin
-                  </button>
-                  <button onclick="deleteNoteAction('${note.id}')" class="p-1.5 rounded-lg bg-white/80 text-rose-600" title="Hapus">
-                    <i data-lucide="trash-2" class="w-4 h-4"></i>
-                  </button>
+                <span class="px-2.5 py-0.5 rounded-full bg-theme-50 text-theme-800 text-[11px] font-extrabold">
+                  ${getAccountClassIcon(acc.classification)} ${escapeHTML(acc.classification)}
+                </span>
+                <div class="flex gap-1">
+                  <button onclick="openAccountModal('${acc.id}')" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-extrabold text-slate-700">Edit</button>
+                  <button onclick="deleteAccountAction('${acc.id}')" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                 </div>
               </div>
-              <h4 class="text-base font-extrabold text-slate-900 mt-2">${escapeHTML(note.title)}</h4>
-              <pre class="mt-2 whitespace-pre-wrap font-sans text-xs font-semibold text-slate-800 bg-white/85 rounded-xl p-3 border border-black/5 leading-relaxed">${escapeHTML(note.content)}</pre>
+              <div>
+                <h4 class="text-base font-extrabold text-slate-900">${escapeHTML(acc.name)}</h4>
+                <p class="text-xs font-semibold text-slate-500">${escapeHTML(acc.institution || '-')} ${acc.last4 ? `• ${escapeHTML(acc.last4)}` : ''} ${owner ? `• Pemilik: ${escapeHTML(owner.name)}` : ''}</p>
+              </div>
+              <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                <span class="text-slate-500">Awal: ${formatRupiah(acc.initialBalance)}</span>
+                <span class="font-extrabold text-theme-700 text-sm">Kini: ${formatRupiah(curBal)}</span>
+              </div>
             </div>
-            <p class="text-[11px] font-bold text-slate-500">Dibuat oleh: ${author ? escapeHTML(author.name) : 'Keluarga'}</p>
-          </div>
-        `;
-      }).join('');
-    }
+          `;
+        }).join('');
+      }
 
-    function handleAddNote(e) {
-      e.preventDefault();
-      const title = document.getElementById('noteTitleInput').value.trim();
-      const category = document.getElementById('noteCategoryInput').value;
-      const color = document.getElementById('noteColorInput').value;
-      const content = document.getElementById('noteContentInput').value.trim();
-      const pinned = document.getElementById('notePinnedInput').checked;
-      if (!title || !content) return;
-
-      appData.notes.unshift({
-        id: generateId('note'),
-        title,
-        category,
-        color,
-        content,
-        pinned,
-        createdBy: activeMemberId
-      });
-      e.target.reset();
-      closeModal('noteModal');
-      commitDataChanges();
-      showToast('Catatan tersimpan!');
-    }
-
-    function toggleNotePin(id) {
-      appData.notes = appData.notes.map(n => n.id === id ? { ...n, pinned: !n.pinned } : n);
-      commitDataChanges();
-    }
-
-    function copyNoteAction(id) {
-      const n = appData.notes.find(x => x.id === id);
-      if (!n) return;
-      copyTextToClipboard(`${n.title}\n${n.content}`, 'Isi catatan berhasil disalin!');
-    }
-
-    function deleteNoteAction(id) {
-      openConfirmDialog(
-        'Hapus Catatan Ini?',
-        'Catatan akan dihapus permanen dari brankas info rumah.',
-        () => {
-          appData.notes = appData.notes.filter(n => n.id !== id);
-          commitDataChanges();
-          showToast('Catatan dihapus.');
-        }
-      );
-    }
-
-    // ==================== KELUARGA & PENGATURAN RENDER + BACKUP ====================
-    function renderFamilyAndSettingsSection() {
+      // Render Anggota Keluarga & Kode Keluarga
       document.getElementById('settingsFamilyCodeText').textContent = familyCode;
       const listEl = document.getElementById('familyMembersList');
       listEl.innerHTML = appData.members.map(m => {
         const isCurrent = m.id === activeMemberId;
         const badgeCls = getMemberColorClasses(m.color);
         return `
-          <div class="p-3.5 rounded-2xl border-2 ${isCurrent ? 'border-emerald-500 bg-emerald-50/60' : 'border-slate-200 bg-slate-50'} flex items-center justify-between gap-3">
+          <div class="p-3.5 rounded-2xl border-2 ${isCurrent ? 'border-theme-500 bg-theme-50/60' : 'border-slate-200 bg-slate-50'} flex items-center justify-between gap-3">
             <button onclick="attemptSwitchMember('${m.id}')" class="flex items-center gap-3 text-left flex-1 min-w-0">
               <div class="w-10 h-10 rounded-xl ${badgeCls} font-extrabold text-xs flex items-center justify-center shrink-0">
                 ${getInitials(m.name)}
               </div>
               <div class="min-w-0">
                 <p class="text-sm font-extrabold text-slate-900 truncate">
-                  ${escapeHTML(m.name)} ${isCurrent ? '<span class="text-[11px] text-emerald-700">(Aktif)</span>' : ''}
+                  ${escapeHTML(m.name)} ${isCurrent ? '<span class="text-[11px] text-theme-700">(Aktif)</span>' : ''}
                 </p>
                 <p class="text-xs font-semibold text-slate-500">${escapeHTML(m.role)} ${m.pin ? '• PIN Aktif' : ''}</p>
               </div>
@@ -3533,17 +4212,10 @@ service cloud.firestore {
           if (!parsed || !Array.isArray(parsed.transactions)) {
             throw new Error('Format JSON tidak valid');
           }
-          appData = {
-            members: parsed.members || appData.members,
-            transactions: parsed.transactions || [],
-            scheduledTransactions: parsed.scheduledTransactions || [],
-            budgets: parsed.budgets || appData.budgets,
-            bills: parsed.bills || [],
-            schedules: parsed.schedules || [],
-            inventory: parsed.inventory || [],
-            shoppingList: parsed.shoppingList || [],
-            notes: parsed.notes || []
-          };
+          appData = normalizeAppData(parsed);
+          if (appData.themeColor && APP_THEMES[appData.themeColor]) {
+            applyAppTheme(appData.themeColor, false);
+          }
           commitDataChanges();
           showToast('Data berhasil dipulihkan dari file backup!');
         } catch (err) {
@@ -3625,7 +4297,7 @@ service cloud.firestore {
       renderSchedulesSection();
       renderStockAndShoppingSection();
       renderNotesSection();
-      renderFamilyAndSettingsSection();
+      renderSettingSection();
 
       lucide.createIcons();
     }
@@ -3633,8 +4305,22 @@ service cloud.firestore {
     // ==================== EXPOSE KE WINDOW ====================
     Object.assign(window, {
       triggerPwaInstall,
+      applyAppTheme,
+      handleRibuanInput,
       switchTab,
       switchFinanceSubTab,
+      switchSettingSubTab,
+      syncTransactionCategoryDropdown,
+      updateSubCategoryPlaceholder,
+      openQuickCategoryFromForm,
+      openCategoryModal,
+      handleSaveCategory,
+      deleteCategoryAction,
+      openAccountModal,
+      handleSaveAccount,
+      deleteAccountAction,
+      openTransferModal,
+      handleAccountTransfer,
       openModal,
       closeModal,
       setFontScale,
@@ -3660,8 +4346,6 @@ service cloud.firestore {
       toggleScheduledActive,
       deleteScheduledAction,
       runScheduledTransactionNow,
-      openBudgetModal,
-      handleSaveBudgets,
       setBillFilter,
       handleAddBill,
       payBillAction,
@@ -3711,11 +4395,15 @@ service cloud.firestore {
       activeMemberId = localStorage.getItem(STORAGE_KEYS.ACTIVE_MEMBER) || 'mem_ayah';
       loadLocalData();
 
+      const savedTheme = localStorage.getItem(STORAGE_KEYS.THEME) || appData.themeColor || 'emerald';
+      applyAppTheme(savedTheme, false);
+
       document.getElementById('txDate').value = getTodayISO();
       document.getElementById('finMonthFilter').value = getTodayISO().slice(0, 7);
 
       processAutoScheduledTransactions();
       switchFinanceSubTab('riwayat');
+      switchSettingSubTab('tema');
       switchTab('beranda');
 
       initFirebaseAutoConnect();
