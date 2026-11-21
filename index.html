@@ -123,7 +123,7 @@
       </div>
     </div>
 
-    <!-- Horizontal Scrollable 7 Tabs -->
+    <!-- Horizontal Scrollable 7 Tabs (min-h-[44px] touch targets) -->
     <nav id="mobile-nav" class="px-2.5 pb-2 flex items-center gap-1.5 overflow-x-auto no-scrollbar"></nav>
   </header>
 
@@ -162,15 +162,22 @@
 
   <!-- ==================== APPLICATION SCRIPT ==================== -->
   <script>
-    const STORAGE_KEY = 'rumahku_app_state_v4';
+    /* ==================== STORAGE & 4-LAYER FAMILY CODE KEYS ==================== */
+    const STORAGE_KEY = 'rumahku_app_state';
+    const LEGACY_STORAGE_KEYS = ['rumahku_app_state_v4', 'rumahku_app_state_v3'];
+    const FAMILY_CODE_KEY = 'rumahku_active_family_code';
+    const COOKIE_NAME = 'rumahku_family_code';
+    const IDB_NAME = 'rumahku_persist_db';
+    const IDB_STORE = 'meta';
+    const IDB_KEY = 'familyCode';
 
     const THEMES = {
-      emerald: { name: 'Emerald Hijau', primary: '#059669', hover: '#047857', light: '#d1fae5', soft: '#ecfdf5', text: '#065f46', border: '#a7f3d0' },
-      ocean:   { name: 'Ocean Biru',    primary: '#0284c7', hover: '#0369a1', light: '#e0f2fe', soft: '#f0f9ff', text: '#075985', border: '#bae6fd' },
-      indigo:  { name: 'Royal Indigo',  primary: '#4f46e5', hover: '#4338ca', light: '#e0e7ff', soft: '#eef2ff', text: '#3730a3', border: '#c7d2fe' },
+      emerald: { name: 'Emerald Hijau',   primary: '#059669', hover: '#047857', light: '#d1fae5', soft: '#ecfdf5', text: '#065f46', border: '#a7f3d0' },
+      ocean:   { name: 'Ocean Biru',      primary: '#0284c7', hover: '#0369a1', light: '#e0f2fe', soft: '#f0f9ff', text: '#075985', border: '#bae6fd' },
+      indigo:  { name: 'Royal Indigo',    primary: '#4f46e5', hover: '#4338ca', light: '#e0e7ff', soft: '#eef2ff', text: '#3730a3', border: '#c7d2fe' },
       rose:    { name: 'Rose Merah Muda', primary: '#e11d48', hover: '#be123c', light: '#ffe4e6', soft: '#fff1f2', text: '#9f1239', border: '#fecdd3' },
-      amber:   { name: 'Amber Emas',    primary: '#d97706', hover: '#b45309', light: '#fef3c7', soft: '#fffbeb', text: '#92400e', border: '#fde68a' },
-      teal:    { name: 'Teal Toska',    primary: '#0d9488', hover: '#0f766e', light: '#ccfbf1', soft: '#f0fdfa', text: '#115e59', border: '#99f6e4' }
+      amber:   { name: 'Amber Emas',      primary: '#d97706', hover: '#b45309', light: '#fef3c7', soft: '#fffbeb', text: '#92400e', border: '#fde68a' },
+      teal:    { name: 'Teal Toska',      primary: '#0d9488', hover: '#0f766e', light: '#ccfbf1', soft: '#f0fdfa', text: '#115e59', border: '#99f6e4' }
     };
 
     const NAV_ITEMS = [
@@ -212,9 +219,10 @@
     let currentView = 'dashboard';
     let currentSettingTab = 'theme';
     let financeSubTab = 'history';
-    let financeFilters = { type: 'all', accountId: 'all', userId: 'all', month: '' };
+    let financeFilters = { type: 'all', categoryId: 'all', accountId: 'all', userId: 'all', month: '' };
     let billFilter = 'all';
     let taskFilter = 'pending';
+    let taskCategoryFilter = 'all';
     let inventoryFilter = 'all';
     let noteSearch = '';
     let noteCategoryFilter = 'all';
@@ -259,6 +267,160 @@
           navigator.serviceWorker.register('./sw.js').catch(() => {});
         }
       } catch (e) {}
+    }
+
+    /* ==================== 4-LAYER PERSISTENT FAMILY CODE MANAGER ==================== */
+    function isValidFamilyCode(code) {
+      return /^[A-Z0-9]{6}$/.test(String(code || '').trim().toUpperCase());
+    }
+
+    function normalizeFamilyCode(code) {
+      const clean = String(code || '').trim().toUpperCase();
+      return isValidFamilyCode(clean) ? clean : '';
+    }
+
+    function readUrlFamilyCode() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        return normalizeFamilyCode(params.get('family'));
+      } catch (e) {
+        return '';
+      }
+    }
+
+    function syncUrlFamilyCode(code) {
+      try {
+        const clean = normalizeFamilyCode(code);
+        if (!clean) return;
+        const url = new URL(window.location.href);
+        if (url.searchParams.get('family') !== clean) {
+          url.searchParams.set('family', clean);
+          window.history.replaceState(null, '', url.toString());
+        }
+      } catch (e) {}
+    }
+
+    function readCookieFamilyCode() {
+      try {
+        const cookies = (document.cookie || '').split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const part = cookies[i].trim();
+          if (part.startsWith(COOKIE_NAME + '=')) {
+            const rawVal = decodeURIComponent(part.slice(COOKIE_NAME.length + 1));
+            const clean = normalizeFamilyCode(rawVal);
+            if (clean) return clean;
+          }
+        }
+      } catch (e) {}
+      return '';
+    }
+
+    function writeCookieFamilyCode(code) {
+      try {
+        const clean = normalizeFamilyCode(code);
+        if (!clean) return;
+        document.cookie = `${COOKIE_NAME}=${encodeURIComponent(clean)}; max-age=31536000; path=/; SameSite=Lax`;
+      } catch (e) {}
+    }
+
+    function openPersistIDB() {
+      return new Promise((resolve) => {
+        try {
+          if (!window.indexedDB) { resolve(null); return; }
+          const req = indexedDB.open(IDB_NAME, 1);
+          req.onupgradeneeded = (e) => {
+            const idb = e.target.result;
+            if (!idb.objectStoreNames.contains(IDB_STORE)) {
+              idb.createObjectStore(IDB_STORE, { keyPath: 'key' });
+            }
+          };
+          req.onsuccess = (e) => resolve(e.target.result);
+          req.onerror = () => resolve(null);
+        } catch (e) {
+          resolve(null);
+        }
+      });
+    }
+
+    async function writeIndexedDBFamilyCode(code) {
+      try {
+        const clean = normalizeFamilyCode(code);
+        if (!clean) return;
+        const idb = await openPersistIDB();
+        if (!idb) return;
+        await new Promise((resolve) => {
+          const tx = idb.transaction(IDB_STORE, 'readwrite');
+          tx.objectStore(IDB_STORE).put({ key: IDB_KEY, value: clean, updatedAt: Date.now() });
+          tx.oncomplete = () => resolve(true);
+          tx.onerror = () => resolve(false);
+        });
+      } catch (e) {}
+    }
+
+    async function readIndexedDBFamilyCode() {
+      try {
+        const idb = await openPersistIDB();
+        if (!idb) return '';
+        return await new Promise((resolve) => {
+          const tx = idb.transaction(IDB_STORE, 'readonly');
+          const req = tx.objectStore(IDB_STORE).get(IDB_KEY);
+          req.onsuccess = () => {
+            const val = req.result && req.result.value ? normalizeFamilyCode(req.result.value) : '';
+            resolve(val);
+          };
+          req.onerror = () => resolve('');
+        });
+      } catch (e) {
+        return '';
+      }
+    }
+
+    function savePersistentFamilyCode(code) {
+      const clean = normalizeFamilyCode(code);
+      if (!clean) return '';
+      if (state) state.familyCode = clean;
+
+      // Layer 1: Dedicated localStorage key + app state
+      try {
+        localStorage.setItem(FAMILY_CODE_KEY, clean);
+        if (state) {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        }
+      } catch (e) {}
+
+      // Layer 2: 1-year persistent Cookie
+      writeCookieFamilyCode(clean);
+
+      // Layer 3: IndexedDB persistent meta store
+      writeIndexedDBFamilyCode(clean);
+
+      // Layer 4: URL ?family= query parameter sync
+      syncUrlFamilyCode(clean);
+
+      return clean;
+    }
+
+    async function recoverFamilyCodeFromIndexedDBOnBoot(wasFreshlyGenerated, explicitUrlCode) {
+      // If user opened an explicit ?family= invite link, that link takes highest priority
+      if (explicitUrlCode) return;
+
+      const idbCode = await readIndexedDBFamilyCode();
+      if (!idbCode) {
+        // Ensure current code is written to IndexedDB
+        if (state && state.familyCode) writeIndexedDBFamilyCode(state.familyCode);
+        return;
+      }
+
+      // If localStorage was cleared by mobile OS (causing a fresh code or mismatch), restore from IndexedDB!
+      if (wasFreshlyGenerated || (state && state.familyCode !== idbCode)) {
+        state.familyCode = idbCode;
+        state.updatedAt = 0; // Allow cloud state for this recovered family code to sync down
+        savePersistentFamilyCode(idbCode);
+        saveLocalState(false);
+        renderAll();
+        if (db) connectToFamilyDoc(idbCode);
+        showToast(`Kode Keluarga ${idbCode} dipulihkan otomatis!`);
+      }
     }
 
     /* ==================== DATE, CURRENCY & HELPERS ==================== */
@@ -369,7 +531,7 @@
       div.className = `${type === 'error' ? 'bg-rose-600' : 'bg-slate-900'} text-white pointer-events-auto px-4 py-3 rounded-xl shadow-lg text-xs sm:text-sm font-bold flex items-center gap-2 transition-all`;
       div.innerHTML = `<span class="w-2 h-2 rounded-full ${type === 'error' ? 'bg-rose-200' : 'bg-emerald-400'} shrink-0"></span><span>${escapeHtml(message)}</span>`;
       box.appendChild(div);
-      setTimeout(() => { div.style.opacity = '0'; setTimeout(() => div.remove(), 250); }, 3000);
+      setTimeout(() => { div.style.opacity = '0'; setTimeout(() => div.remove(), 250); }, 3200);
     }
 
     /* ==================== STATE & DEFAULT DATA ==================== */
@@ -377,7 +539,7 @@
       const today = getTodayISO();
       const ym = today.slice(0, 7);
       return {
-        familyCode: customCode || generateFamilyCode(),
+        familyCode: normalizeFamilyCode(customCode) || generateFamilyCode(),
         theme: 'emerald',
         largeText: false,
         activeUserId: 'usr_ayah',
@@ -438,26 +600,43 @@
       };
     }
 
+    function readSavedAppState() {
+      const keysToCheck = [STORAGE_KEY, ...LEGACY_STORAGE_KEYS];
+      for (let i = 0; i < keysToCheck.length; i++) {
+        try {
+          const raw = localStorage.getItem(keysToCheck[i]);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed && typeof parsed === 'object') return parsed;
+          }
+        } catch (e) {}
+      }
+      return null;
+    }
+
     function loadLocalState() {
-      let urlCode = null;
-      try {
-        const p = new URLSearchParams(window.location.search);
-        const f = (p.get('family') || '').trim().toUpperCase();
-        if (/^[A-Z0-9]{6}$/.test(f)) urlCode = f;
-      } catch (e) {}
+      // Boot priority: URL '?family=' -> localStorage 'rumahku_active_family_code' -> localStorage 'rumahku_app_state'.familyCode -> Cookie 'rumahku_family_code'
+      const urlCode = readUrlFamilyCode();
+      let dedicatedCode = '';
+      try { dedicatedCode = normalizeFamilyCode(localStorage.getItem(FAMILY_CODE_KEY)); } catch (e) {}
+      const saved = readSavedAppState();
+      const stateCode = saved ? normalizeFamilyCode(saved.familyCode) : '';
+      const cookieCode = readCookieFamilyCode();
 
-      let saved = null;
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) saved = JSON.parse(raw);
-      } catch (e) {}
+      let resolvedCode = urlCode || dedicatedCode || stateCode || cookieCode;
+      let wasFreshlyGenerated = false;
 
-      if (saved && typeof saved === 'object') {
-        const base = createDefaultState(urlCode || saved.familyCode);
+      if (!resolvedCode) {
+        resolvedCode = generateFamilyCode();
+        wasFreshlyGenerated = true;
+      }
+
+      const base = createDefaultState(resolvedCode);
+      if (saved) {
         state = {
           ...base,
           ...saved,
-          familyCode: urlCode || saved.familyCode || base.familyCode,
+          familyCode: resolvedCode,
           users: Array.isArray(saved.users) && saved.users.length ? saved.users : base.users,
           accounts: Array.isArray(saved.accounts) && saved.accounts.length ? saved.accounts : base.accounts,
           categories: Array.isArray(saved.categories) && saved.categories.length ? saved.categories : base.categories,
@@ -469,17 +648,28 @@
           notes: Array.isArray(saved.notes) ? saved.notes : base.notes
         };
       } else {
-        state = createDefaultState(urlCode);
+        state = base;
       }
 
       if (!financeFilters.month) financeFilters.month = getTodayISO().slice(0, 7);
       applyThemeAndFont();
+
+      // Immediately write resolved or freshly generated code across all 4 layers
+      savePersistentFamilyCode(resolvedCode);
       saveLocalState(false);
+
+      // Async IndexedDB check to recover saved code if mobile OS wiped localStorage
+      recoverFamilyCodeFromIndexedDBOnBoot(wasFreshlyGenerated, urlCode);
     }
 
     function saveLocalState(syncCloud = true) {
       if (!state) return;
       state.updatedAt = Date.now();
+      const cleanCode = normalizeFamilyCode(state.familyCode);
+      if (cleanCode) {
+        state.familyCode = cleanCode;
+        try { localStorage.setItem(FAMILY_CODE_KEY, cleanCode); } catch (e) {}
+      }
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
       if (syncCloud && !isApplyingRemote) pushStateToCloud();
     }
@@ -551,13 +741,23 @@
     }
 
     function connectToFamilyDoc(code) {
-      if (!db || !code) return;
+      const activeFamilyCode = normalizeFamilyCode(code);
+      if (!db || !activeFamilyCode) return;
+
       try {
-        if (typeof unsubscribeSnapshot === 'function') unsubscribeSnapshot();
-        const docRef = db.collection('rumahku_families').doc(code);
+        if (typeof unsubscribeSnapshot === 'function') {
+          unsubscribeSnapshot();
+          unsubscribeSnapshot = null;
+        }
+
+        const docRef = db.collection('rumahku_families').doc(activeFamilyCode);
 
         docRef.get().then(snap => {
-          if (!snap.exists) return docRef.set(JSON.parse(JSON.stringify(state)));
+          if (!snap.exists) {
+            const payload = JSON.parse(JSON.stringify(state));
+            payload.familyCode = activeFamilyCode;
+            return docRef.set(payload);
+          }
         }).catch(err => {
           isCloudConnected = false;
           cloudStatusText = `Mode Lokal (${err.code || 'Periksa Rules Firestore'})`;
@@ -566,7 +766,7 @@
 
         unsubscribeSnapshot = docRef.onSnapshot(snap => {
           isCloudConnected = true;
-          cloudStatusText = `Terhubung Live • Keluarga ${code}`;
+          cloudStatusText = `Terhubung Live • Keluarga ${activeFamilyCode}`;
           updateSyncBadges();
 
           if (snap.exists) {
@@ -577,10 +777,12 @@
               state = {
                 ...state,
                 ...remote,
-                familyCode: code,
+                // Enforce activeFamilyCode so remote fields can never overwrite or blank it out
+                familyCode: activeFamilyCode,
                 activeUserId: remote.users?.some(u => u.id === localUser) ? localUser : (remote.activeUserId || 'usr_ayah')
               };
               applyThemeAndFont();
+              savePersistentFamilyCode(activeFamilyCode);
               saveLocalState(false);
               renderAll();
               isApplyingRemote = false;
@@ -598,9 +800,12 @@
     }
 
     function pushStateToCloud() {
-      if (!db || !state || !state.familyCode) return;
+      const activeFamilyCode = state ? normalizeFamilyCode(state.familyCode) : '';
+      if (!db || !state || !activeFamilyCode) return;
       try {
-        db.collection('rumahku_families').doc(state.familyCode).set(JSON.parse(JSON.stringify(state)), { merge: true }).catch(() => {});
+        const payload = JSON.parse(JSON.stringify(state));
+        payload.familyCode = activeFamilyCode;
+        db.collection('rumahku_families').doc(activeFamilyCode).set(payload, { merge: true }).catch(() => {});
       } catch (e) {}
     }
 
@@ -678,9 +883,19 @@
       showToast(state.largeText ? 'Teks: Besar (18.5px) aktif' : 'Teks: Normal (16px) aktif');
     }
 
+    function getInviteUrl() {
+      try {
+        const u = new URL(window.location.href);
+        u.searchParams.set('family', state.familyCode);
+        return u.toString();
+      } catch (e) {
+        const base = window.location.href.split('?')[0];
+        return `${base}?family=${state.familyCode}`;
+      }
+    }
+
     function copyInviteLink() {
-      const base = window.location.href.split('?')[0];
-      copyTextToClipboard(`${base}?family=${state.familyCode}`, `Link Undangan HP (${state.familyCode}) disalin!`);
+      copyTextToClipboard(getInviteUrl(), `Link Undangan HP (${state.familyCode}) disalin!`);
     }
 
     function renderNavigation() {
@@ -709,7 +924,7 @@
         mNav.innerHTML = NAV_ITEMS.map(item => {
           const active = currentView === item.id;
           return `
-            <button onclick="navigateTo('${item.id}')" class="min-h-[42px] px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shrink-0 transition ${active ? 'bg-theme text-white shadow-xs' : 'bg-slate-100 text-slate-600'}">
+            <button onclick="navigateTo('${item.id}')" class="min-h-[44px] px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shrink-0 transition ${active ? 'bg-theme text-white shadow-xs' : 'bg-slate-100 text-slate-600'}">
               <i data-lucide="${item.icon}" class="w-4 h-4 shrink-0"></i>
               <span>${item.label}</span>
             </button>
@@ -779,7 +994,7 @@
           <div>
             <p class="text-xs font-bold text-theme uppercase tracking-wider">${formatIndonesianFullDate(new Date())}</p>
             <h3 class="text-lg sm:text-xl font-extrabold text-slate-900 mt-0.5">Selamat Datang, ${escapeHtml(user.name)} ${user.avatar}</h3>
-            <p class="text-xs sm:text-sm text-slate-500">Kode Keluarga: <b class="font-mono text-slate-800">${escapeHtml(state.familyCode)}</b></p>
+            <p class="text-xs sm:text-sm text-slate-500">Kode Keluarga: <b class="font-mono text-slate-800">${escapeHtml(state.familyCode)}</b> <span class="text-[11px] text-emerald-700 font-semibold">(Tersimpan permanen di perangkat)</span></p>
           </div>
           <div class="flex flex-wrap gap-2">
             <button onclick="openTransactionModal('expense')" class="px-3.5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold flex items-center gap-1.5">
@@ -849,7 +1064,7 @@
           </div>
         </div>
 
-        <!-- Urgent Bills, Scheduled Transactions & Chart -->
+        <!-- Expense Chart, Urgent Bills & Scheduled Transactions -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
           <div class="card p-5">
             <h4 class="text-sm font-extrabold text-slate-800 mb-3">Distribusi Pengeluaran Bulan Ini</h4>
@@ -935,6 +1150,7 @@
     function renderFinanceView() {
       const filtered = state.transactions.filter(tx => {
         if (financeFilters.type !== 'all' && tx.type !== financeFilters.type) return false;
+        if (financeFilters.categoryId !== 'all' && tx.categoryId !== financeFilters.categoryId) return false;
         if (financeFilters.accountId !== 'all' && tx.accountId !== financeFilters.accountId && tx.toAccountId !== financeFilters.accountId) return false;
         if (financeFilters.userId !== 'all' && tx.createdBy !== financeFilters.userId) return false;
         if (financeFilters.month && !(tx.date || '').startsWith(financeFilters.month)) return false;
@@ -963,7 +1179,6 @@
         </div>
 
         ${financeSubTab === 'history' ? `
-          <!-- Budget Progress Bars -->
           ${expenseCats.length > 0 ? `
             <div class="card p-4 space-y-3">
               <div class="text-xs font-extrabold text-slate-700">Batas Anggaran Kategori (${escapeHtml(ym)})</div>
@@ -990,13 +1205,17 @@
             </div>
           ` : ''}
 
-          <!-- Filters -->
-          <div class="card p-3.5 grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+          <!-- Filters (Type, Category, Account, Member, Month) -->
+          <div class="card p-3.5 grid grid-cols-2 lg:grid-cols-5 gap-2.5">
             <select onchange="financeFilters.type=this.value; renderAll();" class="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold bg-white">
               <option value="all" ${financeFilters.type === 'all' ? 'selected' : ''}>Semua Jenis</option>
               <option value="income" ${financeFilters.type === 'income' ? 'selected' : ''}>Pemasukan</option>
               <option value="expense" ${financeFilters.type === 'expense' ? 'selected' : ''}>Pengeluaran</option>
               <option value="transfer" ${financeFilters.type === 'transfer' ? 'selected' : ''}>Transfer</option>
+            </select>
+            <select onchange="financeFilters.categoryId=this.value; renderAll();" class="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold bg-white">
+              <option value="all">Semua Kategori</option>
+              ${state.categories.map(c => `<option value="${c.id}" ${financeFilters.categoryId === c.id ? 'selected' : ''}>${c.icon} ${escapeHtml(c.name)}</option>`).join('')}
             </select>
             <select onchange="financeFilters.accountId=this.value; renderAll();" class="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold bg-white">
               <option value="all">Semua Rekening</option>
@@ -1006,7 +1225,7 @@
               <option value="all">Semua Anggota</option>
               ${state.users.map(u => `<option value="${escapeHtml(u.name)}" ${financeFilters.userId === u.name ? 'selected' : ''}>${escapeHtml(u.name)}</option>`).join('')}
             </select>
-            <input type="month" value="${escapeHtml(financeFilters.month)}" onchange="financeFilters.month=this.value; renderAll();" class="px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold bg-white" />
+            <input type="month" value="${escapeHtml(financeFilters.month)}" onchange="financeFilters.month=this.value; renderAll();" class="col-span-2 lg:col-span-1 px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold bg-white" />
           </div>
 
           <div class="space-y-2.5">
@@ -1100,7 +1319,7 @@
                 <div class="flex items-center justify-between pt-2 border-t border-slate-100">
                   <span class="font-extrabold text-base tabular-nums">${formatRupiah(b.amount)}</span>
                   <div class="flex gap-2">
-                    ${!isPaid ? `<button onclick="openPayBillModal('${b.id}')" class="px-3.5 py-1.5 rounded-xl bg-theme text-white text-xs font-bold">Bayar & Lunas</button>` : ''}
+                    ${!isPaid ? `<button onclick="openPayBillModal('${b.id}')" class="px-3.5 py-1.5 rounded-xl bg-theme text-white text-xs font-bold">Bayar & Tandai Lunas</button>` : ''}
                     <button onclick="deleteBill('${b.id}')" class="p-1.5 text-slate-400 hover:text-rose-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                   </div>
                 </div>
@@ -1112,15 +1331,28 @@
     }
 
     function renderTasksView() {
-      const list = state.tasks.filter(t => taskFilter === 'all' ? true : taskFilter === 'done' ? t.done : !t.done);
+      const list = state.tasks.filter(t => {
+        if (taskFilter === 'done' && !t.done) return false;
+        if (taskFilter === 'pending' && t.done) return false;
+        if (taskCategoryFilter !== 'all' && (t.category || 'Perawatan Berkala') !== taskCategoryFilter) return false;
+        return true;
+      });
       return `
         <div class="flex items-center justify-between">
           <h3 class="text-lg font-extrabold text-slate-900">Jadwal Perawatan Rumah</h3>
           <button onclick="openTaskModal()" class="px-4 py-2 rounded-xl bg-theme text-white text-xs font-bold">+ Tambah Jadwal</button>
         </div>
-        <div class="flex gap-2">
+        <div class="flex flex-wrap gap-2">
           <button onclick="taskFilter='pending'; renderAll();" class="px-3.5 py-1.5 rounded-xl text-xs font-bold ${taskFilter === 'pending' ? 'bg-theme text-white' : 'bg-white border border-slate-200'}">Aktif</button>
           <button onclick="taskFilter='done'; renderAll();" class="px-3.5 py-1.5 rounded-xl text-xs font-bold ${taskFilter === 'done' ? 'bg-theme text-white' : 'bg-white border border-slate-200'}">Selesai</button>
+          <button onclick="taskFilter='all'; renderAll();" class="px-3.5 py-1.5 rounded-xl text-xs font-bold ${taskFilter === 'all' ? 'bg-theme text-white' : 'bg-white border border-slate-200'}">Semua</button>
+          <select onchange="taskCategoryFilter=this.value; renderAll();" class="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold bg-white">
+            <option value="all" ${taskCategoryFilter === 'all' ? 'selected' : ''}>Semua Kategori</option>
+            <option value="Perawatan Berkala" ${taskCategoryFilter === 'Perawatan Berkala' ? 'selected' : ''}>Perawatan Berkala</option>
+            <option value="Kebersihan" ${taskCategoryFilter === 'Kebersihan' ? 'selected' : ''}>Kebersihan</option>
+            <option value="Kendaraan & Pajak" ${taskCategoryFilter === 'Kendaraan & Pajak' ? 'selected' : ''}>Kendaraan & Pajak</option>
+            <option value="Agenda Keluarga" ${taskCategoryFilter === 'Agenda Keluarga' ? 'selected' : ''}>Agenda Keluarga</option>
+          </select>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           ${list.map(t => {
@@ -1129,7 +1361,7 @@
               <div class="card p-4 flex items-center justify-between gap-3">
                 <div>
                   <div class="font-bold text-sm text-slate-900 ${t.done ? 'line-through text-slate-400' : ''}">${escapeHtml(t.title)}</div>
-                  <div class="text-xs text-slate-500 mt-0.5">${formatShortDate(t.dueDate)} • ${escapeHtml(t.priority)} • PIC: ${pic.avatar} ${escapeHtml(pic.name)}</div>
+                  <div class="text-xs text-slate-500 mt-0.5">${escapeHtml(t.category || 'Perawatan Berkala')} • ${formatShortDate(t.dueDate)} • ${escapeHtml(t.priority)} • PIC: ${pic.avatar} ${escapeHtml(pic.name)}</div>
                 </div>
                 <div class="flex gap-1.5 shrink-0">
                   <button onclick="toggleTask('${t.id}')" class="px-3 py-1.5 rounded-xl ${t.done ? 'bg-slate-200 text-slate-700' : 'bg-theme text-white'} text-xs font-bold">${t.done ? 'Ulangi' : 'Selesai'}</button>
@@ -1193,6 +1425,16 @@
           <h3 class="text-lg font-extrabold text-slate-900">Catatan & Brankas Info Rumah</h3>
           <button onclick="openNoteModal()" class="px-4 py-2 rounded-xl bg-theme text-white text-xs font-bold">+ Buat Catatan</button>
         </div>
+        <div class="flex flex-col sm:flex-row gap-2">
+          <input type="text" value="${escapeHtml(noteSearch)}" oninput="noteSearch=this.value; renderAll();" placeholder="Cari ID PLN, WiFi, kontak..." class="flex-1 px-3.5 py-2 rounded-xl border border-slate-200 text-xs sm:text-sm bg-white" />
+          <select onchange="noteCategoryFilter=this.value; renderAll();" class="px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-bold bg-white">
+            <option value="all" ${noteCategoryFilter === 'all' ? 'selected' : ''}>Semua Kategori</option>
+            <option value="Penting & Darurat" ${noteCategoryFilter === 'Penting & Darurat' ? 'selected' : ''}>Penting & Darurat</option>
+            <option value="Kontak Tukang/Dokter" ${noteCategoryFilter === 'Kontak Tukang/Dokter' ? 'selected' : ''}>Kontak Tukang/Dokter</option>
+            <option value="Daftar Belanja" ${noteCategoryFilter === 'Daftar Belanja' ? 'selected' : ''}>Daftar Belanja</option>
+            <option value="Umum" ${noteCategoryFilter === 'Umum' ? 'selected' : ''}>Umum</option>
+          </select>
+        </div>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           ${list.map(n => {
             const p = NOTE_COLORS[n.color] || NOTE_COLORS.white;
@@ -1242,7 +1484,7 @@
             <div class="space-y-1.5">
               <div class="flex flex-wrap items-center gap-2">
                 ${badgeHtml}
-                <span class="text-xs font-semibold text-slate-500">Akses cepat layar penuh seperti aplikasi bawaan HP</span>
+                <span class="text-xs font-semibold text-slate-500">Kode Keluarga <b>${escapeHtml(state.familyCode)}</b> otomatis ikut tersimpan</span>
               </div>
               <h4 class="text-base sm:text-lg font-extrabold text-slate-900 flex items-center gap-2">
                 <i data-lucide="smartphone" class="w-5 h-5 text-theme"></i>
@@ -1257,12 +1499,11 @@
             </button>
           </div>
 
-          <!-- Expandable / Clear Step-by-Step Guide for Android & iPhone -->
           <div id="install-steps-box" class="${installGuideExpanded || !canPrompt ? 'grid' : 'hidden'} grid-cols-1 md:grid-cols-2 gap-3 pt-3 border-t border-slate-200/80">
             <div class="p-3.5 rounded-xl bg-white border border-slate-200 space-y-1.5">
               <div class="font-extrabold text-xs sm:text-sm text-slate-900">🤖 Android (Google Chrome)</div>
               <ol class="list-decimal list-inside text-xs text-slate-600 space-y-1">
-                <li>Buka link <b>RumahKu</b> ini di browser <b>Chrome</b>.</li>
+                <li>Pastikan Kode Keluarga sudah benar, lalu buka di browser <b>Chrome</b>.</li>
                 <li>Ketuk menu <b>Titik Tiga (⋮)</b> di pojok kanan atas browser.</li>
                 <li>Pilih <b>Tambahkan ke layar utama</b> atau <b>Instal aplikasi</b>, lalu konfirmasi <b>Instal</b>.</li>
               </ol>
@@ -1493,10 +1734,10 @@
 
             <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 flex flex-wrap items-center justify-between gap-3">
               <div>
-                <span class="text-[11px] font-bold uppercase text-slate-500">Kode Keluarga Aktif</span>
+                <span class="text-[11px] font-bold uppercase text-slate-500">Kode Keluarga Aktif (Tersimpan 4-Lapis)</span>
                 <div class="font-mono font-extrabold text-2xl tracking-widest text-slate-900">${escapeHtml(state.familyCode)}</div>
               </div>
-              <div class="flex gap-2">
+              <div class="flex flex-wrap gap-2">
                 <button onclick="copyTextToClipboard('${escapeHtml(state.familyCode)}', 'Kode disalin!')" class="px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold">Salin Kode</button>
                 <button onclick="copyInviteLink()" class="px-3.5 py-2 rounded-xl bg-theme text-white text-xs font-bold">Salin Link Undangan HP</button>
               </div>
@@ -1519,14 +1760,15 @@
 
           <div class="card p-5 flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h4 class="font-extrabold text-sm text-slate-900">Backup & Restore JSON</h4>
-              <p class="text-xs text-slate-500">Simpan cadangan file ke HP atau pulihkan data.</p>
+              <h4 class="font-extrabold text-sm text-slate-900">Backup, Restore & Reset Data</h4>
+              <p class="text-xs text-slate-500">Simpan cadangan JSON ke HP, pulihkan data, atau reset data contoh.</p>
             </div>
-            <div class="flex gap-2">
+            <div class="flex flex-wrap gap-2">
               <button onclick="exportJsonBackup()" class="px-4 py-2 rounded-xl bg-theme text-white text-xs font-bold">Unduh JSON</button>
               <label class="px-4 py-2 rounded-xl bg-slate-100 text-slate-800 text-xs font-bold cursor-pointer">
                 Pulihkan JSON <input type="file" accept=".json" onchange="importJsonBackup(event)" class="hidden" />
               </label>
+              <button onclick="openResetSampleModal()" class="px-4 py-2 rounded-xl bg-rose-50 text-rose-700 border border-rose-200 text-xs font-bold">Reset Contoh</button>
             </div>
           </div>
         </div>
@@ -1534,23 +1776,28 @@
     }
 
     function joinFamilyByCode() {
-      const code = (document.getElementById('join-code-input')?.value || '').trim().toUpperCase();
-      if (!/^[A-Z0-9]{6}$/.test(code)) { showToast('Kode harus 6 karakter.', 'error'); return; }
+      const code = normalizeFamilyCode(document.getElementById('join-code-input')?.value);
+      if (!code) {
+        showToast('Kode Keluarga harus 6 karakter huruf/angka.', 'error');
+        return;
+      }
       state.familyCode = code;
-      state.updatedAt = 0;
+      state.updatedAt = 0; // Allow cloud state for this family code to load immediately
+      savePersistentFamilyCode(code);
       saveLocalState(false);
       connectToFamilyDoc(code);
       renderAll();
-      showToast(`Bergabung ke keluarga ${code}`);
+      showToast(`Berhasil terhubung & menyimpan permanen Kode Keluarga: ${code}`);
     }
 
     function createFreshFamilyCode() {
       const code = generateFamilyCode();
       state.familyCode = code;
+      savePersistentFamilyCode(code);
       saveLocalState(true);
       connectToFamilyDoc(code);
       renderAll();
-      showToast(`Kode baru dibuat: ${code}`);
+      showToast(`Kode keluarga baru dibuat & disimpan: ${code}`);
     }
 
     function exportJsonBackup() {
@@ -1574,14 +1821,43 @@
         try {
           const parsed = JSON.parse(ev.target.result);
           if (!parsed || !parsed.accounts) { showToast('File tidak valid.', 'error'); return; }
-          state = { ...createDefaultState(state.familyCode), ...parsed, familyCode: state.familyCode };
+          const keepCode = state.familyCode;
+          state = { ...createDefaultState(keepCode), ...parsed, familyCode: keepCode };
           applyThemeAndFont();
+          savePersistentFamilyCode(keepCode);
           saveLocalState(true);
           renderAll();
           showToast('Data berhasil dipulihkan!');
         } catch (err) { showToast('Gagal membaca JSON.', 'error'); }
       };
       reader.readAsText(file);
+    }
+
+    function openResetSampleModal() {
+      openModal(`
+        <div class="p-4 border-b border-slate-100 flex justify-between items-center">
+          <h4 class="font-extrabold text-sm text-slate-900">Reset ke Data Contoh?</h4>
+          <button onclick="closeModal()" class="p-1 text-slate-400"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+        <div class="p-5 space-y-4">
+          <p class="text-xs sm:text-sm text-slate-600">Seluruh data transaksi & catatan lokal saat ini akan diganti dengan data contoh awal, namun <b>Kode Keluarga (${escapeHtml(state.familyCode)})</b> tetap dipertahankan.</p>
+          <div class="flex justify-end gap-2">
+            <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl bg-slate-100 text-xs font-bold">Batal</button>
+            <button type="button" onclick="confirmResetSampleData()" class="px-4 py-2 rounded-xl bg-rose-600 text-white text-xs font-bold">Ya, Reset Data</button>
+          </div>
+        </div>
+      `);
+    }
+
+    function confirmResetSampleData() {
+      const keepCode = state.familyCode;
+      state = createDefaultState(keepCode);
+      applyThemeAndFont();
+      savePersistentFamilyCode(keepCode);
+      saveLocalState(true);
+      closeModal();
+      renderAll();
+      showToast('Data berhasil direset ke data contoh!');
     }
 
     /* ==================== MODALS & CRUD HANDLERS ==================== */
@@ -2015,16 +2291,24 @@
         <form onsubmit="submitTaskForm(event)" class="p-4 space-y-3">
           <input type="text" id="tsk-title" required placeholder="Nama perawatan / tugas..." class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm" />
           <div class="grid grid-cols-2 gap-2.5">
+            <select id="tsk-cat" class="px-3 py-2 rounded-xl border border-slate-200 text-sm bg-white">
+              <option value="Perawatan Berkala">Perawatan Berkala</option>
+              <option value="Kebersihan">Kebersihan</option>
+              <option value="Kendaraan & Pajak">Kendaraan & Pajak</option>
+              <option value="Agenda Keluarga">Agenda Keluarga</option>
+            </select>
             <input type="date" id="tsk-due" value="${addDaysISO(getTodayISO(), 3)}" required class="px-3 py-2 rounded-xl border border-slate-200 text-sm" />
+          </div>
+          <div class="grid grid-cols-2 gap-2.5">
             <select id="tsk-pic" class="px-3 py-2 rounded-xl border border-slate-200 text-sm bg-white">
               ${state.users.map(u => `<option value="${u.id}">${u.avatar} ${escapeHtml(u.name)}</option>`).join('')}
             </select>
+            <select id="tsk-prio" class="px-3 py-2 rounded-xl border border-slate-200 text-sm bg-white">
+              <option value="Tinggi">Prioritas Tinggi</option>
+              <option value="Sedang" selected>Prioritas Sedang</option>
+              <option value="Rendah">Prioritas Rendah</option>
+            </select>
           </div>
-          <select id="tsk-prio" class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm bg-white">
-            <option value="Tinggi">Prioritas Tinggi</option>
-            <option value="Sedang" selected>Prioritas Sedang</option>
-            <option value="Rendah">Prioritas Rendah</option>
-          </select>
           <div class="flex justify-end gap-2 pt-2">
             <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl bg-slate-100 text-xs font-bold">Batal</button>
             <button type="submit" class="px-5 py-2 rounded-xl bg-theme text-white text-xs font-bold">Simpan</button>
@@ -2038,6 +2322,7 @@
       state.tasks.push({
         id: generateId('tsk'),
         title: document.getElementById('tsk-title').value.trim(),
+        category: document.getElementById('tsk-cat').value,
         dueDate: document.getElementById('tsk-due').value,
         picId: document.getElementById('tsk-pic').value,
         priority: document.getElementById('tsk-prio').value,
