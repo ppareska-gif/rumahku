@@ -38,7 +38,7 @@
       --gold-accent: #C9A227;
       --gold-hover: #B38E1E;
       --cream-bg: #FAF8F4;
-      --cream-pill: #F1EDE4;
+      --cream-sand: #F3EFEA;
       --cream-border: #E8E2D5;
     }
     * { font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif; }
@@ -62,7 +62,7 @@
     .hover\:bg-gold-hover:hover { background-color: var(--gold-hover); }
     .text-gold { color: var(--gold-accent); }
     .bg-cream { background-color: var(--cream-bg); }
-    .bg-cream-pill { background-color: var(--cream-pill); }
+    .bg-sand { background-color: var(--cream-sand); }
     .border-cream { border-color: var(--cream-border); }
 
     .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -74,119 +74,181 @@
       border-radius: 1.25rem;
       box-shadow: 0 2px 8px rgba(31, 29, 26, 0.03);
     }
-    .card-soft {
-      background: #F6F3EC;
+    .card-sand {
+      background: var(--cream-sand);
       border: 1px solid var(--cream-border);
       border-radius: 1.125rem;
     }
   </style>
 </head>
-<body class="min-h-screen flex flex-col lg:flex-row pb-24 lg:pb-0">
+<body class="min-h-screen flex flex-col">
 
-  <!-- ==================== DESKTOP SIDEBAR (lg+) ==================== -->
-  <aside class="hidden lg:flex lg:w-68 lg:flex-col lg:fixed lg:inset-y-0 bg-[#FCFBF8] border-r border-cream z-30">
-    <div class="p-5 border-b border-cream flex items-center gap-3">
-      <div class="w-10 h-10 rounded-xl bg-theme flex items-center justify-center text-white shadow-xs shrink-0">
-        <i data-lucide="home" class="w-5 h-5"></i>
-      </div>
-      <div>
-        <h1 class="font-extrabold text-lg text-[#1F1D1A] leading-tight">RumahKu</h1>
-        <p class="text-xs text-[#736D63]">Manajemen Keluarga</p>
-      </div>
-    </div>
-
-    <!-- Family Code & Text Size Toggle -->
-    <div class="p-4 border-b border-cream space-y-2.5">
-      <div class="p-3 rounded-2xl bg-theme-soft border border-theme-light">
-        <div class="flex items-center justify-between mb-1">
-          <span class="text-[11px] font-bold uppercase tracking-wider text-theme-dark">Kode Keluarga</span>
-          <span id="desktop-sync-badge" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800">
-            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Lokal
-          </span>
+  <!-- ==================== AUTH SCREEN (LOGIN / REGISTER AKUN KELUARGA) ==================== -->
+  <div id="auth-screen" class="hidden min-h-screen flex items-center justify-center p-4 bg-[#FAF8F4]">
+    <div class="w-full max-w-md space-y-5">
+      <div class="text-center space-y-2">
+        <div class="w-16 h-16 rounded-3xl bg-theme text-white flex items-center justify-center mx-auto shadow-md">
+          <i data-lucide="home" class="w-8 h-8"></i>
         </div>
-        <div class="flex items-center justify-between gap-2">
-          <span id="sidebar-family-code" class="font-mono font-extrabold text-base tracking-widest text-[#1F1D1A]">------</span>
-          <button onclick="copyInviteLink()" class="px-2.5 py-1 rounded-xl bg-white hover:bg-cream-pill text-[#1F1D1A] border border-cream text-xs font-bold flex items-center gap-1 transition">
-            <i data-lucide="link" class="w-3.5 h-3.5 text-theme"></i> Salin Link
+        <h1 class="text-2xl font-extrabold text-[#1F1D1A]">RumahKu</h1>
+        <p class="text-xs sm:text-sm text-[#736D63]">Manajemen Keuangan, Tagihan & Kebutuhan Keluarga dalam Satu Akun</p>
+      </div>
+
+      <div class="card p-6 space-y-5">
+        <!-- Segmented Tab Login / Register -->
+        <div class="grid grid-cols-2 p-1 rounded-2xl bg-sand">
+          <button type="button" id="auth-tab-login" onclick="switchAuthMode('login')" class="py-2.5 rounded-xl text-xs sm:text-sm font-extrabold bg-white text-[#1F1D1A] shadow-2xs transition">
+            Masuk Akun Keluarga
+          </button>
+          <button type="button" id="auth-tab-register" onclick="switchAuthMode('register')" class="py-2.5 rounded-xl text-xs sm:text-sm font-bold text-[#736D63] transition">
+            Buat Akun Keluarga Baru
           </button>
         </div>
+
+        <form onsubmit="handleAuthSubmit(event)" class="space-y-4">
+          <div id="auth-family-name-group" class="hidden">
+            <label class="block text-xs font-bold text-[#4A453D] mb-1">Nama Keluarga</label>
+            <input type="text" id="auth-family-name" placeholder="Contoh: Keluarga Budi & Sari" class="w-full px-3.5 py-2.5 rounded-xl border border-cream text-sm bg-white focus:outline-none focus:border-theme" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-[#4A453D] mb-1">Username / Email Keluarga</label>
+            <input type="text" id="auth-username" required autocomplete="username" placeholder="Contoh: keluargabudi atau budi@rumahku.id" class="w-full px-3.5 py-2.5 rounded-xl border border-cream text-sm bg-white focus:outline-none focus:border-theme" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-[#4A453D] mb-1">Kata Sandi</label>
+            <div class="relative">
+              <input type="password" id="auth-password" required minlength="4" autocomplete="current-password" placeholder="Minimal 4 karakter" class="w-full px-3.5 py-2.5 pr-11 rounded-xl border border-cream text-sm bg-white focus:outline-none focus:border-theme" />
+              <button type="button" onclick="toggleAuthPasswordVis()" class="absolute right-3 top-1/2 -translate-y-1/2 text-[#736D63] hover:text-[#1F1D1A]">
+                <i data-lucide="eye" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+
+          <div id="auth-error-box" class="hidden p-3 rounded-xl bg-[#FAF2F1] border border-[#E4C5C1] text-xs font-bold text-[#9E3A32]"></div>
+
+          <button type="submit" id="auth-submit-btn" class="w-full py-3 rounded-2xl bg-theme hover:bg-theme-hover text-white text-sm font-extrabold shadow-sm flex items-center justify-center gap-2 transition">
+            <i data-lucide="log-in" class="w-4 h-4"></i>
+            <span id="auth-submit-label">Masuk ke RumahKu</span>
+          </button>
+        </form>
+
+        <div class="p-3.5 rounded-2xl bg-sand text-[11px] text-[#5C564D] leading-relaxed">
+          <b>Info Sinkronisasi:</b> Anggota keluarga di HP lain cukup membuka web ini dan login menggunakan <b>Username/Email</b> serta <b>Kata Sandi</b> yang sama untuk berbagi data secara langsung.
+        </div>
       </div>
-
-      <button onclick="toggleFontSize()" class="w-full py-2.5 px-3 rounded-xl bg-cream-pill hover:bg-[#E7E1D4] text-[#1F1D1A] text-xs font-bold flex items-center justify-between transition">
-        <span class="flex items-center gap-2"><i data-lucide="type" class="w-4 h-4 text-[#736D63]"></i><span>Ukuran Teks</span></span>
-        <span id="sidebar-font-label" class="px-2.5 py-0.5 rounded-lg bg-white text-[#1F1D1A] shadow-2xs">Teks: Normal</span>
-      </button>
     </div>
+  </div>
 
-    <!-- Desktop Navigation Items -->
-    <nav id="desktop-nav" class="flex-1 p-3 space-y-1 overflow-y-auto"></nav>
-  </aside>
+  <!-- ==================== MAIN APP SHELL ==================== -->
+  <div id="app-shell" class="hidden min-h-screen flex-1 flex flex-col lg:flex-row pb-24 lg:pb-0">
 
-  <!-- ==================== MOBILE TOP HEADER (< lg) ==================== -->
-  <header class="lg:hidden sticky top-0 z-30 bg-[#FAF8F4]/95 backdrop-blur border-b border-cream">
-    <div class="px-4 py-2.5 flex items-center justify-between gap-2">
-      <div class="flex items-center gap-2.5 min-w-0">
-        <div class="w-9 h-9 rounded-xl bg-theme flex items-center justify-center text-white shrink-0 shadow-2xs">
-          <i data-lucide="home" class="w-4 h-4"></i>
+    <!-- ==================== DESKTOP SIDEBAR (lg+) ==================== -->
+    <aside class="hidden lg:flex lg:w-68 lg:flex-col lg:fixed lg:inset-y-0 bg-[#FCFBF8] border-r border-cream z-30">
+      <div class="p-5 border-b border-cream flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-theme flex items-center justify-center text-white shadow-xs shrink-0">
+          <i data-lucide="home" class="w-5 h-5"></i>
         </div>
         <div class="min-w-0">
-          <div class="flex items-center gap-1.5">
-            <span class="font-extrabold text-base text-[#1F1D1A] truncate">RumahKu</span>
-            <span id="mobile-sync-badge" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 shrink-0">
+          <h1 class="font-extrabold text-lg text-[#1F1D1A] leading-tight">RumahKu</h1>
+          <p id="sidebar-family-name" class="text-xs text-[#736D63] truncate">Keluarga Bahagia</p>
+        </div>
+      </div>
+
+      <!-- Account Info & Text Size Toggle -->
+      <div class="p-4 border-b border-cream space-y-2.5">
+        <div class="p-3 rounded-2xl bg-theme-soft border border-theme-light">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-theme-dark">Akun Keluarga</span>
+            <span id="desktop-sync-badge" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800">
               <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Lokal
             </span>
           </div>
-          <p class="text-[11px] text-[#736D63] truncate">Keluarga <span id="mobile-family-code-sub" class="font-mono font-bold">------</span></p>
-        </div>
-      </div>
-
-      <div class="flex items-center gap-1.5 shrink-0">
-        <button onclick="toggleFontSize()" id="mobile-font-btn" class="min-h-[38px] px-2.5 rounded-xl bg-cream-pill text-[#1F1D1A] text-xs font-extrabold border border-cream" title="Perbesar / Perkecil Teks">
-          A+
-        </button>
-        <button onclick="openUserSwitcherModal()" class="min-h-[38px] pl-2.5 pr-2.5 rounded-xl bg-white border border-cream text-[#1F1D1A] text-xs font-bold flex items-center gap-1.5 shadow-2xs">
-          <span id="mobile-active-avatar">👨🏻</span>
-          <span id="mobile-active-username" class="max-w-[70px] truncate">Ayah</span>
-          <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-[#736D63]"></i>
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <!-- ==================== MAIN CONTENT WRAPPER ==================== -->
-  <div class="flex-1 lg:pl-68 flex flex-col min-w-0">
-    <!-- Desktop Top Header -->
-    <header class="hidden lg:flex items-center justify-between px-8 py-4 bg-[#FCFBF8]/95 backdrop-blur border-b border-cream sticky top-0 z-20">
-      <div>
-        <h2 id="desktop-page-title" class="text-xl font-extrabold text-[#1F1D1A]">Beranda</h2>
-        <p id="desktop-today-date" class="text-xs text-[#736D63] mt-0.5"></p>
-      </div>
-      <div class="flex items-center gap-3">
-        <button onclick="openQuickAddMenu()" class="px-4 py-2.5 rounded-xl bg-gold hover:bg-gold-hover text-white text-sm font-extrabold flex items-center gap-2 shadow-xs transition">
-          <i data-lucide="plus" class="w-4 h-4"></i> Catat Cepat
-        </button>
-        <button onclick="openUserSwitcherModal()" class="pl-3 pr-3.5 py-2 rounded-xl bg-cream-pill hover:bg-[#E7E1D4] text-[#1F1D1A] text-sm font-bold flex items-center gap-2 transition">
-          <span id="desktop-active-avatar" class="text-base">👨🏻</span>
-          <div class="text-left leading-tight">
-            <div id="desktop-active-username" class="text-xs font-extrabold text-[#1F1D1A]">Ayah</div>
-            <div id="desktop-active-role" class="text-[10px] text-[#736D63]">Ganti Profil</div>
+          <div class="flex items-center justify-between gap-2">
+            <span id="sidebar-account-username" class="font-bold text-xs text-[#1F1D1A] truncate">keluarga</span>
+            <button onclick="navigateTo('setting', 'sync')" class="px-2 py-1 rounded-lg bg-white hover:bg-sand text-[#1F1D1A] border border-cream text-[11px] font-bold shrink-0 transition">
+              Akun
+            </button>
           </div>
-          <i data-lucide="chevrons-up-down" class="w-4 h-4 text-[#736D63]"></i>
+        </div>
+
+        <button onclick="toggleFontSize()" class="w-full py-2.5 px-3 rounded-xl bg-sand hover:bg-[#E7E1D4] text-[#1F1D1A] text-xs font-bold flex items-center justify-between transition">
+          <span class="flex items-center gap-2"><i data-lucide="type" class="w-4 h-4 text-[#736D63]"></i><span>Ukuran Teks</span></span>
+          <span id="sidebar-font-label" class="px-2.5 py-0.5 rounded-lg bg-white text-[#1F1D1A] shadow-2xs">Teks: Normal</span>
         </button>
+      </div>
+
+      <!-- Desktop Navigation Items -->
+      <nav id="desktop-nav" class="flex-1 p-3 space-y-1 overflow-y-auto"></nav>
+    </aside>
+
+    <!-- ==================== MOBILE TOP HEADER (< lg) ==================== -->
+    <header class="lg:hidden sticky top-0 z-30 bg-[#FAF8F4]/95 backdrop-blur border-b border-cream">
+      <div class="px-4 py-2.5 flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div class="w-9 h-9 rounded-xl bg-theme flex items-center justify-center text-white shrink-0 shadow-2xs">
+            <i data-lucide="home" class="w-4 h-4"></i>
+          </div>
+          <div class="min-w-0">
+            <div class="flex items-center gap-1.5">
+              <span class="font-extrabold text-base text-[#1F1D1A] truncate">RumahKu</span>
+              <span id="mobile-sync-badge" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 shrink-0">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Lokal
+              </span>
+            </div>
+            <p id="mobile-family-name-sub" class="text-[11px] text-[#736D63] truncate">Keluarga Bahagia</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button onclick="toggleFontSize()" id="mobile-font-btn" class="min-h-[38px] px-2.5 rounded-xl bg-sand text-[#1F1D1A] text-xs font-extrabold border border-cream" title="Perbesar / Perkecil Teks">
+            A+
+          </button>
+          <button onclick="openUserSwitcherModal()" class="min-h-[38px] pl-2.5 pr-2.5 rounded-xl bg-white border border-cream text-[#1F1D1A] text-xs font-bold flex items-center gap-1.5 shadow-2xs">
+            <span id="mobile-active-avatar">👨🏻</span>
+            <span id="mobile-active-username" class="max-w-[70px] truncate">Ayah</span>
+            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-[#736D63]"></i>
+          </button>
+        </div>
       </div>
     </header>
 
-    <!-- Dynamic View Container -->
-    <main id="app-main" class="flex-1 p-4 sm:p-6 lg:p-8 max-w-6xl w-full mx-auto space-y-5"></main>
+    <!-- ==================== MAIN CONTENT WRAPPER ==================== -->
+    <div class="flex-1 lg:pl-68 flex flex-col min-w-0">
+      <!-- Desktop Top Header -->
+      <header class="hidden lg:flex items-center justify-between px-8 py-4 bg-[#FCFBF8]/95 backdrop-blur border-b border-cream sticky top-0 z-20">
+        <div>
+          <h2 id="desktop-page-title" class="text-xl font-extrabold text-[#1F1D1A]">Beranda</h2>
+          <p id="desktop-today-date" class="text-xs text-[#736D63] mt-0.5"></p>
+        </div>
+        <div class="flex items-center gap-3">
+          <button onclick="openQuickAddMenu()" class="px-4 py-2.5 rounded-xl bg-gold hover:bg-gold-hover text-white text-sm font-extrabold flex items-center gap-2 shadow-xs transition">
+            <i data-lucide="plus" class="w-4 h-4"></i> Catat Cepat
+          </button>
+          <button onclick="openUserSwitcherModal()" class="pl-3 pr-3.5 py-2 rounded-xl bg-sand hover:bg-[#E7E1D4] text-[#1F1D1A] text-sm font-bold flex items-center gap-2 transition">
+            <span id="desktop-active-avatar" class="text-base">👨🏻</span>
+            <div class="text-left leading-tight">
+              <div id="desktop-active-username" class="text-xs font-extrabold text-[#1F1D1A]">Ayah</div>
+              <div id="desktop-active-role" class="text-[10px] text-[#736D63]">Ganti Profil</div>
+            </div>
+            <i data-lucide="chevrons-up-down" class="w-4 h-4 text-[#736D63]"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- Dynamic View Container -->
+      <main id="app-main" class="flex-1 p-4 sm:p-6 lg:p-8 max-w-6xl w-full mx-auto space-y-5"></main>
+    </div>
+
+    <!-- ==================== FLOATING GOLD '+' ACTION BUTTON ==================== -->
+    <button onclick="openQuickAddMenu()" aria-label="Tambah Cepat" class="fixed right-5 bottom-22 lg:bottom-7 z-30 w-14 h-14 rounded-2xl bg-gold hover:bg-gold-hover text-white shadow-xl flex items-center justify-center transition transform active:scale-95">
+      <i data-lucide="plus" class="w-7 h-7 stroke-[2.5]"></i>
+    </button>
+
+    <!-- ==================== MOBILE 5-TAB BOTTOM NAVIGATION BAR ==================== -->
+    <nav id="mobile-bottom-nav" class="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-[#FCFBF8]/95 backdrop-blur border-t border-cream px-2 py-1.5 flex items-center justify-around shadow-[0_-4px_16px_rgba(31,29,26,0.04)]"></nav>
   </div>
-
-  <!-- ==================== FLOATING GOLD '+' ACTION BUTTON ==================== -->
-  <button onclick="openQuickAddMenu()" aria-label="Tambah Cepat" class="fixed right-5 bottom-22 lg:bottom-7 z-30 w-14 h-14 rounded-2xl bg-gold hover:bg-gold-hover text-white shadow-xl flex items-center justify-center transition transform active:scale-95">
-    <i data-lucide="plus" class="w-7 h-7 stroke-[2.5]"></i>
-  </button>
-
-  <!-- ==================== MOBILE 5-TAB BOTTOM NAVIGATION BAR ==================== -->
-  <nav id="mobile-bottom-nav" class="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-[#FCFBF8]/95 backdrop-blur border-t border-cream px-2 py-1.5 flex items-center justify-around shadow-[0_-4px_16px_rgba(31,29,26,0.04)]"></nav>
 
   <!-- ==================== MODAL & TOAST CONTAINERS ==================== -->
   <div id="modal-backdrop" class="hidden fixed inset-0 z-50 bg-black/45 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
@@ -196,31 +258,30 @@
 
   <!-- ==================== APPLICATION SCRIPT ==================== -->
   <script>
-    /* ==================== STORAGE & 4-LAYER FAMILY CODE KEYS ==================== */
-    const STORAGE_KEY = 'rumahku_app_state';
-    const LEGACY_STORAGE_KEYS = ['rumahku_app_state_v4', 'rumahku_app_state_v3'];
-    const FAMILY_CODE_KEY = 'rumahku_active_family_code';
-    const COOKIE_NAME = 'rumahku_family_code';
-    const IDB_NAME = 'rumahku_persist_db';
-    const IDB_STORE = 'meta';
-    const IDB_KEY = 'familyCode';
+    /* ==================== STORAGE & 3-LAYER SESSION PERSISTENCE KEYS ==================== */
+    const SESSION_KEY = 'rumahku_auth_session_v1';
+    const STATE_PREFIX = 'rumahku_state_acc_';
+    const COOKIE_NAME = 'rumahku_session';
+    const IDB_NAME = 'rumahku_auth_db';
+    const IDB_STORE = 'sessionStore';
+    const IDB_KEY = 'activeSession';
 
     const THEMES = {
-      emerald: { name: 'Hutan Seruma (Default)', primary: '#214E2A', hover: '#183A1F', light: '#E4EFE6', soft: '#F2F7F3', text: '#1B4223', border: '#C4DEC9' },
-      ocean:   { name: 'Ocean Biru',             primary: '#1E4E6E', hover: '#163B54', light: '#E1EEF6', soft: '#F1F7FB', text: '#173F5A', border: '#BDD7E8' },
-      indigo:  { name: 'Royal Indigo',           primary: '#3B3F75', hover: '#2D305C', light: '#E7E8F5', soft: '#F4F4FA', text: '#2E3261', border: '#C9CCE6' },
-      rose:    { name: 'Terakota Hangat',        primary: '#8A3E36', hover: '#6E302A', light: '#F6E5E3', soft: '#FBF3F2', text: '#6E302A', border: '#E4C1BD' },
-      amber:   { name: 'Zaitun & Emas',          primary: '#635B23', hover: '#4C461A', light: '#F2EFE0', soft: '#F9F8F1', text: '#4C461A', border: '#DDD6B4' },
-      teal:    { name: 'Teal Toska',             primary: '#1F5C58', hover: '#174643', light: '#E0F0EF', soft: '#F1F8F8', text: '#174643', border: '#BBDAD8' }
+      emerald: { name: 'Forest Hijau',     primary: '#214E2A', hover: '#183A1F', light: '#E4EFE6', soft: '#F2F7F3', text: '#1B4223', border: '#C4DEC9' },
+      modern:  { name: 'Emerald Modern',   primary: '#059669', hover: '#047857', light: '#D1FAE5', soft: '#ECFDF5', text: '#065F46', border: '#A7F3D0' },
+      ocean:   { name: 'Ocean Biru',       primary: '#0284C7', hover: '#0369A1', light: '#E0F2FE', soft: '#F0F9FF', text: '#075985', border: '#BAE6FD' },
+      indigo:  { name: 'Royal Indigo',     primary: '#4F46E5', hover: '#4338CA', light: '#E0E7FF', soft: '#EEF2FF', text: '#3730A3', border: '#C7D2FE' },
+      rose:    { name: 'Rose Merah Muda',  primary: '#E11D48', hover: '#BE123C', light: '#FFE4E6', soft: '#FFF1F2', text: '#9F1239', border: '#FECDD3' },
+      amber:   { name: 'Amber Emas',       primary: '#D97706', hover: '#B45309', light: '#FEF3C7', soft: '#FFFBEB', text: '#92400E', border: '#FDE68A' }
     };
 
-    // 5 Primary Mobile Bottom Tabs + Full Desktop Sidebar Access
+    // 5 Primary Mobile Bottom Tabs
     const BOTTOM_NAV_ITEMS = [
       { id: 'dashboard', label: 'Beranda',  icon: 'home' },
       { id: 'finance',   label: 'Keuangan', icon: 'wallet' },
       { id: 'calendar',  label: 'Kalender', icon: 'calendar' },
       { id: 'homecare',  label: 'Rumah',    icon: 'heart-handshake' },
-      { id: 'setting',   label: 'Lainnya',  icon: 'more-horizontal' }
+      { id: 'setting',   label: 'Setting',  icon: 'settings' }
     ];
 
     const DESKTOP_NAV_ITEMS = [
@@ -228,18 +289,18 @@
       { id: 'finance',   label: 'Keuangan & Terjadwal',  icon: 'wallet' },
       { id: 'calendar',  label: 'Kalender & Agenda',     icon: 'calendar' },
       { id: 'bills',     label: 'Tagihan Rutin',         icon: 'receipt' },
-      { id: 'tasks',     label: 'Jadwal Maintenance',    icon: 'wrench' },
-      { id: 'inventory', label: 'Stok & Groceries',      icon: 'shopping-cart' },
-      { id: 'notes',     label: 'Catatan & Link',        icon: 'book-open' },
+      { id: 'tasks',     label: 'Jadwal Perawatan',      icon: 'wrench' },
+      { id: 'inventory', label: 'Stok & Belanja',        icon: 'shopping-cart' },
+      { id: 'notes',     label: 'Catatan & Brankas',     icon: 'book-open' },
       { id: 'setting',   label: 'Setting & Install HP',  icon: 'settings' }
     ];
 
     const SETTING_TABS = [
-      { id: 'theme',      label: 'Tampilan & Tema',      icon: 'palette' },
-      { id: 'categories', label: 'Anggaran & Kategori',  icon: 'tags' },
-      { id: 'accounts',   label: 'Wallet & Rekening',    icon: 'credit-card' },
-      { id: 'family',     label: 'Anggota Keluarga',     icon: 'users' },
-      { id: 'sync',       label: 'Sinkronisasi & Data',  icon: 'cloud' }
+      { id: 'theme',      label: 'Tema & Tampilan',     icon: 'palette' },
+      { id: 'categories', label: 'Kategori Keuangan',   icon: 'tags' },
+      { id: 'accounts',   label: 'Rekening & Dompet',   icon: 'credit-card' },
+      { id: 'family',     label: 'Anggota Keluarga',    icon: 'users' },
+      { id: 'sync',       label: 'Akun & Backup',       icon: 'shield-check' }
     ];
 
     const NOTE_COLORS = {
@@ -247,7 +308,7 @@
       emerald: { name: 'Hijau Daun',    bg: 'bg-[#F2F7F3]', border: 'border-[#C4DEC9]', badge: 'bg-[#E4EFE6] text-[#1B4223]' },
       sky:     { name: 'Biru Teduh',    bg: 'bg-[#F1F6FA]', border: 'border-[#C5D8E8]', badge: 'bg-[#E1EDF7] text-[#1E4666]' },
       rose:    { name: 'Terakota Muda', bg: 'bg-[#FAF2F1]', border: 'border-[#E4C5C1]', badge: 'bg-[#F4E1DF] text-[#7A352E]' },
-      white:   { name: 'Krem Bersih',   bg: 'bg-white',     border: 'border-cream',     badge: 'bg-cream-pill text-[#4A453D]' }
+      white:   { name: 'Krem Bersih',   bg: 'bg-white',     border: 'border-cream',     badge: 'bg-sand text-[#4A453D]' }
     };
 
     const firebaseConfig = {
@@ -259,15 +320,17 @@
       appId: "1:462962514794:web:50b035373f2fc0fe342313"
     };
 
+    let session = null; // { accountId, username, passwordHash, familyName }
     let state = null;
+    let authMode = 'login';
     let currentView = 'dashboard';
     let currentSettingTab = 'theme';
-    let financeSubTab = 'overview'; // 'overview' | 'history' | 'scheduled'
+    let financeSubTab = 'overview';
     let financeFilters = {
-      type: 'expense', // 'expense' | 'income' | 'all'
+      type: 'expense',
       categoryId: 'all',
       accountId: 'all',
-      posOwnerId: 'all', // 'all' | 'shared' | userId
+      posOwnerId: 'all',
       month: ''
     };
     let hideBalances = false;
@@ -321,61 +384,68 @@
       } catch (e) {}
     }
 
-    /* ==================== 4-LAYER PERSISTENT FAMILY CODE MANAGER ==================== */
-    function isValidFamilyCode(code) {
-      return /^[A-Z0-9]{6}$/.test(String(code || '').trim().toUpperCase());
+    /* ==================== CRYPTO HASHING & DETERMINISTIC ACCOUNT ID ==================== */
+    function normalizeUsername(raw) {
+      return String(raw || '').trim().toLowerCase().replace(/\s+/g, '');
     }
 
-    function normalizeFamilyCode(code) {
-      const clean = String(code || '').trim().toUpperCase();
-      return isValidFamilyCode(clean) ? clean : '';
-    }
-
-    function readUrlFamilyCode() {
+    async function sha256Hex(text) {
+      const str = String(text || '');
       try {
-        const params = new URLSearchParams(window.location.search);
-        return normalizeFamilyCode(params.get('family'));
-      } catch (e) {
-        return '';
-      }
-    }
-
-    function syncUrlFamilyCode(code) {
-      try {
-        const clean = normalizeFamilyCode(code);
-        if (!clean) return;
-        const url = new URL(window.location.href);
-        if (url.searchParams.get('family') !== clean) {
-          url.searchParams.set('family', clean);
-          window.history.replaceState(null, '', url.toString());
+        if (window.crypto && window.crypto.subtle) {
+          const encoder = new TextEncoder();
+          const data = encoder.encode(str);
+          const hashBuffer = await window.crypto.subtle.digest('SHA-256', data);
+          const hashArray = Array.from(new Uint8Array(hashBuffer));
+          return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         }
+      } catch (e) {}
+      // Deterministic FNV-1a fallback if subtle crypto is unavailable in non-HTTPS preview
+      let h1 = 0x811c9dc5, h2 = 0x1b873593;
+      for (let i = 0; i < str.length; i++) {
+        const ch = str.charCodeAt(i);
+        h1 ^= ch;
+        h1 = Math.imul(h1, 0x01000193);
+        h2 ^= ch;
+        h2 = Math.imul(h2, 0x85ebca6b);
+      }
+      return (h1 >>> 0).toString(16).padStart(8, '0') + (h2 >>> 0).toString(16).padStart(8, '0');
+    }
+
+    async function deriveAccountDocId(username) {
+      const norm = normalizeUsername(username);
+      const digest = await sha256Hex('rumahku_v1_' + norm);
+      return 'acc_' + digest.slice(0, 24);
+    }
+
+    /* ==================== 3-LAYER SESSION PERSISTENCE (LOCALSTORAGE + COOKIE + INDEXEDDB) ==================== */
+    function writeSessionCookie(sessObj) {
+      try {
+        if (!sessObj) {
+          document.cookie = `${COOKIE_NAME}=; max-age=0; path=/; SameSite=Lax`;
+          return;
+        }
+        const encoded = encodeURIComponent(JSON.stringify(sessObj));
+        document.cookie = `${COOKIE_NAME}=${encoded}; max-age=31536000; path=/; SameSite=Lax`;
       } catch (e) {}
     }
 
-    function readCookieFamilyCode() {
+    function readSessionCookie() {
       try {
         const cookies = (document.cookie || '').split(';');
         for (let i = 0; i < cookies.length; i++) {
           const part = cookies[i].trim();
           if (part.startsWith(COOKIE_NAME + '=')) {
-            const rawVal = decodeURIComponent(part.slice(COOKIE_NAME.length + 1));
-            const clean = normalizeFamilyCode(rawVal);
-            if (clean) return clean;
+            const raw = decodeURIComponent(part.slice(COOKIE_NAME.length + 1));
+            const parsed = JSON.parse(raw);
+            if (parsed && parsed.accountId && parsed.passwordHash) return parsed;
           }
         }
       } catch (e) {}
-      return '';
+      return null;
     }
 
-    function writeCookieFamilyCode(code) {
-      try {
-        const clean = normalizeFamilyCode(code);
-        if (!clean) return;
-        document.cookie = `${COOKIE_NAME}=${encodeURIComponent(clean)}; max-age=31536000; path=/; SameSite=Lax`;
-      } catch (e) {}
-    }
-
-    function openPersistIDB() {
+    function openSessionIDB() {
       return new Promise((resolve) => {
         try {
           if (!window.indexedDB) { resolve(null); return; }
@@ -394,71 +464,262 @@
       });
     }
 
-    async function writeIndexedDBFamilyCode(code) {
+    async function writeSessionIDB(sessObj) {
       try {
-        const clean = normalizeFamilyCode(code);
-        if (!clean) return;
-        const idb = await openPersistIDB();
+        const idb = await openSessionIDB();
         if (!idb) return;
         await new Promise((resolve) => {
           const tx = idb.transaction(IDB_STORE, 'readwrite');
-          tx.objectStore(IDB_STORE).put({ key: IDB_KEY, value: clean, updatedAt: Date.now() });
+          if (sessObj) {
+            tx.objectStore(IDB_STORE).put({ key: IDB_KEY, value: sessObj, updatedAt: Date.now() });
+          } else {
+            tx.objectStore(IDB_STORE).delete(IDB_KEY);
+          }
           tx.oncomplete = () => resolve(true);
           tx.onerror = () => resolve(false);
         });
       } catch (e) {}
     }
 
-    async function readIndexedDBFamilyCode() {
+    async function readSessionIDB() {
       try {
-        const idb = await openPersistIDB();
-        if (!idb) return '';
+        const idb = await openSessionIDB();
+        if (!idb) return null;
         return await new Promise((resolve) => {
           const tx = idb.transaction(IDB_STORE, 'readonly');
           const req = tx.objectStore(IDB_STORE).get(IDB_KEY);
           req.onsuccess = () => {
-            const val = req.result && req.result.value ? normalizeFamilyCode(req.result.value) : '';
-            resolve(val);
+            const val = req.result && req.result.value ? req.result.value : null;
+            resolve(val && val.accountId && val.passwordHash ? val : null);
           };
-          req.onerror = () => resolve('');
+          req.onerror = () => resolve(null);
         });
       } catch (e) {
-        return '';
+        return null;
       }
     }
 
-    function savePersistentFamilyCode(code) {
-      const clean = normalizeFamilyCode(code);
-      if (!clean) return '';
-      if (state) state.familyCode = clean;
-
+    function savePersistentSession(sessObj) {
+      session = sessObj;
       try {
-        localStorage.setItem(FAMILY_CODE_KEY, clean);
-        if (state) localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        if (sessObj) {
+          localStorage.setItem(SESSION_KEY, JSON.stringify(sessObj));
+        } else {
+          localStorage.removeItem(SESSION_KEY);
+        }
+      } catch (e) {}
+      writeSessionCookie(sessObj);
+      writeSessionIDB(sessObj);
+    }
+
+    async function loadPersistentSession() {
+      try {
+        const raw = localStorage.getItem(SESSION_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && parsed.accountId && parsed.passwordHash) return parsed;
+        }
       } catch (e) {}
 
-      writeCookieFamilyCode(clean);
-      writeIndexedDBFamilyCode(clean);
-      syncUrlFamilyCode(clean);
-      return clean;
+      const fromCookie = readSessionCookie();
+      if (fromCookie) {
+        savePersistentSession(fromCookie);
+        return fromCookie;
+      }
+
+      const fromIDB = await readSessionIDB();
+      if (fromIDB) {
+        savePersistentSession(fromIDB);
+        return fromIDB;
+      }
+      return null;
     }
 
-    async function recoverFamilyCodeFromIndexedDBOnBoot(wasFreshlyGenerated, explicitUrlCode) {
-      if (explicitUrlCode) return;
-      const idbCode = await readIndexedDBFamilyCode();
-      if (!idbCode) {
-        if (state && state.familyCode) writeIndexedDBFamilyCode(state.familyCode);
+    /* ==================== AUTH UI & LOGIN / REGISTER HANDLERS ==================== */
+    function switchAuthMode(mode) {
+      authMode = mode;
+      const loginTab = document.getElementById('auth-tab-login');
+      const regTab = document.getElementById('auth-tab-register');
+      const nameGroup = document.getElementById('auth-family-name-group');
+      const submitLabel = document.getElementById('auth-submit-label');
+      const errBox = document.getElementById('auth-error-box');
+
+      if (errBox) errBox.classList.add('hidden');
+      if (mode === 'login') {
+        loginTab.className = 'py-2.5 rounded-xl text-xs sm:text-sm font-extrabold bg-white text-[#1F1D1A] shadow-2xs transition';
+        regTab.className = 'py-2.5 rounded-xl text-xs sm:text-sm font-bold text-[#736D63] transition';
+        nameGroup.classList.add('hidden');
+        submitLabel.textContent = 'Masuk ke RumahKu';
+      } else {
+        regTab.className = 'py-2.5 rounded-xl text-xs sm:text-sm font-extrabold bg-white text-[#1F1D1A] shadow-2xs transition';
+        loginTab.className = 'py-2.5 rounded-xl text-xs sm:text-sm font-bold text-[#736D63] transition';
+        nameGroup.classList.remove('hidden');
+        submitLabel.textContent = 'Buat Akun & Masuk';
+      }
+    }
+
+    function toggleAuthPasswordVis() {
+      const inp = document.getElementById('auth-password');
+      if (inp) inp.type = inp.type === 'password' ? 'text' : 'password';
+    }
+
+    function showAuthError(msg) {
+      const box = document.getElementById('auth-error-box');
+      if (!box) return;
+      box.textContent = msg;
+      box.classList.remove('hidden');
+    }
+
+    async function handleAuthSubmit(e) {
+      e.preventDefault();
+      const rawUser = document.getElementById('auth-username')?.value || '';
+      const rawPass = document.getElementById('auth-password')?.value || '';
+      const rawFamName = document.getElementById('auth-family-name')?.value || '';
+      const btn = document.getElementById('auth-submit-btn');
+
+      const username = normalizeUsername(rawUser);
+      if (username.length < 3) {
+        showAuthError('Username / Email minimal 3 karakter.');
         return;
       }
-      if (wasFreshlyGenerated || (state && state.familyCode !== idbCode)) {
-        state.familyCode = idbCode;
-        state.updatedAt = 0;
-        savePersistentFamilyCode(idbCode);
-        saveLocalState(false);
-        renderAll();
-        if (db) connectToFamilyDoc(idbCode);
-        showToast(`Kode Keluarga ${idbCode} dipulihkan otomatis!`);
+      if (rawPass.length < 4) {
+        showAuthError('Kata sandi minimal 4 karakter.');
+        return;
       }
+
+      btn.disabled = true;
+      btn.style.opacity = '0.7';
+
+      try {
+        const accountId = await deriveAccountDocId(username);
+        const passwordHash = await sha256Hex(username + '::' + rawPass);
+        const familyName = rawFamName.trim() || `Keluarga ${rawUser.trim().split('@')[0]}`;
+
+        initFirebaseAppOnly();
+
+        if (db) {
+          const docRef = db.collection('rumahku_accounts').doc(accountId);
+          const snap = await docRef.get();
+
+          if (authMode === 'register') {
+            if (snap.exists) {
+              showAuthError('Username/Email ini sudah terdaftar. Silakan pilih tab "Masuk Akun Keluarga".');
+              btn.disabled = false;
+              btn.style.opacity = '1';
+              return;
+            }
+            const newSess = { accountId, username, passwordHash, familyName };
+            const initialData = createDefaultState(newSess);
+            await docRef.set(initialData);
+            savePersistentSession(newSess);
+            state = initialData;
+            saveLocalState(false);
+            enterAuthenticatedApp();
+            showToast(`Akun ${familyName} berhasil dibuat!`);
+          } else {
+            // Login mode
+            if (snap.exists) {
+              const remote = snap.data();
+              if (remote.passwordHash && remote.passwordHash !== passwordHash) {
+                showAuthError('Kata sandi salah! Periksa kembali kata sandi akun keluarga Anda.');
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                return;
+              }
+              const sessObj = {
+                accountId,
+                username,
+                passwordHash,
+                familyName: remote.familyName || familyName
+              };
+              savePersistentSession(sessObj);
+              state = mergeWithDefaultState(remote, sessObj);
+              saveLocalState(false);
+              enterAuthenticatedApp();
+              showToast(`Selamat datang kembali, ${sessObj.familyName}!`);
+            } else {
+              // Check if local cached state exists for this accountId (offline login)
+              const localCached = readLocalStateForAccount(accountId);
+              if (localCached && localCached.passwordHash === passwordHash) {
+                const sessObj = { accountId, username, passwordHash, familyName: localCached.familyName || familyName };
+                savePersistentSession(sessObj);
+                state = localCached;
+                enterAuthenticatedApp();
+                showToast('Masuk dalam mode lokal.');
+              } else {
+                showAuthError('Akun tidak ditemukan. Silakan pilih "Buat Akun Keluarga Baru" jika belum mendaftar.');
+              }
+            }
+          }
+        } else {
+          // Pure Offline fallback if Firebase SDK blocked
+          const localCached = readLocalStateForAccount(accountId);
+          if (authMode === 'login' && localCached) {
+            if (localCached.passwordHash && localCached.passwordHash !== passwordHash) {
+              showAuthError('Kata sandi salah!');
+              btn.disabled = false;
+              btn.style.opacity = '1';
+              return;
+            }
+            const sessObj = { accountId, username, passwordHash, familyName: localCached.familyName || familyName };
+            savePersistentSession(sessObj);
+            state = localCached;
+            enterAuthenticatedApp();
+          } else {
+            const newSess = { accountId, username, passwordHash, familyName };
+            savePersistentSession(newSess);
+            state = createDefaultState(newSess);
+            saveLocalState(false);
+            enterAuthenticatedApp();
+          }
+        }
+      } catch (err) {
+        // Fallback when Firestore rules block read: allow local session and try cloud sync
+        const accountId = await deriveAccountDocId(username);
+        const passwordHash = await sha256Hex(username + '::' + rawPass);
+        const familyName = rawFamName.trim() || `Keluarga ${rawUser.trim().split('@')[0]}`;
+        const localCached = readLocalStateForAccount(accountId);
+        if (localCached && localCached.passwordHash && localCached.passwordHash !== passwordHash) {
+          showAuthError('Kata sandi salah!');
+        } else {
+          const sessObj = { accountId, username, passwordHash, familyName: (localCached && localCached.familyName) || familyName };
+          savePersistentSession(sessObj);
+          state = localCached || createDefaultState(sessObj);
+          saveLocalState(false);
+          enterAuthenticatedApp();
+          showToast('Terhubung ke akun keluarga.');
+        }
+      } finally {
+        if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+      }
+    }
+
+    function enterAuthenticatedApp() {
+      document.getElementById('auth-screen').classList.add('hidden');
+      document.getElementById('app-shell').classList.remove('hidden');
+      if (!financeFilters.month) financeFilters.month = getTodayISO().slice(0, 7);
+      if (!calendarSelectedDate) calendarSelectedDate = getTodayISO();
+      applyThemeAndFont();
+      processDueScheduledTransactions();
+      renderAll();
+      safeCreateIcons();
+      connectToAccountDoc(session.accountId);
+    }
+
+    function logoutAccount() {
+      if (typeof unsubscribeSnapshot === 'function') {
+        unsubscribeSnapshot();
+        unsubscribeSnapshot = null;
+      }
+      savePersistentSession(null);
+      state = null;
+      isCloudConnected = false;
+      closeModal();
+      document.getElementById('app-shell').classList.add('hidden');
+      document.getElementById('auth-screen').classList.remove('hidden');
+      switchAuthMode('login');
+      safeCreateIcons();
+      showToast('Anda telah keluar dari akun keluarga.');
     }
 
     /* ==================== DATE, CURRENCY & HELPERS ==================== */
@@ -551,12 +812,8 @@
     function formatCalendarCellShort(amount) {
       const num = Math.round(Number(amount) || 0);
       if (num <= 0) return '';
-      if (num >= 1000000) {
-        return `${(num / 1000000).toFixed(1).replace('.0', '').replace('.', ',')}jt`;
-      }
-      if (num >= 1000) {
-        return `${Math.round(num / 1000)}rb`;
-      }
+      if (num >= 1000000) return `${(num / 1000000).toFixed(1).replace('.0', '').replace('.', ',')}jt`;
+      if (num >= 1000) return `${Math.round(num / 1000)}rb`;
       return `${num}`;
     }
 
@@ -582,13 +839,6 @@
 
     function generateId(prefix = 'id') {
       return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
-    }
-
-    function generateFamilyCode() {
-      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-      let out = '';
-      for (let i = 0; i < 6; i++) out += chars[Math.floor(Math.random() * chars.length)];
-      return out;
     }
 
     function safeCreateIcons() {
@@ -623,11 +873,14 @@
     }
 
     /* ==================== STATE & DEFAULT DATA ==================== */
-    function createDefaultState(customCode = null) {
+    function createDefaultState(sessObj) {
       const today = getTodayISO();
       const ym = today.slice(0, 7);
       return {
-        familyCode: normalizeFamilyCode(customCode) || generateFamilyCode(),
+        accountId: sessObj.accountId,
+        username: sessObj.username,
+        passwordHash: sessObj.passwordHash,
+        familyName: sessObj.familyName || 'Keluarga Bahagia',
         theme: 'emerald',
         largeText: false,
         activeUserId: 'usr_ayah',
@@ -689,75 +942,47 @@
       };
     }
 
-    function readSavedAppState() {
-      const keysToCheck = [STORAGE_KEY, ...LEGACY_STORAGE_KEYS];
-      for (let i = 0; i < keysToCheck.length; i++) {
-        try {
-          const raw = localStorage.getItem(keysToCheck[i]);
-          if (raw) {
-            const parsed = JSON.parse(raw);
-            if (parsed && typeof parsed === 'object') return parsed;
-          }
-        } catch (e) {}
-      }
+    function mergeWithDefaultState(rawObj, sessObj) {
+      const base = createDefaultState(sessObj);
+      return {
+        ...base,
+        ...rawObj,
+        accountId: sessObj.accountId,
+        username: sessObj.username,
+        passwordHash: sessObj.passwordHash,
+        familyName: rawObj.familyName || sessObj.familyName || base.familyName,
+        users: Array.isArray(rawObj.users) && rawObj.users.length ? rawObj.users : base.users,
+        accounts: Array.isArray(rawObj.accounts) && rawObj.accounts.length ? rawObj.accounts : base.accounts,
+        categories: Array.isArray(rawObj.categories) && rawObj.categories.length ? rawObj.categories : base.categories,
+        transactions: Array.isArray(rawObj.transactions) ? rawObj.transactions : base.transactions,
+        scheduledTransactions: Array.isArray(rawObj.scheduledTransactions) ? rawObj.scheduledTransactions : base.scheduledTransactions,
+        bills: Array.isArray(rawObj.bills) ? rawObj.bills : base.bills,
+        tasks: Array.isArray(rawObj.tasks) ? rawObj.tasks : base.tasks,
+        inventory: Array.isArray(rawObj.inventory) ? rawObj.inventory : base.inventory,
+        notes: Array.isArray(rawObj.notes) ? rawObj.notes : base.notes
+      };
+    }
+
+    function readLocalStateForAccount(accountId) {
+      try {
+        const raw = localStorage.getItem(STATE_PREFIX + accountId);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object') return parsed;
+        }
+      } catch (e) {}
       return null;
     }
 
-    function loadLocalState() {
-      const urlCode = readUrlFamilyCode();
-      let dedicatedCode = '';
-      try { dedicatedCode = normalizeFamilyCode(localStorage.getItem(FAMILY_CODE_KEY)); } catch (e) {}
-      const saved = readSavedAppState();
-      const stateCode = saved ? normalizeFamilyCode(saved.familyCode) : '';
-      const cookieCode = readCookieFamilyCode();
-
-      let resolvedCode = urlCode || dedicatedCode || stateCode || cookieCode;
-      let wasFreshlyGenerated = false;
-
-      if (!resolvedCode) {
-        resolvedCode = generateFamilyCode();
-        wasFreshlyGenerated = true;
-      }
-
-      const base = createDefaultState(resolvedCode);
-      if (saved) {
-        state = {
-          ...base,
-          ...saved,
-          familyCode: resolvedCode,
-          users: Array.isArray(saved.users) && saved.users.length ? saved.users : base.users,
-          accounts: Array.isArray(saved.accounts) && saved.accounts.length ? saved.accounts : base.accounts,
-          categories: Array.isArray(saved.categories) && saved.categories.length ? saved.categories : base.categories,
-          transactions: Array.isArray(saved.transactions) ? saved.transactions : base.transactions,
-          scheduledTransactions: Array.isArray(saved.scheduledTransactions) ? saved.scheduledTransactions : base.scheduledTransactions,
-          bills: Array.isArray(saved.bills) ? saved.bills : base.bills,
-          tasks: Array.isArray(saved.tasks) ? saved.tasks : base.tasks,
-          inventory: Array.isArray(saved.inventory) ? saved.inventory : base.inventory,
-          notes: Array.isArray(saved.notes) ? saved.notes : base.notes
-        };
-      } else {
-        state = base;
-      }
-
-      if (!financeFilters.month) financeFilters.month = getTodayISO().slice(0, 7);
-      if (!calendarSelectedDate) calendarSelectedDate = getTodayISO();
-      applyThemeAndFont();
-
-      savePersistentFamilyCode(resolvedCode);
-      saveLocalState(false);
-
-      recoverFamilyCodeFromIndexedDBOnBoot(wasFreshlyGenerated, urlCode);
-    }
-
     function saveLocalState(syncCloud = true) {
-      if (!state) return;
+      if (!state || !session) return;
       state.updatedAt = Date.now();
-      const cleanCode = normalizeFamilyCode(state.familyCode);
-      if (cleanCode) {
-        state.familyCode = cleanCode;
-        try { localStorage.setItem(FAMILY_CODE_KEY, cleanCode); } catch (e) {}
-      }
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+      state.accountId = session.accountId;
+      state.username = session.username;
+      state.passwordHash = session.passwordHash;
+      try {
+        localStorage.setItem(STATE_PREFIX + session.accountId, JSON.stringify(state));
+      } catch (e) {}
       if (syncCloud && !isApplyingRemote) pushStateToCloud();
     }
 
@@ -809,27 +1034,22 @@
     }
 
     /* ==================== FIREBASE REAL-TIME SYNC ==================== */
-    function initFirebaseSync() {
+    function initFirebaseAppOnly() {
       try {
-        if (!window.firebase || !firebase.initializeApp) {
-          isCloudConnected = false;
-          cloudStatusText = 'Mode Lokal (Offline)';
-          updateSyncBadges();
-          return;
-        }
+        if (!window.firebase || !firebase.initializeApp) return;
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         db = firebase.firestore();
-        connectToFamilyDoc(state.familyCode);
-      } catch (e) {
-        isCloudConnected = false;
-        cloudStatusText = 'Mode Lokal (Cek Koneksi)';
-        updateSyncBadges();
-      }
+      } catch (e) {}
     }
 
-    function connectToFamilyDoc(code) {
-      const activeFamilyCode = normalizeFamilyCode(code);
-      if (!db || !activeFamilyCode) return;
+    function connectToAccountDoc(accountId) {
+      initFirebaseAppOnly();
+      if (!db || !accountId) {
+        isCloudConnected = false;
+        cloudStatusText = 'Mode Lokal (Offline)';
+        updateSyncBadges();
+        return;
+      }
 
       try {
         if (typeof unsubscribeSnapshot === 'function') {
@@ -837,12 +1057,11 @@
           unsubscribeSnapshot = null;
         }
 
-        const docRef = db.collection('rumahku_families').doc(activeFamilyCode);
+        const docRef = db.collection('rumahku_accounts').doc(accountId);
 
         docRef.get().then(snap => {
           if (!snap.exists) {
             const payload = JSON.parse(JSON.stringify(state));
-            payload.familyCode = activeFamilyCode;
             return docRef.set(payload);
           }
         }).catch(err => {
@@ -853,7 +1072,7 @@
 
         unsubscribeSnapshot = docRef.onSnapshot(snap => {
           isCloudConnected = true;
-          cloudStatusText = `Terhubung Live • Keluarga ${activeFamilyCode}`;
+          cloudStatusText = `Terhubung Live • Akun ${session.username}`;
           updateSyncBadges();
 
           if (snap.exists) {
@@ -861,14 +1080,13 @@
             if (remote && remote.updatedAt && (!state.updatedAt || remote.updatedAt > state.updatedAt)) {
               isApplyingRemote = true;
               const localUser = state.activeUserId;
-              state = {
-                ...state,
-                ...remote,
-                familyCode: activeFamilyCode,
-                activeUserId: remote.users?.some(u => u.id === localUser) ? localUser : (remote.activeUserId || 'usr_ayah')
-              };
+              state = mergeWithDefaultState(remote, session);
+              if (state.users.some(u => u.id === localUser)) state.activeUserId = localUser;
+              if (remote.familyName && remote.familyName !== session.familyName) {
+                session.familyName = remote.familyName;
+                savePersistentSession(session);
+              }
               applyThemeAndFont();
-              savePersistentFamilyCode(activeFamilyCode);
               saveLocalState(false);
               renderAll();
               isApplyingRemote = false;
@@ -886,12 +1104,10 @@
     }
 
     function pushStateToCloud() {
-      const activeFamilyCode = state ? normalizeFamilyCode(state.familyCode) : '';
-      if (!db || !state || !activeFamilyCode) return;
+      if (!db || !state || !session || !session.accountId) return;
       try {
         const payload = JSON.parse(JSON.stringify(state));
-        payload.familyCode = activeFamilyCode;
-        db.collection('rumahku_families').doc(activeFamilyCode).set(payload, { merge: true }).catch(() => {});
+        db.collection('rumahku_accounts').doc(session.accountId).set(payload, { merge: true }).catch(() => {});
       } catch (e) {}
     }
 
@@ -997,25 +1213,9 @@
       showToast(state.largeText ? 'Teks: Besar (18.5px) aktif' : 'Teks: Normal (16px) aktif');
     }
 
-    function getInviteUrl() {
-      try {
-        const u = new URL(window.location.href);
-        u.searchParams.set('family', state.familyCode);
-        return u.toString();
-      } catch (e) {
-        const base = window.location.href.split('?')[0];
-        return `${base}?family=${state.familyCode}`;
-      }
-    }
-
-    function copyInviteLink() {
-      copyTextToClipboard(getInviteUrl(), `Link Undangan HP (${state.familyCode}) disalin!`);
-    }
-
     function isBottomTabActive(tabId) {
       if (tabId === currentView) return true;
-      if (tabId === 'homecare' && ['homecare', 'tasks', 'inventory', 'notes'].includes(currentView)) return true;
-      if (tabId === 'finance' && ['finance', 'bills'].includes(currentView)) return true;
+      if (tabId === 'homecare' && ['homecare', 'bills', 'tasks', 'inventory', 'notes'].includes(currentView)) return true;
       return false;
     }
 
@@ -1032,7 +1232,7 @@
           if (item.id === 'bills' && unpaidCount > 0) badge = `<span class="ml-auto px-2 py-0.5 rounded-full text-[11px] font-bold ${active ? 'bg-white text-theme' : 'bg-[#F4E1DF] text-[#7A352E]'}">${unpaidCount}</span>`;
           if (item.id === 'inventory' && lowStockCount > 0) badge = `<span class="ml-auto px-2 py-0.5 rounded-full text-[11px] font-bold ${active ? 'bg-white text-theme' : 'bg-[#F3E5BE] text-[#6E5614]'}">${lowStockCount}</span>`;
           return `
-            <button onclick="navigateTo('${item.id}')" class="w-full px-3.5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-3 transition ${active ? 'bg-theme text-white shadow-xs' : 'text-[#4A453D] hover:bg-cream-pill hover:text-[#1F1D1A]'}">
+            <button onclick="navigateTo('${item.id}')" class="w-full px-3.5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-3 transition ${active ? 'bg-theme text-white shadow-xs' : 'text-[#4A453D] hover:bg-sand hover:text-[#1F1D1A]'}">
               <i data-lucide="${item.icon}" class="w-4 h-4 shrink-0"></i>
               <span class="truncate">${item.label}</span>
               ${badge}
@@ -1046,7 +1246,7 @@
           const active = isBottomTabActive(item.id);
           return `
             <button onclick="navigateTo('${item.id}')" class="min-w-[60px] py-1.5 px-2.5 rounded-2xl flex flex-col items-center justify-center gap-1 transition ${
-              active ? 'bg-cream-pill text-gold font-extrabold' : 'text-[#736D63] font-semibold hover:text-[#1F1D1A]'
+              active ? 'bg-sand text-gold font-extrabold' : 'text-[#736D63] font-semibold hover:text-[#1F1D1A]'
             }">
               <i data-lucide="${item.icon}" class="w-5 h-5 ${active ? 'text-gold stroke-[2.3]' : ''}"></i>
               <span class="text-[11px] leading-none">${item.label}</span>
@@ -1059,21 +1259,23 @@
       const page = DESKTOP_NAV_ITEMS.find(n => n.id === currentView) || BOTTOM_NAV_ITEMS.find(n => n.id === currentView) || DESKTOP_NAV_ITEMS[0];
       const dTitle = document.getElementById('desktop-page-title');
       const dDate = document.getElementById('desktop-today-date');
-      const sCode = document.getElementById('sidebar-family-code');
-      const mCodeSub = document.getElementById('mobile-family-code-sub');
+      const sFam = document.getElementById('sidebar-family-name');
+      const mFam = document.getElementById('mobile-family-name-sub');
+      const sUser = document.getElementById('sidebar-account-username');
       const sFont = document.getElementById('sidebar-font-label');
       const mFont = document.getElementById('mobile-font-btn');
 
       if (dTitle) dTitle.textContent = page.label;
       if (dDate) dDate.textContent = formatIndonesianFullDate(new Date());
-      if (sCode) sCode.textContent = state.familyCode;
-      if (mCodeSub) mCodeSub.textContent = state.familyCode;
+      if (sFam) sFam.textContent = state.familyName || 'Keluarga Bahagia';
+      if (mFam) mFam.textContent = state.familyName || 'Keluarga Bahagia';
+      if (sUser) sUser.textContent = session ? session.username : '';
       if (sFont) sFont.textContent = state.largeText ? 'Teks: Besar' : 'Teks: Normal';
       if (mFont) {
         mFont.textContent = state.largeText ? 'A-' : 'A+';
         mFont.className = state.largeText
           ? 'min-h-[38px] px-2.5 rounded-xl bg-theme text-white text-xs font-extrabold'
-          : 'min-h-[38px] px-2.5 rounded-xl bg-cream-pill text-[#1F1D1A] text-xs font-extrabold border border-cream';
+          : 'min-h-[38px] px-2.5 rounded-xl bg-sand text-[#1F1D1A] text-xs font-extrabold border border-cream';
       }
 
       document.getElementById('desktop-active-avatar').textContent = user.avatar;
@@ -1121,19 +1323,19 @@
       const dotPalette = ['#C86D7D', '#5B8EA6', '#C9A227', '#8B857A', '#5E8C6A'];
 
       return `
-        <!-- Greeting & Family Strip -->
+        <!-- Greeting & Account Pill -->
         <div class="flex items-center justify-between gap-3">
           <div>
             <p class="text-xs font-bold text-[#736D63]">${formatIndonesianFullDate(new Date())}</p>
             <h3 class="text-lg sm:text-xl font-extrabold text-[#1F1D1A]">Halo, ${escapeHtml(user.name)} ${user.avatar}</h3>
           </div>
-          <button onclick="navigateTo('setting', 'sync')" class="px-3 py-1.5 rounded-full bg-cream-pill border border-cream text-xs font-bold text-[#4A453D] flex items-center gap-1.5">
-            <i data-lucide="shield-check" class="w-3.5 h-3.5 text-theme"></i>
-            <span class="font-mono">${escapeHtml(state.familyCode)}</span>
+          <button onclick="navigateTo('setting', 'sync')" class="px-3 py-1.5 rounded-full bg-sand border border-cream text-xs font-bold text-[#4A453D] flex items-center gap-1.5">
+            <i data-lucide="user-check" class="w-3.5 h-3.5 text-theme"></i>
+            <span class="truncate max-w-[110px]">${escapeHtml(session ? session.username : '')}</span>
           </button>
         </div>
 
-        <!-- SERUMA-INSPIRED FOREST GREEN NERACA KELUARGA CARD -->
+        <!-- FOREST GREEN NERACA KELUARGA HERO CARD -->
         <section class="rounded-[1.75rem] bg-theme text-white p-5 sm:p-6 shadow-md space-y-4">
           <div class="flex items-start justify-between gap-3">
             <div>
@@ -1195,17 +1397,17 @@
           </div>
         </section>
 
-        <!-- 8-ICON APP LAUNCHER GRID (MATCHING REFERENCE) -->
+        <!-- 8-ICON SHORTCUTS GRID -->
         <section class="grid grid-cols-4 gap-3 sm:gap-4 pt-1">
           ${[
             { label: 'Keuangan',   icon: 'wallet',         bg: 'bg-[#C9A227]', action: "navigateTo('finance')" },
             { label: 'Kalender',   icon: 'calendar',       bg: 'bg-[#5A8D9A]', action: "navigateTo('calendar')" },
-            { label: 'Maintenance',icon: 'wrench',         bg: 'bg-[#C7854A]', action: "navigateTo('tasks')" },
+            { label: 'Perawatan',  icon: 'wrench',         bg: 'bg-[#C7854A]', action: "navigateTo('tasks')" },
             { label: 'Tagihan',    icon: 'receipt',        bg: 'bg-[#B06C68]', action: "navigateTo('bills')" },
-            { label: 'Groceries',  icon: 'shopping-cart',  bg: 'bg-[#638D4B]', action: "navigateTo('inventory')" },
+            { label: 'Stok Rumah', icon: 'shopping-cart',  bg: 'bg-[#638D4B]', action: "navigateTo('inventory')" },
             { label: 'Catatan',    icon: 'book-open',      bg: 'bg-[#737B9E]', action: "navigateTo('notes')" },
             { label: 'Terjadwal',  icon: 'repeat',         bg: 'bg-[#488682]', action: "financeSubTab='scheduled'; navigateTo('finance')" },
-            { label: 'Setting',    icon: 'sparkles',       bg: 'bg-[#56895E]', action: "navigateTo('setting')" }
+            { label: 'Setting',    icon: 'settings',       bg: 'bg-[#56895E]', action: "navigateTo('setting')" }
           ].map(app => `
             <button onclick="${app.action}" class="flex flex-col items-center gap-2 group">
               <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-[1.25rem] ${app.bg} text-white flex items-center justify-center shadow-xs group-active:scale-95 transition">
@@ -1224,20 +1426,20 @@
               <span class="px-2.5 py-1 rounded-full bg-[#E4EFE6] text-[#1B4223] text-xs font-bold">
                 ${doneTodayCount}/${todayTasks.length} selesai
               </span>
-              <button onclick="openTaskModal()" class="w-8 h-8 rounded-xl bg-cream-pill hover:bg-[#E7E1D4] flex items-center justify-center text-[#1F1D1A]">
+              <button onclick="openTaskModal()" class="w-8 h-8 rounded-xl bg-sand hover:bg-[#E7E1D4] flex items-center justify-center text-[#1F1D1A]">
                 <i data-lucide="plus" class="w-4 h-4"></i>
               </button>
             </div>
           </div>
 
           ${todayTasks.length === 0
-            ? `<div class="p-3.5 rounded-2xl bg-[#F6F3EC] text-xs text-[#736D63] flex items-center justify-between">
+            ? `<div class="p-3.5 rounded-2xl bg-sand text-xs text-[#736D63] flex items-center justify-between">
                 <span>Tidak ada jadwal perawatan hari ini.</span>
                 <button onclick="navigateTo('tasks')" class="font-bold text-theme hover:underline">Lihat semua →</button>
                </div>`
             : `<div class="space-y-2">
                 ${todayTasks.map(t => `
-                  <button onclick="toggleTask('${t.id}')" class="w-full p-3.5 rounded-2xl bg-[#F6F3EC] flex items-center justify-between gap-3 text-left">
+                  <button onclick="toggleTask('${t.id}')" class="w-full p-3.5 rounded-2xl bg-sand flex items-center justify-between gap-3 text-left">
                     <div class="flex items-center gap-3 min-w-0">
                       <span class="w-6 h-6 rounded-lg flex items-center justify-center text-white text-xs font-bold shrink-0 ${t.done ? 'bg-[#C7854A]' : 'border-2 border-[#C7854A] bg-white'}">
                         ${t.done ? '✓' : ''}
@@ -1380,11 +1582,10 @@
       } catch (e) {}
     }
 
-    /* ==================== 2. KEUANGAN VIEW (MENU GRID + WALLET/POS PILLS + HEATMAP CALENDAR) ==================== */
+    /* ==================== 2. KEUANGAN VIEW ==================== */
     function renderFinanceView() {
       const ym = financeFilters.month || getTodayISO().slice(0, 7);
 
-      // Filter accounts by Wallet & Pos ownership
       const matchingAccounts = state.accounts.filter(acc => {
         if (financeFilters.accountId !== 'all' && acc.id !== financeFilters.accountId) return false;
         if (financeFilters.posOwnerId !== 'all') {
@@ -1400,7 +1601,6 @@
         return acc.classification === 'Kartu Kredit / PayLater' ? sum - b : sum + b;
       }, 0);
 
-      // Filter transactions by Month, Wallet, Pos, Category, and Type
       const monthAllTxs = state.transactions.filter(tx => {
         if (ym && !(tx.date || '').startsWith(ym)) return false;
         if (financeFilters.categoryId !== 'all' && tx.categoryId !== financeFilters.categoryId) return false;
@@ -1423,7 +1623,6 @@
       }, 0);
       const budgetPct = totalBudget > 0 ? Math.min(100, Math.round((spentInBudgetCats / totalBudget) * 100)) : 0;
 
-      // Group visibleTxs by date for timeline display
       const groupedByDate = {};
       visibleTxs.forEach(tx => {
         const d = tx.date || getTodayISO();
@@ -1433,20 +1632,20 @@
       const sortedDates = Object.keys(groupedByDate).sort((a, b) => b.localeCompare(a));
 
       return `
-        <!-- MENU KEUANGAN 3x3 ICON GRID -->
+        <!-- MENU KEUANGAN GRID -->
         <section class="space-y-3">
           <div class="flex items-center justify-between">
             <h3 class="text-xs font-extrabold uppercase tracking-wider text-[#736D63]">MENU KEUANGAN</h3>
-            <button onclick="navigateTo('setting', 'categories')" class="text-xs font-bold text-theme hover:underline">Atur ›</button>
+            <button onclick="navigateTo('setting', 'categories')" class="text-xs font-bold text-theme hover:underline">Atur Kategori ›</button>
           </div>
           <div class="grid grid-cols-3 gap-3">
             ${[
               { label: 'Transaksi',          icon: 'receipt-text',    bg: 'bg-[#29231B]', action: "financeSubTab='history'; renderAll();" },
               { label: 'Anggaran & Kategori',icon: 'layout-grid',     bg: 'bg-[#C9A227]', action: "navigateTo('setting', 'categories')" },
               { label: 'Tagihan & Utang',    icon: 'handshake',       bg: 'bg-[#A66A61]', action: "navigateTo('bills')" },
-              { label: 'Stok & Groceries',   icon: 'shopping-cart',   bg: 'bg-[#5A8E5F]', action: "navigateTo('inventory')" },
-              { label: 'Wallet & Rekening',  icon: 'arrow-left-right',bg: 'bg-[#3D5B70]', action: "navigateTo('setting', 'accounts')" },
-              { label: 'Transaksi Rutin',    icon: 'repeat',          bg: 'bg-[#C48246]', action: "financeSubTab='scheduled'; renderAll();" }
+              { label: 'Stok & Belanja',     icon: 'shopping-cart',   bg: 'bg-[#5A8E5F]', action: "navigateTo('inventory')" },
+              { label: 'Rekening & Transfer',icon: 'arrow-left-right',bg: 'bg-[#3D5B70]', action: "navigateTo('setting', 'accounts')" },
+              { label: 'Transaksi Terjadwal',icon: 'repeat',          bg: 'bg-[#C48246]', action: "financeSubTab='scheduled'; renderAll();" }
             ].map(m => `
               <button onclick="${m.action}" class="flex flex-col items-center gap-2 py-1 group">
                 <div class="w-14 h-14 rounded-2xl ${m.bg} text-white flex items-center justify-center shadow-xs group-active:scale-95 transition">
@@ -1458,15 +1657,15 @@
           </div>
         </section>
 
-        <!-- SUB-MODE SWITCHER (Ringkasan & Kalender | Semua Riwayat | Transaksi Terjadwal) -->
+        <!-- SUB-MODE SWITCHER -->
         <div class="flex gap-2 overflow-x-auto no-scrollbar">
-          <button onclick="financeSubTab='overview'; renderAll();" class="px-4 py-2 rounded-full text-xs font-extrabold shrink-0 transition ${financeSubTab === 'overview' ? 'bg-theme text-white' : 'bg-cream-pill text-[#4A453D]'}">
+          <button onclick="financeSubTab='overview'; renderAll();" class="px-4 py-2 rounded-full text-xs font-extrabold shrink-0 transition ${financeSubTab === 'overview' ? 'bg-theme text-white' : 'bg-sand text-[#4A453D]'}">
             Bulan Ini & Kalender
           </button>
-          <button onclick="financeSubTab='history'; renderAll();" class="px-4 py-2 rounded-full text-xs font-extrabold shrink-0 transition ${financeSubTab === 'history' ? 'bg-theme text-white' : 'bg-cream-pill text-[#4A453D]'}">
+          <button onclick="financeSubTab='history'; renderAll();" class="px-4 py-2 rounded-full text-xs font-extrabold shrink-0 transition ${financeSubTab === 'history' ? 'bg-theme text-white' : 'bg-sand text-[#4A453D]'}">
             Semua Transaksi (${state.transactions.length})
           </button>
-          <button onclick="financeSubTab='scheduled'; renderAll();" class="px-4 py-2 rounded-full text-xs font-extrabold shrink-0 transition ${financeSubTab === 'scheduled' ? 'bg-theme text-white' : 'bg-cream-pill text-[#4A453D]'}">
+          <button onclick="financeSubTab='scheduled'; renderAll();" class="px-4 py-2 rounded-full text-xs font-extrabold shrink-0 transition ${financeSubTab === 'scheduled' ? 'bg-theme text-white' : 'bg-sand text-[#4A453D]'}">
             Terjadwal (${state.scheduledTransactions.length})
           </button>
         </div>
@@ -1501,10 +1700,9 @@
             }).join('')}
           </div>
         ` : `
-          <!-- BULAN INI INTERACTIVE CONTAINER -->
           <div class="card p-4 sm:p-5 space-y-4">
             <!-- Pengeluaran vs Pemasukan Segmented Pill -->
-            <div class="grid grid-cols-2 p-1 rounded-2xl bg-cream-pill">
+            <div class="grid grid-cols-2 p-1 rounded-2xl bg-sand">
               <button onclick="financeFilters.type='expense'; renderAll();" class="py-2.5 rounded-xl text-xs sm:text-sm font-extrabold flex items-center justify-center gap-1.5 transition ${
                 financeFilters.type === 'expense' ? 'bg-white text-[#1F1D1A] shadow-xs' : 'text-[#736D63]'
               }">
@@ -1520,10 +1718,10 @@
             <!-- Horizontal WALLET Filter Strip -->
             <div class="space-y-1.5">
               <div class="flex items-center justify-between">
-                <span class="text-[11px] font-extrabold uppercase tracking-wider text-[#736D63]">WALLET</span>
-                <button onclick="openTransferModal()" class="text-xs font-bold text-[#8A6D1B] hover:underline">+ Transfer Antar Wallet</button>
+                <span class="text-[11px] font-extrabold uppercase tracking-wider text-[#736D63]">WALLET & REKENING</span>
+                <button onclick="openTransferModal()" class="text-xs font-bold text-[#8A6D1B] hover:underline">+ Transfer Antar Rekening</button>
               </div>
-              <div class="flex gap-2 overflow-x-auto no-scrollbar p-1 rounded-2xl bg-cream-pill">
+              <div class="flex gap-2 overflow-x-auto no-scrollbar p-1 rounded-2xl bg-sand">
                 <button onclick="financeFilters.accountId='all'; renderAll();" class="px-3.5 py-2 rounded-xl text-xs font-extrabold shrink-0 transition ${
                   financeFilters.accountId === 'all' ? 'bg-white text-[#1F1D1A] shadow-xs' : 'text-[#736D63]'
                 }">Semua Wallet</button>
@@ -1538,13 +1736,13 @@
             </div>
 
             <!-- Horizontal POS Ownership Filter Strip -->
-            <div class="flex gap-2 overflow-x-auto no-scrollbar p-1 rounded-2xl bg-cream-pill">
+            <div class="flex gap-2 overflow-x-auto no-scrollbar p-1 rounded-2xl bg-sand">
               <button onclick="financeFilters.posOwnerId='all'; renderAll();" class="px-3.5 py-2 rounded-xl text-xs font-extrabold shrink-0 transition ${
                 financeFilters.posOwnerId === 'all' ? 'bg-white text-[#1F1D1A] shadow-xs' : 'text-[#736D63]'
               }">Semua Pos</button>
               <button onclick="financeFilters.posOwnerId='shared'; renderAll();" class="px-3.5 py-2 rounded-xl text-xs font-bold shrink-0 flex items-center gap-1.5 transition ${
                 financeFilters.posOwnerId === 'shared' ? 'bg-white text-[#1F1D1A] shadow-xs' : 'text-[#736D63]'
-              }"><span>📘</span><span>Keluarga</span></button>
+              }"><span>🏡</span><span>Keluarga</span></button>
               ${state.users.map(u => `
                 <button onclick="financeFilters.posOwnerId='${u.id}'; renderAll();" class="px-3.5 py-2 rounded-xl text-xs font-bold shrink-0 flex items-center gap-1.5 transition ${
                   financeFilters.posOwnerId === u.id ? 'bg-white text-[#1F1D1A] shadow-xs' : 'text-[#736D63]'
@@ -1552,8 +1750,8 @@
               `).join('')}
             </div>
 
-            <!-- Month Navigator Bar (< November 2026 >) -->
-            <div class="flex items-center justify-between px-4 py-2.5 rounded-2xl bg-cream-pill">
+            <!-- Month Navigator Bar -->
+            <div class="flex items-center justify-between px-4 py-2.5 rounded-2xl bg-sand">
               <button onclick="financeFilters.month=shiftMonthYM(financeFilters.month, -1); renderAll();" class="p-1.5 rounded-lg hover:bg-white text-[#1F1D1A]">
                 <i data-lucide="chevron-left" class="w-4 h-4"></i>
               </button>
@@ -1565,13 +1763,11 @@
 
             <!-- 2-Column Saldo Aktif & Terpakai / Anggaran Cards -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div class="card-soft p-4 flex flex-col justify-between">
+              <div class="card-sand p-4 flex flex-col justify-between">
                 <div>
                   <div class="text-xs font-bold text-[#736D63]">Saldo aktif</div>
                   <div class="text-xl font-extrabold text-[#1F1D1A] tabular-nums mt-1">${formatRupiah(filteredBalance, true)}</div>
-                  <div class="text-xs font-bold text-theme mt-1">
-                    ${matchingAccounts.length} dompet/rekening terpilih
-                  </div>
+                  <div class="text-xs font-bold text-theme mt-1">${matchingAccounts.length} dompet/rekening terpilih</div>
                 </div>
                 <div class="mt-3">
                   <button onclick="navigateTo('setting', 'accounts')" class="px-3.5 py-1.5 rounded-full border border-theme text-theme text-xs font-extrabold hover:bg-theme hover:text-white transition">
@@ -1580,7 +1776,7 @@
                 </div>
               </div>
 
-              <div class="card-soft p-4 flex flex-col justify-between">
+              <div class="card-sand p-4 flex flex-col justify-between">
                 <div>
                   <div class="text-xs font-bold text-[#736D63]">Terpakai / anggaran</div>
                   <div class="text-xl font-extrabold text-[#1F1D1A] tabular-nums mt-1">${budgetPct}%</div>
@@ -1595,6 +1791,33 @@
             </div>
 
             ${financeSubTab === 'overview' ? renderSpendingHeatmapCalendar(ym, monthAllTxs) : ''}
+
+            <!-- Category Budget Progress Bars -->
+            ${expenseCatsWithBudget.length > 0 ? `
+              <div class="pt-3 border-t border-cream space-y-2.5">
+                <div class="text-xs font-extrabold uppercase tracking-wider text-[#736D63]">Anggaran Per Kategori</div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  ${expenseCatsWithBudget.map(cat => {
+                    const spent = monthAllTxs
+                      .filter(t => t.type === 'expense' && t.categoryId === cat.id)
+                      .reduce((s, t) => s + (Number(t.amount) || 0), 0);
+                    const pct = Math.min(100, Math.round((spent / cat.budget) * 100));
+                    return `
+                      <div class="p-3 rounded-xl bg-sand">
+                        <div class="flex justify-between text-xs font-bold mb-1">
+                          <span>${cat.icon} ${escapeHtml(cat.name)}</span>
+                          <span class="${pct >= 90 ? 'text-[#9E4B3B]' : 'text-[#1F1D1A]'}">${pct}%</span>
+                        </div>
+                        <div class="w-full h-1.5 bg-[#E3DDD0] rounded-full overflow-hidden">
+                          <div class="h-full ${pct >= 90 ? 'bg-[#9E4B3B]' : 'bg-theme'}" style="width:${pct}%"></div>
+                        </div>
+                        <div class="text-[11px] text-[#736D63] mt-1 tabular-nums">${formatRupiah(spent, true)} / ${formatRupiah(cat.budget, true)}</div>
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+            ` : ''}
           </div>
 
           <!-- GROUPED TRANSACTION FEED BY DATE -->
@@ -1603,9 +1826,7 @@
               <h4 class="text-xs font-extrabold uppercase tracking-wider text-[#736D63]">
                 ${financeFilters.type === 'income' ? 'PEMASUKAN BULAN INI' : 'TRANSAKSI TERAKHIR'}
               </h4>
-              <div class="flex gap-2">
-                <button onclick="financeFilters.type='all'; renderAll();" class="text-xs font-bold text-theme hover:underline">Tampilkan Semua Jenis</button>
-              </div>
+              <button onclick="financeFilters.type='all'; renderAll();" class="text-xs font-bold text-theme hover:underline">Tampilkan Semua Jenis</button>
             </div>
 
             ${sortedDates.length === 0
@@ -1669,7 +1890,6 @@
     function renderSpendingHeatmapCalendar(ym, monthAllTxs) {
       const [y, m] = ym.split('-').map(Number);
       const firstDayObj = new Date(y, m - 1, 1);
-      // Monday-first weekday offset (Senin = 0 .. Minggu = 6)
       const startOffset = (firstDayObj.getDay() + 6) % 7;
       const daysInMonth = new Date(y, m, 0).getDate();
       const todayISO = getTodayISO();
@@ -1692,15 +1912,13 @@
         });
 
       const cells = [];
-      for (let i = 0; i < startOffset; i++) {
-        cells.push(`<div></div>`);
-      }
+      for (let i = 0; i < startOffset; i++) cells.push(`<div></div>`);
 
       for (let d = 1; d <= daysInMonth; d++) {
         const iso = `${ym}-${String(d).padStart(2, '0')}`;
         const amt = dailyTotals[d] || 0;
         const isToday = iso === todayISO;
-        let cellStyle = 'bg-[#F3EFE6] text-[#736D63]';
+        let cellStyle = 'bg-sand text-[#736D63]';
         if (amt > 0 && maxDayAmount > 0) {
           const ratio = amt / maxDayAmount;
           if (financeFilters.type === 'income') {
@@ -1732,9 +1950,7 @@
             ${dayHeaders.map(h => `<div>${h}</div>`).join('')}
           </div>
 
-          <div class="grid grid-cols-7 gap-1.5">
-            ${cells.join('')}
-          </div>
+          <div class="grid grid-cols-7 gap-1.5">${cells.join('')}</div>
 
           <div class="flex flex-wrap items-center justify-between gap-2 pt-1 text-[11px] text-[#736D63]">
             <span>
@@ -1753,7 +1969,7 @@
       `;
     }
 
-    /* ==================== 3. KALENDER & AGENDA GABUNGAN VIEW ==================== */
+    /* ==================== 3. KALENDER VIEW ==================== */
     function renderCalendarView() {
       const sel = calendarSelectedDate || getTodayISO();
       const ym = sel.slice(0, 7);
@@ -1763,6 +1979,7 @@
 
       const dayBills = state.bills.filter(b => b.dueDate === sel);
       const dayTasks = state.tasks.filter(t => t.dueDate === sel);
+      const daySched = state.scheduledTransactions.filter(s => s.nextDate === sel && s.active !== false);
       const dayTxs = state.transactions.filter(t => t.date === sel);
 
       const cells = [];
@@ -1771,11 +1988,11 @@
         const iso = `${ym}-${String(d).padStart(2, '0')}`;
         const hasBill = state.bills.some(b => b.dueDate === iso);
         const hasTask = state.tasks.some(t => t.dueDate === iso);
-        const hasTx = state.transactions.some(t => t.date === iso);
+        const hasTx = state.transactions.some(t => t.date === iso) || state.scheduledTransactions.some(s => s.nextDate === iso);
         const isSel = iso === sel;
         cells.push(`
           <button onclick="calendarSelectedDate='${iso}'; renderAll();" class="py-2.5 rounded-xl flex flex-col items-center gap-1 text-xs font-extrabold transition ${
-            isSel ? 'bg-theme text-white shadow-xs' : 'bg-[#F6F3EC] text-[#1F1D1A] hover:bg-cream-pill'
+            isSel ? 'bg-theme text-white shadow-xs' : 'bg-sand text-[#1F1D1A] hover:bg-[#E7E1D4]'
           }">
             <span>${d}</span>
             <span class="flex gap-1 h-1.5">
@@ -1791,13 +2008,13 @@
         <div class="flex items-center justify-between">
           <div>
             <h3 class="text-lg font-extrabold text-[#1F1D1A]">Kalender Keluarga</h3>
-            <p class="text-xs text-[#736D63]">Jadwal tagihan, perawatan rumah, dan riwayat transaksi dalam satu kalender.</p>
+            <p class="text-xs text-[#736D63]">Jadwal tagihan, perawatan rumah, transaksi terjadwal, dan riwayat transaksi.</p>
           </div>
-          <button onclick="calendarSelectedDate=getTodayISO(); renderAll();" class="px-3.5 py-2 rounded-xl bg-cream-pill text-xs font-extrabold text-[#1F1D1A]">Hari Ini</button>
+          <button onclick="calendarSelectedDate=getTodayISO(); renderAll();" class="px-3.5 py-2 rounded-xl bg-sand text-xs font-extrabold text-[#1F1D1A]">Hari Ini</button>
         </div>
 
         <div class="card p-4 sm:p-5 space-y-3">
-          <div class="flex items-center justify-between px-3 py-2 rounded-2xl bg-cream-pill">
+          <div class="flex items-center justify-between px-3 py-2 rounded-2xl bg-sand">
             <button onclick="calendarSelectedDate=shiftMonthYM('${ym}', -1)+'-01'; renderAll();" class="p-1.5 rounded-lg hover:bg-white"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
             <span class="font-extrabold text-sm text-[#1F1D1A]">${formatMonthTitle(ym)}</span>
             <button onclick="calendarSelectedDate=shiftMonthYM('${ym}', 1)+'-01'; renderAll();" class="p-1.5 rounded-lg hover:bg-white"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
@@ -1810,57 +2027,59 @@
 
         <div class="card p-4 sm:p-5 space-y-3">
           <div class="flex items-center justify-between">
-            <h4 class="font-extrabold text-sm text-[#1F1D1A]">Agenda & Catatan: ${formatTimelineDate(sel)}</h4>
+            <h4 class="font-extrabold text-sm text-[#1F1D1A]">Agenda: ${formatTimelineDate(sel)}</h4>
             <div class="flex gap-2">
-              <button onclick="openTaskModal()" class="px-3 py-1.5 rounded-xl bg-cream-pill text-xs font-bold">+ Agenda</button>
+              <button onclick="openTaskModal()" class="px-3 py-1.5 rounded-xl bg-sand text-xs font-bold">+ Agenda</button>
               <button onclick="openTransactionModal('expense', '${sel}')" class="px-3 py-1.5 rounded-xl bg-theme text-white text-xs font-bold">+ Transaksi</button>
             </div>
           </div>
 
-          ${dayBills.length === 0 && dayTasks.length === 0 && dayTxs.length === 0
+          ${dayBills.length === 0 && dayTasks.length === 0 && daySched.length === 0 && dayTxs.length === 0
             ? `<p class="text-xs text-[#736D63] py-4 text-center">Tidak ada agenda atau transaksi pada tanggal ini.</p>`
             : `<div class="space-y-2">
                 ${dayBills.map(b => `<div class="p-3 rounded-xl bg-[#FAF2F1] border border-[#E4C5C1] flex justify-between text-xs font-bold"><span>🧾 Tagihan: ${escapeHtml(b.title)}</span><span>${formatRupiah(b.amount, true)}</span></div>`).join('')}
+                ${daySched.map(s => `<div class="p-3 rounded-xl bg-[#FBF6E8] border border-[#EBDDB5] flex justify-between text-xs font-bold"><span>🔁 Terjadwal: ${escapeHtml(s.title)}</span><span>${formatRupiah(s.amount, true)}</span></div>`).join('')}
                 ${dayTasks.map(t => `<div class="p-3 rounded-xl bg-[#F2F7F3] border border-[#C4DEC9] flex justify-between text-xs font-bold"><span>🛠️ Jadwal: ${escapeHtml(t.title)}</span><span>${t.done ? 'Selesai' : 'Aktif'}</span></div>`).join('')}
-                ${dayTxs.map(tx => `<div class="p-3 rounded-xl bg-[#F6F3EC] flex justify-between text-xs font-bold"><span>💳 ${escapeHtml(tx.title)}</span><span>${formatRupiah(tx.amount, true)}</span></div>`).join('')}
+                ${dayTxs.map(tx => `<div class="p-3 rounded-xl bg-sand flex justify-between text-xs font-bold"><span>💳 ${escapeHtml(tx.title)}</span><span>${formatRupiah(tx.amount, true)}</span></div>`).join('')}
               </div>`}
         </div>
       `;
     }
 
-    /* ==================== 4. RUMAH & STOK HUB VIEW (MOBILE TAB 'RUMAH') ==================== */
+    /* ==================== 4. RUMAH HUB VIEW ==================== */
     function renderHomeCareHubView() {
-      const lowCount = state.inventory.filter(i => Number(i.qty) <= Number(i.minQty)).length;
+      const unpaidBills = state.bills.filter(b => b.status !== 'paid').length;
       const pendingTasks = state.tasks.filter(t => !t.done).length;
+      const lowCount = state.inventory.filter(i => Number(i.qty) <= Number(i.minQty)).length;
       return `
         <div>
-          <h3 class="text-lg font-extrabold text-[#1F1D1A]">Rumah, Stok & Catatan Keluarga</h3>
-          <p class="text-xs text-[#736D63]">Kelola jadwal maintenance rumah, stok belanja bulanan, dan brankas info keluarga.</p>
+          <h3 class="text-lg font-extrabold text-[#1F1D1A]">Kebutuhan Rumah & Keluarga</h3>
+          <p class="text-xs text-[#736D63]">Tagihan rutin, jadwal perawatan rumah, stok belanja bulanan, dan catatan penting keluarga.</p>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <button onclick="navigateTo('tasks')" class="card p-5 text-left space-y-2 hover:border-theme transition">
-            <div class="w-11 h-11 rounded-2xl bg-[#C7854A] text-white flex items-center justify-center">
-              <i data-lucide="wrench" class="w-5 h-5"></i>
-            </div>
-            <div class="font-extrabold text-base text-[#1F1D1A]">Jadwal Maintenance</div>
-            <p class="text-xs text-[#736D63]">${pendingTasks} tugas perawatan & kebersihan aktif</p>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <button onclick="navigateTo('bills')" class="card p-4 text-left space-y-2 hover:border-theme transition">
+            <div class="w-10 h-10 rounded-2xl bg-[#B06C68] text-white flex items-center justify-center"><i data-lucide="receipt" class="w-5 h-5"></i></div>
+            <div class="font-extrabold text-sm text-[#1F1D1A]">Tagihan Rutin</div>
+            <p class="text-[11px] text-[#736D63]">${unpaidBills} belum lunas</p>
           </button>
 
-          <button onclick="navigateTo('inventory')" class="card p-5 text-left space-y-2 hover:border-theme transition">
-            <div class="w-11 h-11 rounded-2xl bg-[#638D4B] text-white flex items-center justify-center">
-              <i data-lucide="shopping-cart" class="w-5 h-5"></i>
-            </div>
-            <div class="font-extrabold text-base text-[#1F1D1A]">Stok & Groceries</div>
-            <p class="text-xs text-[#736D63]">${lowCount} barang stok menipis perlu dibeli</p>
+          <button onclick="navigateTo('tasks')" class="card p-4 text-left space-y-2 hover:border-theme transition">
+            <div class="w-10 h-10 rounded-2xl bg-[#C7854A] text-white flex items-center justify-center"><i data-lucide="wrench" class="w-5 h-5"></i></div>
+            <div class="font-extrabold text-sm text-[#1F1D1A]">Jadwal Rumah</div>
+            <p class="text-[11px] text-[#736D63]">${pendingTasks} tugas aktif</p>
           </button>
 
-          <button onclick="navigateTo('notes')" class="card p-5 text-left space-y-2 hover:border-theme transition">
-            <div class="w-11 h-11 rounded-2xl bg-[#488682] text-white flex items-center justify-center">
-              <i data-lucide="book-open" class="w-5 h-5"></i>
-            </div>
-            <div class="font-extrabold text-base text-[#1F1D1A]">Catatan & Link Penting</div>
-            <p class="text-xs text-[#736D63]">${state.notes.length} catatan WiFi, meteran & kontak darurat</p>
+          <button onclick="navigateTo('inventory')" class="card p-4 text-left space-y-2 hover:border-theme transition">
+            <div class="w-10 h-10 rounded-2xl bg-[#638D4B] text-white flex items-center justify-center"><i data-lucide="shopping-cart" class="w-5 h-5"></i></div>
+            <div class="font-extrabold text-sm text-[#1F1D1A]">Stok & Belanja</div>
+            <p class="text-[11px] text-[#736D63]">${lowCount} stok menipis</p>
+          </button>
+
+          <button onclick="navigateTo('notes')" class="card p-4 text-left space-y-2 hover:border-theme transition">
+            <div class="w-10 h-10 rounded-2xl bg-[#488682] text-white flex items-center justify-center"><i data-lucide="book-open" class="w-5 h-5"></i></div>
+            <div class="font-extrabold text-sm text-[#1F1D1A]">Catatan & Brankas</div>
+            <p class="text-[11px] text-[#736D63]">${state.notes.length} catatan tersimpan</p>
           </button>
         </div>
 
@@ -1868,7 +2087,6 @@
       `;
     }
 
-    /* ==================== TAGIHAN, JADWAL, STOK, CATATAN SUB-VIEWS ==================== */
     function renderBillsView() {
       const list = state.bills.filter(b => billFilter === 'all' ? true : billFilter === 'paid' ? b.status === 'paid' : b.status !== 'paid')
         .sort((a, b) => (a.status === 'paid' ? 1 : 0) - (b.status === 'paid' ? 1 : 0) || a.dueDate.localeCompare(b.dueDate));
@@ -1878,9 +2096,9 @@
           <button onclick="openBillModal()" class="px-4 py-2 rounded-xl bg-theme text-white text-xs font-bold">+ Tambah Tagihan</button>
         </div>
         <div class="flex gap-2">
-          <button onclick="billFilter='all'; renderAll();" class="px-3.5 py-1.5 rounded-full text-xs font-bold ${billFilter === 'all' ? 'bg-theme text-white' : 'bg-cream-pill text-[#4A453D]'}">Semua</button>
-          <button onclick="billFilter='unpaid'; renderAll();" class="px-3.5 py-1.5 rounded-full text-xs font-bold ${billFilter === 'unpaid' ? 'bg-theme text-white' : 'bg-cream-pill text-[#4A453D]'}">Belum Lunas</button>
-          <button onclick="billFilter='paid'; renderAll();" class="px-3.5 py-1.5 rounded-full text-xs font-bold ${billFilter === 'paid' ? 'bg-theme text-white' : 'bg-cream-pill text-[#4A453D]'}">Lunas</button>
+          <button onclick="billFilter='all'; renderAll();" class="px-3.5 py-1.5 rounded-full text-xs font-bold ${billFilter === 'all' ? 'bg-theme text-white' : 'bg-sand text-[#4A453D]'}">Semua</button>
+          <button onclick="billFilter='unpaid'; renderAll();" class="px-3.5 py-1.5 rounded-full text-xs font-bold ${billFilter === 'unpaid' ? 'bg-theme text-white' : 'bg-sand text-[#4A453D]'}">Belum Lunas</button>
+          <button onclick="billFilter='paid'; renderAll();" class="px-3.5 py-1.5 rounded-full text-xs font-bold ${billFilter === 'paid' ? 'bg-theme text-white' : 'bg-sand text-[#4A453D]'}">Lunas</button>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           ${list.map(b => {
@@ -1921,13 +2139,13 @@
       });
       return `
         <div class="flex items-center justify-between">
-          <h3 class="text-lg font-extrabold text-[#1F1D1A]">Jadwal Maintenance Rumah</h3>
+          <h3 class="text-lg font-extrabold text-[#1F1D1A]">Jadwal Perawatan Rumah</h3>
           <button onclick="openTaskModal()" class="px-4 py-2 rounded-xl bg-theme text-white text-xs font-bold">+ Tambah Jadwal</button>
         </div>
         <div class="flex flex-wrap gap-2">
-          <button onclick="taskFilter='pending'; renderAll();" class="px-3.5 py-1.5 rounded-full text-xs font-bold ${taskFilter === 'pending' ? 'bg-theme text-white' : 'bg-cream-pill text-[#4A453D]'}">Aktif</button>
-          <button onclick="taskFilter='done'; renderAll();" class="px-3.5 py-1.5 rounded-full text-xs font-bold ${taskFilter === 'done' ? 'bg-theme text-white' : 'bg-cream-pill text-[#4A453D]'}">Selesai</button>
-          <button onclick="taskFilter='all'; renderAll();" class="px-3.5 py-1.5 rounded-full text-xs font-bold ${taskFilter === 'all' ? 'bg-theme text-white' : 'bg-cream-pill text-[#4A453D]'}">Semua</button>
+          <button onclick="taskFilter='pending'; renderAll();" class="px-3.5 py-1.5 rounded-full text-xs font-bold ${taskFilter === 'pending' ? 'bg-theme text-white' : 'bg-sand text-[#4A453D]'}">Aktif</button>
+          <button onclick="taskFilter='done'; renderAll();" class="px-3.5 py-1.5 rounded-full text-xs font-bold ${taskFilter === 'done' ? 'bg-theme text-white' : 'bg-sand text-[#4A453D]'}">Selesai</button>
+          <button onclick="taskFilter='all'; renderAll();" class="px-3.5 py-1.5 rounded-full text-xs font-bold ${taskFilter === 'all' ? 'bg-theme text-white' : 'bg-sand text-[#4A453D]'}">Semua</button>
           <select onchange="taskCategoryFilter=this.value; renderAll();" class="px-3 py-1.5 rounded-full border border-cream text-xs font-bold bg-white">
             <option value="all" ${taskCategoryFilter === 'all' ? 'selected' : ''}>Semua Kategori</option>
             <option value="Perawatan Berkala" ${taskCategoryFilter === 'Perawatan Berkala' ? 'selected' : ''}>Perawatan Berkala</option>
@@ -1946,7 +2164,7 @@
                   <div class="text-xs text-[#736D63] mt-0.5">${escapeHtml(t.category || 'Perawatan Berkala')} • ${formatShortDate(t.dueDate)} • ${escapeHtml(t.priority)} • PIC: ${pic.avatar} ${escapeHtml(pic.name)}</div>
                 </div>
                 <div class="flex gap-1.5 shrink-0">
-                  <button onclick="toggleTask('${t.id}')" class="px-3 py-1.5 rounded-xl ${t.done ? 'bg-cream-pill text-[#4A453D]' : 'bg-theme text-white'} text-xs font-bold">${t.done ? 'Ulangi' : 'Selesai'}</button>
+                  <button onclick="toggleTask('${t.id}')" class="px-3 py-1.5 rounded-xl ${t.done ? 'bg-sand text-[#4A453D]' : 'bg-theme text-white'} text-xs font-bold">${t.done ? 'Ulangi' : 'Selesai'}</button>
                   <button onclick="deleteTask('${t.id}')" class="p-1.5 text-[#9C9589] hover:text-rose-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                 </div>
               </div>
@@ -1961,15 +2179,15 @@
       const list = inventoryFilter === 'low' ? lowItems : state.inventory;
       return `
         <div class="flex flex-wrap items-center justify-between gap-2 pt-2">
-          <h3 class="text-lg font-extrabold text-[#1F1D1A]">Stok & Groceries</h3>
+          <h3 class="text-lg font-extrabold text-[#1F1D1A]">Stok & Belanja</h3>
           <div class="flex gap-2">
             <button onclick="openRestockModal()" class="px-3.5 py-2 rounded-xl bg-theme text-white text-xs font-bold">Selesai Belanja & Restock</button>
             <button onclick="openInventoryModal()" class="px-3.5 py-2 rounded-xl bg-gold text-white text-xs font-bold">+ Tambah Barang</button>
           </div>
         </div>
         <div class="flex gap-2">
-          <button onclick="inventoryFilter='all'; renderAll();" class="px-3.5 py-1.5 rounded-full text-xs font-bold ${inventoryFilter === 'all' ? 'bg-theme text-white' : 'bg-cream-pill text-[#4A453D]'}">Semua (${state.inventory.length})</button>
-          <button onclick="inventoryFilter='low'; renderAll();" class="px-3.5 py-1.5 rounded-full text-xs font-bold ${inventoryFilter === 'low' ? 'bg-theme text-white' : 'bg-cream-pill text-[#4A453D]'}">Stok Menipis (${lowItems.length})</button>
+          <button onclick="inventoryFilter='all'; renderAll();" class="px-3.5 py-1.5 rounded-full text-xs font-bold ${inventoryFilter === 'all' ? 'bg-theme text-white' : 'bg-sand text-[#4A453D]'}">Semua (${state.inventory.length})</button>
+          <button onclick="inventoryFilter='low'; renderAll();" class="px-3.5 py-1.5 rounded-full text-xs font-bold ${inventoryFilter === 'low' ? 'bg-theme text-white' : 'bg-sand text-[#4A453D]'}">Stok Menipis (${lowItems.length})</button>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           ${list.map(item => {
@@ -1986,7 +2204,7 @@
                 <div class="flex items-center justify-between pt-2 border-t border-cream">
                   <span class="text-xs font-bold ${isLow ? 'text-[#8A6D1B]' : 'text-theme'}">${isLow ? '⚠️ Menipis' : '✅ Aman'}</span>
                   <div class="flex items-center gap-2">
-                    <button onclick="adjustInventoryQty('${item.id}', -1)" class="w-8 h-8 rounded-xl bg-cream-pill font-extrabold">-</button>
+                    <button onclick="adjustInventoryQty('${item.id}', -1)" class="w-8 h-8 rounded-xl bg-sand font-extrabold">-</button>
                     <span class="font-extrabold text-sm tabular-nums">${item.qty} ${escapeHtml(item.unit)}</span>
                     <button onclick="adjustInventoryQty('${item.id}', 1)" class="w-8 h-8 rounded-xl bg-theme text-white font-extrabold">+</button>
                   </div>
@@ -2004,11 +2222,11 @@
         .sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
       return `
         <div class="flex items-center justify-between">
-          <h3 class="text-lg font-extrabold text-[#1F1D1A]">Catatan & Link Penting</h3>
+          <h3 class="text-lg font-extrabold text-[#1F1D1A]">Catatan & Brankas Info</h3>
           <button onclick="openNoteModal()" class="px-4 py-2 rounded-xl bg-theme text-white text-xs font-bold">+ Buat Catatan</button>
         </div>
         <div class="flex flex-col sm:flex-row gap-2">
-          <input type="text" value="${escapeHtml(noteSearch)}" oninput="noteSearch=this.value; renderAll();" placeholder="Cari ID PLN, WiFi, link Google Drive, kontak..." class="flex-1 px-3.5 py-2 rounded-xl border border-cream text-xs sm:text-sm bg-white" />
+          <input type="text" value="${escapeHtml(noteSearch)}" oninput="noteSearch=this.value; renderAll();" placeholder="Cari ID PLN, WiFi, kontak..." class="flex-1 px-3.5 py-2 rounded-xl border border-cream text-xs sm:text-sm bg-white" />
           <select onchange="noteCategoryFilter=this.value; renderAll();" class="px-3.5 py-2 rounded-xl border border-cream text-xs font-bold bg-white">
             <option value="all" ${noteCategoryFilter === 'all' ? 'selected' : ''}>Semua Kategori</option>
             <option value="Penting & Darurat" ${noteCategoryFilter === 'Penting & Darurat' ? 'selected' : ''}>Penting & Darurat</option>
@@ -2042,7 +2260,7 @@
       `;
     }
 
-    /* ==================== 7. SETTING & LAINNYA VIEW ==================== */
+    /* ==================== 5. SETTING VIEW (TOP PWA INSTALL CARD + ACCOUNT LOGOUT + 5 SUB-TABS) ==================== */
     function renderSettingView() {
       const standalone = isStandaloneMode();
       const canPrompt = Boolean(deferredPrompt);
@@ -2061,7 +2279,7 @@
             <div class="space-y-1.5">
               <div class="flex flex-wrap items-center gap-2">
                 ${badgeHtml}
-                <span class="text-xs font-semibold text-[#736D63]">Kode Keluarga <b>${escapeHtml(state.familyCode)}</b> otomatis tersimpan</span>
+                <span class="text-xs font-semibold text-[#736D63]">Sesi login tersimpan otomatis</span>
               </div>
               <h4 class="text-base sm:text-lg font-extrabold text-[#1F1D1A] flex items-center gap-2">
                 <i data-lucide="smartphone" class="w-5 h-5 text-theme"></i>
@@ -2080,7 +2298,7 @@
             <div class="p-3.5 rounded-2xl bg-white border border-cream space-y-1.5">
               <div class="font-extrabold text-xs sm:text-sm text-[#1F1D1A]">🤖 Android (Google Chrome)</div>
               <ol class="list-decimal list-inside text-xs text-[#4A453D] space-y-1">
-                <li>Pastikan Kode Keluarga sudah sesuai, lalu buka di browser <b>Chrome</b>.</li>
+                <li>Buka <b>RumahKu</b> di browser <b>Chrome</b> dan pastikan sudah masuk ke akun keluarga.</li>
                 <li>Ketuk menu <b>Titik Tiga (⋮)</b> di pojok kanan atas browser.</li>
                 <li>Pilih <b>Tambahkan ke layar utama</b> atau <b>Instal aplikasi</b>, lalu konfirmasi <b>Instal</b>.</li>
               </ol>
@@ -2096,65 +2314,33 @@
           </div>
         </div>
 
-        <!-- FAMILY PROFILE CARD (SERUMA STYLE) -->
-        <button onclick="currentSettingTab='family'; renderAll();" class="w-full card p-4 flex items-center justify-between gap-3 text-left hover:border-theme transition">
+        <!-- ACTIVE FAMILY ACCOUNT CARD + LOGOUT -->
+        <div class="card p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div class="flex items-center gap-3.5">
             <div class="w-12 h-12 rounded-full bg-gold text-white font-extrabold text-lg flex items-center justify-center shrink-0">
-              ${escapeHtml((state.familyCode || 'R')[0])}
+              ${escapeHtml((state.familyName || 'R')[0].toUpperCase())}
             </div>
             <div>
-              <div class="font-extrabold text-base text-[#1F1D1A]">Keluarga ${escapeHtml(state.familyCode)}</div>
-              <div class="text-xs text-[#736D63]">${state.users.length} anggota keluarga • ${state.accounts.length} wallet aktif</div>
+              <div class="font-extrabold text-base text-[#1F1D1A]">${escapeHtml(state.familyName || 'Keluarga Bahagia')}</div>
+              <div class="text-xs text-[#736D63]">Username: <b>${escapeHtml(session ? session.username : '-')}</b> • ${escapeHtml(cloudStatusText)}</div>
             </div>
           </div>
-          <i data-lucide="chevron-right" class="w-5 h-5 text-[#736D63]"></i>
-        </button>
-
-        <!-- RUMAH & CATATAN SHORTCUT LIST -->
-        <div class="space-y-2">
-          <div class="text-[11px] font-extrabold uppercase tracking-wider text-[#736D63] px-1">RUMAH & CATATAN</div>
-          <div class="card divide-y divide-cream overflow-hidden">
-            <button onclick="navigateTo('tasks')" class="w-full p-4 flex items-center justify-between gap-3 text-left hover:bg-[#FAF8F4]">
-              <div class="flex items-center gap-3.5">
-                <div class="w-11 h-11 rounded-2xl bg-[#C7854A] text-white flex items-center justify-center shrink-0">
-                  <i data-lucide="wrench" class="w-5 h-5"></i>
-                </div>
-                <div>
-                  <div class="font-extrabold text-sm text-[#1F1D1A]">Maintenance</div>
-                  <div class="text-xs text-[#736D63]">Servis kendaraan & perawatan rumah</div>
-                </div>
-              </div>
-              <i data-lucide="chevron-right" class="w-4 h-4 text-[#736D63]"></i>
-            </button>
-
-            <button onclick="navigateTo('notes')" class="w-full p-4 flex items-center justify-between gap-3 text-left hover:bg-[#FAF8F4]">
-              <div class="flex items-center gap-3.5">
-                <div class="w-11 h-11 rounded-2xl bg-[#488682] text-white flex items-center justify-center shrink-0">
-                  <i data-lucide="link-2" class="w-5 h-5"></i>
-                </div>
-                <div>
-                  <div class="font-extrabold text-sm text-[#1F1D1A]">Catatan & Link Penting</div>
-                  <div class="text-xs text-[#736D63]">Simpan ID meteran, WiFi & link Google Drive</div>
-                </div>
-              </div>
-              <i data-lucide="chevron-right" class="w-4 h-4 text-[#736D63]"></i>
-            </button>
-          </div>
+          <button onclick="openLogoutConfirmModal()" class="px-4 py-2.5 rounded-xl bg-[#FAF2F1] hover:bg-[#F4E1DF] text-[#9E3A32] border border-[#E4C5C1] text-xs font-extrabold flex items-center justify-center gap-1.5 shrink-0 transition">
+            <i data-lucide="log-out" class="w-4 h-4"></i>
+            <span>Keluar dari Akun (Logout)</span>
+          </button>
         </div>
 
-        <!-- PENGATURAN LIST (SERUMA STYLE + SUB-TAB CONTENT) -->
-        <div class="space-y-2">
-          <div class="text-[11px] font-extrabold uppercase tracking-wider text-[#736D63] px-1">PENGATURAN</div>
-          <div class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-            ${SETTING_TABS.map(t => `
-              <button onclick="currentSettingTab='${t.id}'; renderAll();" class="min-h-[42px] px-4 py-2 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2 shrink-0 transition ${
-                currentSettingTab === t.id ? 'bg-theme text-white shadow-xs' : 'bg-white text-[#4A453D] border border-cream hover:bg-cream-pill'
-              }">
-                <i data-lucide="${t.icon}" class="w-4 h-4"></i>
-                <span>${t.label}</span>
-              </button>
-            `).join('')}
-          </div>
+        <!-- 5 SETTING SUB-TABS -->
+        <div class="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+          ${SETTING_TABS.map(t => `
+            <button onclick="currentSettingTab='${t.id}'; renderAll();" class="min-h-[42px] px-4 py-2 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2 shrink-0 transition ${
+              currentSettingTab === t.id ? 'bg-theme text-white shadow-xs' : 'bg-white text-[#4A453D] border border-cream hover:bg-sand'
+            }">
+              <i data-lucide="${t.icon}" class="w-4 h-4"></i>
+              <span>${t.label}</span>
+            </button>
+          `).join('')}
         </div>
 
         <div>
@@ -2182,6 +2368,22 @@
       installGuideExpanded = true;
       renderAll();
       showToast(isStandaloneMode() ? 'Aplikasi RumahKu sudah terpasang di HP!' : 'Ikuti panduan langkah di atas untuk memasang ke layar utama HP.');
+    }
+
+    function openLogoutConfirmModal() {
+      openModal(`
+        <div class="p-4 border-b border-cream flex justify-between items-center">
+          <h4 class="font-extrabold text-sm text-[#1F1D1A]">Keluar dari Akun Keluarga?</h4>
+          <button onclick="closeModal()" class="p-1 text-[#736D63]"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+        <div class="p-5 space-y-4">
+          <p class="text-xs sm:text-sm text-[#4A453D]">Anda akan keluar dari akun <b>${escapeHtml(session ? session.username : '')}</b>. Data Anda tetap aman dan bisa diakses kembali kapan saja dengan login ulang.</p>
+          <div class="flex justify-end gap-2">
+            <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl bg-sand text-xs font-bold">Batal</button>
+            <button type="button" onclick="logoutAccount()" class="px-4 py-2 rounded-xl bg-[#9E3A32] text-white text-xs font-bold">Ya, Keluar</button>
+          </div>
+        </div>
+      `);
     }
 
     function renderThemeTab() {
@@ -2244,7 +2446,7 @@
                     <div class="text-[11px] text-[#736D63]">${escapeHtml(c.hint || '-')} • Anggaran: ${c.budget ? formatRupiah(c.budget) : 'Bebas'}</div>
                   </div>
                   <div class="flex gap-1 shrink-0">
-                    <button onclick="openCategoryModal('expense', '${c.id}')" class="p-1.5 text-[#736D63] hover:bg-cream-pill rounded-lg"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
+                    <button onclick="openCategoryModal('expense', '${c.id}')" class="p-1.5 text-[#736D63] hover:bg-sand rounded-lg"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
                     <button onclick="deleteCategory('${c.id}')" class="p-1.5 text-[#9C9589] hover:text-rose-600 rounded-lg"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
                   </div>
                 </div>
@@ -2260,7 +2462,7 @@
                     <div class="text-[11px] text-[#736D63]">${escapeHtml(c.hint || '-')}</div>
                   </div>
                   <div class="flex gap-1 shrink-0">
-                    <button onclick="openCategoryModal('income', '${c.id}')" class="p-1.5 text-[#736D63] hover:bg-cream-pill rounded-lg"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
+                    <button onclick="openCategoryModal('income', '${c.id}')" class="p-1.5 text-[#736D63] hover:bg-sand rounded-lg"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
                     <button onclick="deleteCategory('${c.id}')" class="p-1.5 text-[#9C9589] hover:text-rose-600 rounded-lg"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
                   </div>
                 </div>
@@ -2276,7 +2478,7 @@
         <div class="space-y-4">
           <div class="flex justify-between items-center">
             <p class="text-xs text-[#736D63]">Rekening Bank, Kartu Debit, Dompet Tunai, E-Wallet/QRIS, dan Kartu Kredit.</p>
-            <button onclick="openAccountModal()" class="px-4 py-2 rounded-xl bg-theme text-white text-xs font-bold">+ Tambah Wallet</button>
+            <button onclick="openAccountModal()" class="px-4 py-2 rounded-xl bg-theme text-white text-xs font-bold">+ Tambah Rekening</button>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             ${state.accounts.map(acc => {
@@ -2285,12 +2487,12 @@
                 <div class="card p-4 border-l-4 space-y-2" style="border-left-color:${escapeHtml(acc.color || '#214E2A')}">
                   <div class="flex justify-between items-start">
                     <div>
-                      <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-cream-pill text-[#4A453D]">${escapeHtml(acc.classification)}</span>
+                      <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-sand text-[#4A453D]">${escapeHtml(acc.classification)}</span>
                       <h4 class="font-extrabold text-sm text-[#1F1D1A] mt-1">${escapeHtml(acc.name)}</h4>
                       <p class="text-xs text-[#736D63]">${escapeHtml(acc.provider)} ${acc.last4 ? '• •••• ' + escapeHtml(acc.last4) : ''} • Pos: ${owner.avatar} ${escapeHtml(owner.name)}</p>
                     </div>
                     <div class="flex gap-1">
-                      <button onclick="openAccountModal('${acc.id}')" class="p-1.5 text-[#736D63] hover:bg-cream-pill rounded-lg"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                      <button onclick="openAccountModal('${acc.id}')" class="p-1.5 text-[#736D63] hover:bg-sand rounded-lg"><i data-lucide="pencil" class="w-4 h-4"></i></button>
                       <button onclick="deleteAccount('${acc.id}')" class="p-1.5 text-[#9C9589] hover:text-rose-600 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                     </div>
                   </div>
@@ -2329,9 +2531,9 @@
                     ${u.pin ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#F3E5BE] text-[#6E5614]">PIN</span>` : ''}
                   </div>
                   <div class="flex items-center justify-between pt-2 border-t border-cream">
-                    ${isCurrent ? `<span class="text-xs font-extrabold text-theme">✓ Aktif</span>` : `<button onclick="requestSwitchUser('${u.id}')" class="px-3 py-1 rounded-lg bg-cream-pill text-xs font-bold">Pilih</button>`}
+                    ${isCurrent ? `<span class="text-xs font-extrabold text-theme">✓ Aktif</span>` : `<button onclick="requestSwitchUser('${u.id}')" class="px-3 py-1 rounded-lg bg-sand text-xs font-bold">Pilih</button>`}
                     <div class="flex gap-1">
-                      <button onclick="openFamilyMemberModal('${u.id}')" class="p-1.5 text-[#736D63] hover:bg-cream-pill rounded-lg"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                      <button onclick="openFamilyMemberModal('${u.id}')" class="p-1.5 text-[#736D63] hover:bg-sand rounded-lg"><i data-lucide="pencil" class="w-4 h-4"></i></button>
                       ${state.users.length > 1 ? `<button onclick="deleteFamilyMember('${u.id}')" class="p-1.5 text-[#9C9589] hover:text-rose-600 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>` : ''}
                     </div>
                   </div>
@@ -2344,13 +2546,13 @@
     }
 
     function renderSyncTab() {
-      const rulesText = `rules_version = '2';\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    match /rumahku_families/{familyCode} {\n      allow read, write: if familyCode.size() == 6;\n    }\n  }\n}`;
+      const rulesText = `rules_version = '2';\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    match /rumahku_accounts/{accountId} {\n      allow read, write: if accountId.size() >= 10;\n    }\n  }\n}`;
       return `
         <div class="space-y-4">
           <div class="card p-5 space-y-3">
             <div class="flex flex-wrap items-center justify-between gap-2">
               <div>
-                <h4 class="font-extrabold text-sm text-[#1F1D1A]">Kode Keluarga & Sinkronisasi Cloud</h4>
+                <h4 class="font-extrabold text-sm text-[#1F1D1A]">Informasi Akun & Sinkronisasi Cloud</h4>
                 <p class="text-xs text-[#736D63]">${escapeHtml(cloudStatusText)}</p>
               </div>
               <span class="px-3 py-1 rounded-full text-xs font-bold ${isCloudConnected ? 'bg-[#E4EFE6] text-[#1B4223]' : 'bg-[#F3E5BE] text-[#6E5614]'}">
@@ -2358,21 +2560,15 @@
               </span>
             </div>
 
-            <div class="p-4 rounded-2xl bg-[#F6F3EC] border border-cream flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <span class="text-[11px] font-bold uppercase text-[#736D63]">Kode Keluarga Aktif (Tersimpan 4-Lapis)</span>
-                <div class="font-mono font-extrabold text-2xl tracking-widest text-[#1F1D1A]">${escapeHtml(state.familyCode)}</div>
+            <div class="p-4 rounded-2xl bg-sand border border-cream space-y-2">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <span class="text-[11px] font-bold uppercase text-[#736D63]">Nama Keluarga & Username Login</span>
+                  <div class="font-extrabold text-base text-[#1F1D1A]">${escapeHtml(state.familyName)} (${escapeHtml(session ? session.username : '-')})</div>
+                </div>
+                <button onclick="openEditFamilyNameModal()" class="px-3.5 py-2 rounded-xl bg-white border border-cream text-xs font-bold">Ubah Nama Keluarga</button>
               </div>
-              <div class="flex flex-wrap gap-2">
-                <button onclick="copyTextToClipboard('${escapeHtml(state.familyCode)}', 'Kode disalin!')" class="px-3.5 py-2 rounded-xl bg-white border border-cream text-xs font-bold">Salin Kode</button>
-                <button onclick="copyInviteLink()" class="px-3.5 py-2 rounded-xl bg-theme text-white text-xs font-bold">Salin Link Undangan HP</button>
-              </div>
-            </div>
-
-            <div class="flex flex-col sm:flex-row gap-2">
-              <input type="text" id="join-code-input" maxlength="6" placeholder="Masukkan 6-digit kode keluarga lain..." class="flex-1 px-3.5 py-2 rounded-xl border border-cream text-sm font-mono uppercase bg-white" />
-              <button onclick="joinFamilyByCode()" class="px-4 py-2 rounded-xl bg-[#29231B] text-white text-xs font-bold">Gabung Kode</button>
-              <button onclick="createFreshFamilyCode()" class="px-4 py-2 rounded-xl bg-cream-pill text-[#1F1D1A] text-xs font-bold">Buat Kode Baru</button>
+              <p class="text-xs text-[#5C564D]">Bagikan <b>Username/Email</b> dan <b>Kata Sandi</b> akun ini kepada pasangan atau anggota keluarga agar dapat login dari HP mereka dan menyinkronkan data secara otomatis.</p>
             </div>
           </div>
 
@@ -2391,7 +2587,7 @@
             </div>
             <div class="flex flex-wrap gap-2">
               <button onclick="exportJsonBackup()" class="px-4 py-2 rounded-xl bg-theme text-white text-xs font-bold">Unduh JSON</button>
-              <label class="px-4 py-2 rounded-xl bg-cream-pill text-[#1F1D1A] text-xs font-bold cursor-pointer">
+              <label class="px-4 py-2 rounded-xl bg-sand text-[#1F1D1A] text-xs font-bold cursor-pointer">
                 Pulihkan JSON <input type="file" accept=".json" onchange="importJsonBackup(event)" class="hidden" />
               </label>
               <button onclick="openResetSampleModal()" class="px-4 py-2 rounded-xl bg-[#FAF2F1] text-[#7A352E] border border-[#E4C5C1] text-xs font-bold">Reset Contoh</button>
@@ -2401,29 +2597,35 @@
       `;
     }
 
-    function joinFamilyByCode() {
-      const code = normalizeFamilyCode(document.getElementById('join-code-input')?.value);
-      if (!code) {
-        showToast('Kode Keluarga harus 6 karakter huruf/angka.', 'error');
-        return;
-      }
-      state.familyCode = code;
-      state.updatedAt = 0;
-      savePersistentFamilyCode(code);
-      saveLocalState(false);
-      connectToFamilyDoc(code);
-      renderAll();
-      showToast(`Berhasil terhubung & menyimpan permanen Kode Keluarga: ${code}`);
+    function openEditFamilyNameModal() {
+      openModal(`
+        <div class="p-4 border-b border-cream flex justify-between items-center">
+          <h4 class="font-extrabold text-sm">Ubah Nama Keluarga</h4>
+          <button onclick="closeModal()" class="p-1 text-[#736D63]"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+        <form onsubmit="submitEditFamilyName(event)" class="p-4 space-y-3">
+          <input type="text" id="efn-name" value="${escapeHtml(state.familyName || '')}" required class="w-full px-3 py-2 rounded-xl border border-cream text-sm bg-white" />
+          <div class="flex justify-end gap-2 pt-2">
+            <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl bg-sand text-xs font-bold">Batal</button>
+            <button type="submit" class="px-5 py-2 rounded-xl bg-theme text-white text-xs font-bold">Simpan</button>
+          </div>
+        </form>
+      `);
     }
 
-    function createFreshFamilyCode() {
-      const code = generateFamilyCode();
-      state.familyCode = code;
-      savePersistentFamilyCode(code);
+    function submitEditFamilyName(e) {
+      e.preventDefault();
+      const val = document.getElementById('efn-name')?.value.trim();
+      if (!val) return;
+      state.familyName = val;
+      if (session) {
+        session.familyName = val;
+        savePersistentSession(session);
+      }
       saveLocalState(true);
-      connectToFamilyDoc(code);
+      closeModal();
       renderAll();
-      showToast(`Kode keluarga baru dibuat & disimpan: ${code}`);
+      showToast('Nama keluarga diperbarui!');
     }
 
     function exportJsonBackup() {
@@ -2432,7 +2634,7 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `RumahKu_${state.familyCode}_${getTodayISO()}.json`;
+        a.download = `RumahKu_${session ? session.username : 'backup'}_${getTodayISO()}.json`;
         a.click();
         URL.revokeObjectURL(url);
         showToast('Backup JSON berhasil diunduh!');
@@ -2447,10 +2649,8 @@
         try {
           const parsed = JSON.parse(ev.target.result);
           if (!parsed || !parsed.accounts) { showToast('File tidak valid.', 'error'); return; }
-          const keepCode = state.familyCode;
-          state = { ...createDefaultState(keepCode), ...parsed, familyCode: keepCode };
+          state = mergeWithDefaultState(parsed, session);
           applyThemeAndFont();
-          savePersistentFamilyCode(keepCode);
           saveLocalState(true);
           renderAll();
           showToast('Data berhasil dipulihkan!');
@@ -2466,9 +2666,9 @@
           <button onclick="closeModal()" class="p-1 text-[#736D63]"><i data-lucide="x" class="w-5 h-5"></i></button>
         </div>
         <div class="p-5 space-y-4">
-          <p class="text-xs sm:text-sm text-[#4A453D]">Seluruh data transaksi & catatan lokal saat ini akan diganti dengan data contoh awal, namun <b>Kode Keluarga (${escapeHtml(state.familyCode)})</b> tetap dipertahankan.</p>
+          <p class="text-xs sm:text-sm text-[#4A453D]">Seluruh data transaksi & catatan saat ini akan diganti dengan data contoh awal, namun akun login <b>${escapeHtml(session ? session.username : '')}</b> tetap aktif.</p>
           <div class="flex justify-end gap-2">
-            <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl bg-cream-pill text-xs font-bold">Batal</button>
+            <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl bg-sand text-xs font-bold">Batal</button>
             <button type="button" onclick="confirmResetSampleData()" class="px-4 py-2 rounded-xl bg-[#9E3A32] text-white text-xs font-bold">Ya, Reset Data</button>
           </div>
         </div>
@@ -2476,10 +2676,8 @@
     }
 
     function confirmResetSampleData() {
-      const keepCode = state.familyCode;
-      state = createDefaultState(keepCode);
+      state = createDefaultState(session);
       applyThemeAndFont();
-      savePersistentFamilyCode(keepCode);
       saveLocalState(true);
       closeModal();
       renderAll();
@@ -2518,7 +2716,7 @@
           </button>
           <button onclick="openTransferModal()" class="p-4 rounded-2xl bg-[#F1F6FA] border border-[#C5D8E8] flex flex-col items-start gap-1.5 text-left">
             <span class="text-xl">🔄</span>
-            <span class="font-extrabold text-sm text-[#1E4666]">Transfer Wallet</span>
+            <span class="font-extrabold text-sm text-[#1E4666]">Transfer Rekening</span>
             <span class="text-[11px] text-[#736D63]">Pindah saldo antar akun</span>
           </button>
           <button onclick="openBillModal()" class="p-4 rounded-2xl bg-[#FBF6E8] border border-[#EBDDB5] flex flex-col items-start gap-1.5 text-left">
@@ -2526,12 +2724,12 @@
             <span class="font-extrabold text-sm text-[#6E5614]">Tagihan Baru</span>
             <span class="text-[11px] text-[#736D63]">Listrik, air, cicilan</span>
           </button>
-          <button onclick="openTaskModal()" class="p-4 rounded-2xl bg-cream-pill flex flex-col items-start gap-1.5 text-left">
+          <button onclick="openTaskModal()" class="p-4 rounded-2xl bg-sand flex flex-col items-start gap-1.5 text-left">
             <span class="text-xl">🛠️</span>
             <span class="font-extrabold text-sm text-[#1F1D1A]">Agenda Rumah</span>
             <span class="text-[11px] text-[#736D63]">Servis & jadwal rumah</span>
           </button>
-          <button onclick="openNoteModal()" class="p-4 rounded-2xl bg-cream-pill flex flex-col items-start gap-1.5 text-left">
+          <button onclick="openNoteModal()" class="p-4 rounded-2xl bg-sand flex flex-col items-start gap-1.5 text-left">
             <span class="text-xl">📝</span>
             <span class="font-extrabold text-sm text-[#1F1D1A]">Catatan Baru</span>
             <span class="text-[11px] text-[#736D63]">Info penting & kontak</span>
@@ -2575,7 +2773,7 @@
           <form onsubmit="verifyPin(event, '${u.id}')" class="p-5 space-y-4">
             <input type="password" id="pin-check-val" maxlength="4" inputmode="numeric" required autofocus placeholder="••••" class="w-full text-center tracking-[0.7em] font-mono text-2xl font-extrabold py-3 rounded-xl border border-cream bg-white" />
             <div class="flex justify-end gap-2">
-              <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl bg-cream-pill text-xs font-bold">Batal</button>
+              <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl bg-sand text-xs font-bold">Batal</button>
               <button type="submit" class="px-5 py-2 rounded-xl bg-theme text-white text-xs font-bold">Masuk</button>
             </div>
           </form>
@@ -2613,8 +2811,8 @@
         </div>
         <form onsubmit="submitTxForm(event)" class="p-4 space-y-3 overflow-y-auto">
           <div class="grid grid-cols-2 gap-2">
-            <button type="button" onclick="openTransactionModal('expense', '${dateVal}')" class="py-2 rounded-xl text-xs font-extrabold ${type === 'expense' ? 'bg-[#9E4B3B] text-white' : 'bg-cream-pill text-[#4A453D]'}">Pengeluaran (-)</button>
-            <button type="button" onclick="openTransactionModal('income', '${dateVal}')" class="py-2 rounded-xl text-xs font-extrabold ${type === 'income' ? 'bg-theme text-white' : 'bg-cream-pill text-[#4A453D]'}">Pemasukan (+)</button>
+            <button type="button" onclick="openTransactionModal('expense', '${dateVal}')" class="py-2 rounded-xl text-xs font-extrabold ${type === 'expense' ? 'bg-[#9E4B3B] text-white' : 'bg-sand text-[#4A453D]'}">Pengeluaran (-)</button>
+            <button type="button" onclick="openTransactionModal('income', '${dateVal}')" class="py-2 rounded-xl text-xs font-extrabold ${type === 'income' ? 'bg-theme text-white' : 'bg-sand text-[#4A453D]'}">Pemasukan (+)</button>
           </div>
           <input type="hidden" id="tx-type" value="${type}" />
           <div>
@@ -2639,7 +2837,7 @@
             <select id="tx-cat" class="w-full px-3 py-2 rounded-xl border border-cream text-sm bg-white">
               ${cats.map(c => `<option value="${c.id}">${c.icon} ${escapeHtml(c.name)}</option>`).join('')}
             </select>
-            <div id="quick-cat-box" class="hidden mt-2 p-2.5 rounded-xl bg-cream-pill border border-cream flex gap-2">
+            <div id="quick-cat-box" class="hidden mt-2 p-2.5 rounded-xl bg-sand border border-cream flex gap-2">
               <input type="text" id="qcat-icon" value="🏷️" maxlength="4" class="w-12 text-center rounded-lg border border-cream text-sm bg-white" />
               <input type="text" id="qcat-name" placeholder="Nama kategori baru..." class="flex-1 px-2.5 py-1.5 rounded-lg border border-cream text-xs bg-white" />
               <button type="button" onclick="addQuickCategory('${type}')" class="px-3 py-1.5 rounded-lg bg-theme text-white text-xs font-bold">Simpan</button>
@@ -2647,18 +2845,18 @@
           </div>
           <div class="grid grid-cols-2 gap-2.5">
             <div>
-              <label class="block text-xs font-bold text-[#4A453D] mb-1">Tag / Pos (Opsional)</label>
-              <input type="text" id="tx-subclass" placeholder="Misal: Pribadi / Dapur" class="w-full px-3 py-2 rounded-xl border border-cream text-sm bg-white" />
+              <label class="block text-xs font-bold text-[#4A453D] mb-1">Sub-Klasifikasi (Opsional)</label>
+              <input type="text" id="tx-subclass" placeholder="Misal: Sayur / Token" class="w-full px-3 py-2 rounded-xl border border-cream text-sm bg-white" />
             </div>
             <div>
-              <label class="block text-xs font-bold text-[#4A453D] mb-1">Wallet / Rekening</label>
+              <label class="block text-xs font-bold text-[#4A453D] mb-1">Rekening / Dompet</label>
               <select id="tx-acc" class="w-full px-3 py-2 rounded-xl border border-cream text-sm bg-white">
                 ${state.accounts.map(a => `<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('')}
               </select>
             </div>
           </div>
           <div class="flex justify-end gap-2 pt-2">
-            <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl bg-cream-pill text-xs font-bold">Batal</button>
+            <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl bg-sand text-xs font-bold">Batal</button>
             <button type="submit" class="px-5 py-2 rounded-xl bg-theme text-white text-xs font-bold">Simpan</button>
           </div>
         </form>
@@ -2714,18 +2912,18 @@
     function openTransferModal() {
       openModal(`
         <div class="p-4 border-b border-cream flex justify-between items-center">
-          <h4 class="font-extrabold text-sm">Transfer Antar Wallet</h4>
+          <h4 class="font-extrabold text-sm">Transfer Antar Rekening</h4>
           <button onclick="closeModal()" class="p-1 text-[#736D63]"><i data-lucide="x" class="w-5 h-5"></i></button>
         </div>
         <form onsubmit="submitTransferForm(event)" class="p-4 space-y-3">
           <div>
-            <label class="block text-xs font-bold text-[#4A453D] mb-1">Dari Wallet</label>
+            <label class="block text-xs font-bold text-[#4A453D] mb-1">Dari Rekening</label>
             <select id="trf-from" class="w-full px-3 py-2 rounded-xl border border-cream text-sm bg-white">
               ${state.accounts.map(a => `<option value="${a.id}">${escapeHtml(a.name)} (${formatRupiah(computeAccountBalance(a.id))})</option>`).join('')}
             </select>
           </div>
           <div>
-            <label class="block text-xs font-bold text-[#4A453D] mb-1">Ke Wallet Tujuan</label>
+            <label class="block text-xs font-bold text-[#4A453D] mb-1">Ke Rekening Tujuan</label>
             <select id="trf-to" class="w-full px-3 py-2 rounded-xl border border-cream text-sm bg-white">
               ${state.accounts.map((a, i) => `<option value="${a.id}" ${i === 1 ? 'selected' : ''}>${escapeHtml(a.name)}</option>`).join('')}
             </select>
@@ -2741,7 +2939,7 @@
             </div>
           </div>
           <div class="flex justify-end gap-2 pt-2">
-            <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl bg-cream-pill text-xs font-bold">Batal</button>
+            <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl bg-sand text-xs font-bold">Batal</button>
             <button type="submit" class="px-5 py-2 rounded-xl bg-theme text-white text-xs font-bold">Transfer</button>
           </div>
         </form>
@@ -2753,7 +2951,7 @@
       const fromId = document.getElementById('trf-from').value;
       const toId = document.getElementById('trf-to').value;
       const amt = parseRupiah(document.getElementById('trf-amt').value);
-      if (fromId === toId || amt <= 0) { showToast('Periksa wallet tujuan & nominal.', 'error'); return; }
+      if (fromId === toId || amt <= 0) { showToast('Periksa rekening tujuan & nominal.', 'error'); return; }
       state.transactions.unshift({
         id: generateId('tx'),
         type: 'transfer',
@@ -2807,7 +3005,7 @@
           </div>
           <input type="date" id="sch-date" value="${addDaysISO(getTodayISO(), 1)}" required class="w-full px-3 py-2 rounded-xl border border-cream text-sm bg-white" />
           <div class="flex justify-end gap-2 pt-2">
-            <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl bg-cream-pill text-xs font-bold">Batal</button>
+            <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl bg-sand text-xs font-bold">Batal</button>
             <button type="submit" class="px-5 py-2 rounded-xl bg-theme text-white text-xs font-bold">Simpan</button>
           </div>
         </form>
@@ -2880,7 +3078,7 @@
           </select>
           <input type="text" id="bill-note" placeholder="ID Pelanggan / Catatan..." class="w-full px-3 py-2 rounded-xl border border-cream text-sm bg-white" />
           <div class="flex justify-end gap-2 pt-2">
-            <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl bg-cream-pill text-xs font-bold">Batal</button>
+            <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl bg-sand text-xs font-bold">Batal</button>
             <button type="submit" class="px-5 py-2 rounded-xl bg-theme text-white text-xs font-bold">Simpan</button>
           </div>
         </form>
@@ -2918,7 +3116,7 @@
             ${state.accounts.map(a => `<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('')}
           </select>
           <div class="flex justify-end gap-2 pt-2">
-            <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl bg-cream-pill text-xs font-bold">Batal</button>
+            <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl bg-sand text-xs font-bold">Batal</button>
             <button type="submit" class="px-5 py-2 rounded-xl bg-theme text-white text-xs font-bold">Konfirmasi Bayar</button>
           </div>
         </form>
@@ -2978,7 +3176,7 @@
             </select>
           </div>
           <div class="flex justify-end gap-2 pt-2">
-            <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl bg-cream-pill text-xs font-bold">Batal</button>
+            <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl bg-sand text-xs font-bold">Batal</button>
             <button type="submit" class="px-5 py-2 rounded-xl bg-theme text-white text-xs font-bold">Simpan</button>
           </div>
         </form>
@@ -3019,7 +3217,7 @@
           </div>
           <input type="text" id="inv-price" inputmode="numeric" oninput="formatCurrencyInput(this)" placeholder="Estimasi harga (Rp)" class="w-full px-3 py-2 rounded-xl border border-cream text-sm bg-white" />
           <div class="flex justify-end gap-2 pt-2">
-            <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl bg-cream-pill text-xs font-bold">Batal</button>
+            <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl bg-sand text-xs font-bold">Batal</button>
             <button type="submit" class="px-5 py-2 rounded-xl bg-theme text-white text-xs font-bold">Simpan</button>
           </div>
         </form>
@@ -3055,7 +3253,7 @@
           <button onclick="closeModal()" class="p-1 text-[#736D63]"><i data-lucide="x" class="w-5 h-5"></i></button>
         </div>
         <form onsubmit="submitRestockForm(event)" class="p-4 space-y-3">
-          <div class="max-h-40 overflow-y-auto space-y-1.5 border border-cream rounded-xl p-2.5 bg-[#F6F3EC]">
+          <div class="max-h-40 overflow-y-auto space-y-1.5 border border-cream rounded-xl p-2.5 bg-sand">
             ${state.inventory.map(i => `
               <label class="flex items-center justify-between text-xs bg-white p-2 rounded-lg">
                 <span><input type="checkbox" class="rst-chk" data-id="${i.id}" ${i.qty <= i.minQty ? 'checked' : ''} /> ${escapeHtml(i.name)}</span>
@@ -3069,7 +3267,7 @@
             <select id="rst-cat" class="px-3 py-2 rounded-xl border border-cream text-sm bg-white">${exp.map(c => `<option value="${c.id}">${c.icon} ${escapeHtml(c.name)}</option>`).join('')}</select>
           </div>
           <div class="flex justify-end gap-2 pt-2">
-            <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl bg-cream-pill text-xs font-bold">Batal</button>
+            <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl bg-sand text-xs font-bold">Batal</button>
             <button type="submit" class="px-5 py-2 rounded-xl bg-theme text-white text-xs font-bold">Simpan Restock</button>
           </div>
         </form>
@@ -3123,7 +3321,7 @@
           </div>
           <textarea id="note-content" rows="4" required placeholder="Isi catatan..." class="w-full px-3 py-2 rounded-xl border border-cream text-sm bg-white"></textarea>
           <div class="flex justify-end gap-2 pt-2">
-            <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl bg-cream-pill text-xs font-bold">Batal</button>
+            <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl bg-sand text-xs font-bold">Batal</button>
             <button type="submit" class="px-5 py-2 rounded-xl bg-theme text-white text-xs font-bold">Simpan</button>
           </div>
         </form>
@@ -3175,7 +3373,7 @@
             <input type="color" id="cm-color" value="${ex ? ex.color : '#214E2A'}" class="w-full h-10 rounded-xl border border-cream bg-white" />
           </div>
           <div class="flex justify-end gap-2 pt-2">
-            <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl bg-cream-pill text-xs font-bold">Batal</button>
+            <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl bg-sand text-xs font-bold">Batal</button>
             <button type="submit" class="px-5 py-2 rounded-xl bg-theme text-white text-xs font-bold">Simpan</button>
           </div>
         </form>
@@ -3209,7 +3407,7 @@
       const classes = ['Rekening Bank', 'Kartu Debit', 'Dompet Tunai', 'E-Wallet / QRIS', 'Kartu Kredit / PayLater'];
       openModal(`
         <div class="p-4 border-b border-cream flex justify-between items-center">
-          <h4 class="font-extrabold text-sm">${ex ? 'Edit Wallet' : 'Tambah Wallet / Rekening'}</h4>
+          <h4 class="font-extrabold text-sm">${ex ? 'Edit Rekening' : 'Tambah Rekening / Dompet'}</h4>
           <button onclick="closeModal()" class="p-1 text-[#736D63]"><i data-lucide="x" class="w-5 h-5"></i></button>
         </div>
         <form onsubmit="submitAccModal(event, '${editId || ''}')" class="p-4 space-y-3">
@@ -3230,7 +3428,7 @@
           </div>
           <input type="text" id="am-init" value="${ex ? formatDotsOnly(ex.initialBalance) : ''}" inputmode="numeric" oninput="formatCurrencyInput(this)" placeholder="Saldo awal (Rp)" class="w-full px-3 py-2 rounded-xl border border-cream text-sm font-bold bg-white" />
           <div class="flex justify-end gap-2 pt-2">
-            <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl bg-cream-pill text-xs font-bold">Batal</button>
+            <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl bg-sand text-xs font-bold">Batal</button>
             <button type="submit" class="px-5 py-2 rounded-xl bg-theme text-white text-xs font-bold">Simpan</button>
           </div>
         </form>
@@ -3278,7 +3476,7 @@
           </div>
           <input type="text" id="um-pin" value="${ex ? escapeHtml(ex.pin || '') : ''}" maxlength="4" inputmode="numeric" placeholder="PIN 4-digit (Opsional)" class="w-full px-3 py-2 rounded-xl border border-cream text-sm font-mono bg-white" />
           <div class="flex justify-end gap-2 pt-2">
-            <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl bg-cream-pill text-xs font-bold">Batal</button>
+            <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-xl bg-sand text-xs font-bold">Batal</button>
             <button type="submit" class="px-5 py-2 rounded-xl bg-theme text-white text-xs font-bold">Simpan</button>
           </div>
         </form>
@@ -3315,13 +3513,20 @@
     }
 
     /* ==================== INSTANT STARTUP INITIALIZATION ==================== */
-    document.addEventListener('DOMContentLoaded', () => {
-      loadLocalState();
-      processDueScheduledTransactions();
-      renderAll();
-      safeCreateIcons();
-      initFirebaseSync();
+    document.addEventListener('DOMContentLoaded', async () => {
       registerServiceWorker();
+      const savedSession = await loadPersistentSession();
+
+      if (savedSession && savedSession.accountId) {
+        session = savedSession;
+        const localData = readLocalStateForAccount(session.accountId);
+        state = localData ? mergeWithDefaultState(localData, session) : createDefaultState(session);
+        saveLocalState(false);
+        enterAuthenticatedApp();
+      } else {
+        document.getElementById('auth-screen').classList.remove('hidden');
+        safeCreateIcons();
+      }
     });
   </script>
 </body>
