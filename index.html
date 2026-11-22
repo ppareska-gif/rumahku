@@ -471,7 +471,6 @@
         const ctx = canvas.getContext('2d');
         if (!ctx) return '';
 
-        // Rounded forest-green background
         const radius = Math.round(size * 0.22);
         ctx.fillStyle = '#214E2A';
         ctx.beginPath();
@@ -487,12 +486,10 @@
         ctx.closePath();
         ctx.fill();
 
-        // Subtle gold border ring
         ctx.strokeStyle = 'rgba(223, 193, 91, 0.35)';
         ctx.lineWidth = Math.max(2, Math.round(size * 0.02));
         ctx.stroke();
 
-        // Warm gold house icon
         ctx.fillStyle = '#DFC15B';
         const cx = size * 0.5;
         const topY = size * 0.22;
@@ -559,7 +556,6 @@
         if (manifestLink) manifestLink.setAttribute('href', manifestUrl);
       } catch (e) {}
 
-      // Register ./sw.js with inline Blob fallback for full offline & Android install readiness
       try {
         if ('serviceWorker' in navigator) {
           navigator.serviceWorker.register('./sw.js').catch(() => {
@@ -806,10 +802,10 @@
       return {
         familyName,
         users: [
-          { id: 'u_admin', name: adminName, role: 'Admin', password: adminPass, avatarColor: '#214E2A' },
-          { id: 'u_ibu', name: 'Ibu', role: 'Admin', password: '1234', avatarColor: '#C9A227' },
-          { id: 'u_kakak', name: 'Kakak', role: 'Anggota', password: '1234', avatarColor: '#2563EB' },
-          { id: 'u_nenek', name: 'Nenek', role: 'Anggota', password: '', avatarColor: '#0D9488' }
+          { id: 'u_admin', name: adminName, role: 'Admin', password: adminPass, avatarColor: '#214E2A', privateMode: false, allowSharedView: true },
+          { id: 'u_ibu', name: 'Ibu', role: 'Admin', password: '1234', avatarColor: '#C9A227', privateMode: false, allowSharedView: true },
+          { id: 'u_kakak', name: 'Kakak', role: 'Anggota', password: '1234', avatarColor: '#2563EB', privateMode: false, allowSharedView: true },
+          { id: 'u_nenek', name: 'Nenek', role: 'Anggota', password: '', avatarColor: '#0D9488', privateMode: false, allowSharedView: true }
         ],
         accounts: [
           { id: 'acc_bca', name: 'BCA Keluarga', type: 'Bank', accountNumber: '542109884821', balance: 12500000, ownerId: 'u_admin' },
@@ -884,7 +880,7 @@
     let appState = createDefaultHouseholdState();
 
     /* =========================================================================
-       4. FORMATTING, MASKING & CLIPBOARD UTILITIES
+       4. FORMATTING, MASKING, PRIVATE SPACE & CLIPBOARD UTILITIES
        ========================================================================= */
     function formatRupiah(num) {
       if (devicePrefs.hideBalances) return "Rp •••••••";
@@ -982,6 +978,63 @@
     function isAdminUser() {
       const u = getActiveUser();
       return !!(u && u.role === 'Admin');
+    }
+
+    function isRestrictedPrivateMode() {
+      const u = getActiveUser();
+      return !!(u && u.role !== 'Admin' && u.privateMode);
+    }
+
+    function canSeeAccount(acc) {
+      if (!isRestrictedPrivateMode()) return true;
+      const uid = devicePrefs.activeUserId;
+      if (!acc) return false;
+      if (acc.ownerId === uid) return true;
+      if ((acc.ownerId || 'shared') === 'shared') {
+        const u = getActiveUser();
+        return !!(u && u.allowSharedView !== false);
+      }
+      return false;
+    }
+
+    function getVisibleAccounts() {
+      return (appState.accounts || []).filter(acc => canSeeAccount(acc));
+    }
+
+    function getVisibleTransactions() {
+      if (!isRestrictedPrivateMode()) return appState.transactions || [];
+      const uid = devicePrefs.activeUserId;
+      const visibleAccIds = new Set(getVisibleAccounts().map(a => a.id));
+      return (appState.transactions || []).filter(tx =>
+        tx.userId === uid ||
+        tx.ownerId === uid ||
+        visibleAccIds.has(tx.accountId) ||
+        (tx.toAccountId && visibleAccIds.has(tx.toAccountId))
+      );
+    }
+
+    function getVisibleBills() {
+      if (!isRestrictedPrivateMode()) return appState.bills || [];
+      const visibleAccIds = new Set(getVisibleAccounts().map(a => a.id));
+      return (appState.bills || []).filter(b => visibleAccIds.has(b.accountId));
+    }
+
+    function getVisibleScheduled() {
+      if (!isRestrictedPrivateMode()) return appState.scheduledTransactions || [];
+      const visibleAccIds = new Set(getVisibleAccounts().map(a => a.id));
+      return (appState.scheduledTransactions || []).filter(s => visibleAccIds.has(s.accountId));
+    }
+
+    function getVisibleTasks() {
+      if (!isRestrictedPrivateMode()) return appState.tasks || [];
+      const uid = devicePrefs.activeUserId;
+      return (appState.tasks || []).filter(t => t.assigneeId === uid || !t.assigneeId);
+    }
+
+    function getVisibleNotes() {
+      if (!isRestrictedPrivateMode()) return appState.notes || [];
+      const uid = devicePrefs.activeUserId;
+      return (appState.notes || []).filter(n => n.authorId === uid || !n.authorId);
     }
 
     /* =========================================================================
@@ -1403,14 +1456,14 @@
       const dName = document.getElementById('desktop-user-name');
       if (dName) dName.textContent = user.name;
       const dRole = document.getElementById('desktop-user-role');
-      if (dRole) dRole.textContent = user.role;
+      if (dRole) dRole.textContent = isRestrictedPrivateMode() ? 'Ruang Pribadi' : user.role;
 
       const routeTitles = {
-        beranda: 'Beranda Keluarga',
+        beranda: isRestrictedPrivateMode() ? `Ruang Pribadi ${user.name}` : 'Beranda Keluarga',
         keuangan: 'Keuangan, Tagihan & Rekening',
         kalender: 'Kalender Belanja & Agenda Rumah',
         rumah: 'Stok, Checklist Belanja & Tugas',
-        setting: 'Pengaturan & Profil Keluarga'
+        setting: 'Pengaturan & Profil'
       };
       const pTitle = document.getElementById('desktop-page-title');
       if (pTitle) pTitle.textContent = routeTitles[currentRoute] || 'RumahKu';
@@ -1437,7 +1490,7 @@
       });
 
       const lowItems = getLowStockItems();
-      const unpaidBills = (appState.bills || []).filter(b => !b.paid);
+      const unpaidBills = getVisibleBills().filter(b => !b.paid);
       const dot = document.getElementById('nav-lowstock-dot');
       if (dot) dot.classList.toggle('hidden', lowItems.length === 0);
 
@@ -1483,24 +1536,29 @@
     }
 
     function renderBerandaView() {
-      const cashAccounts = (appState.accounts || []).filter(a => !isCreditCardType(a.type));
-      const creditCards = (appState.accounts || []).filter(a => isCreditCardType(a.type));
+      const visibleAccounts = getVisibleAccounts();
+      const visibleTransactions = getVisibleTransactions();
+      const visibleBills = getVisibleBills();
+      const visibleTasks = getVisibleTasks();
+      const isPrivate = isRestrictedPrivateMode();
+
+      const cashAccounts = visibleAccounts.filter(a => !isCreditCardType(a.type));
+      const creditCards = visibleAccounts.filter(a => isCreditCardType(a.type));
       const totalBalance = cashAccounts.reduce((sum, a) => sum + (Number(a.balance) || 0), 0);
       const totalCardDebt = creditCards.reduce((sum, a) => sum + Math.max(0, Number(a.balance) || 0), 0);
       const currentMonth = new Date().toISOString().slice(0, 7);
-      const monthTx = (appState.transactions || []).filter(t => (t.date || '').startsWith(currentMonth));
+      const monthTx = visibleTransactions.filter(t => (t.date || '').startsWith(currentMonth));
       const monthIncome = monthTx.filter(t => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0);
       const monthExpense = monthTx.filter(t => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0);
 
-      // Hindari penghitungan ganda antara utang kartu kredit & tagihan yang sudah terhubung ke kartu
-      const nonCardBills = (appState.bills || []).filter(b => !b.paid && !b.linkedAccountId);
+      const nonCardBills = visibleBills.filter(b => !b.paid && !b.linkedAccountId);
       const totalUnpaidAmount = nonCardBills.reduce((s, b) => s + (Number(b.amount) || 0), 0) + totalCardDebt;
-      const unpaidBills = (appState.bills || []).filter(b => !b.paid);
+      const unpaidBills = visibleBills.filter(b => !b.paid);
       const netWorth = totalBalance - totalUnpaidAmount;
       const lowStock = getLowStockItems();
       const uncheckedShop = (appState.shoppingChecklist || []).filter(s => !s.checked);
-      const pendingTasks = (appState.tasks || []).filter(t => !t.done);
-      const recentTx = [...(appState.transactions || [])].sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, 5);
+      const pendingTasks = visibleTasks.filter(t => !t.done);
+      const recentTx = [...visibleTransactions].sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, 5);
 
       const shortcuts = [
         { label: 'Transaksi', icon: 'arrow-left-right', color: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300', action: "keuanganSubTab='transaksi'; navigateTo('keuangan')" },
@@ -1518,10 +1576,10 @@
 
           <!-- LEFT COLUMN (5/12 Cols on Desktop PC) -->
           <div class="lg:col-span-5 space-y-4">
-            <!-- Neraca Keluarga Hero Card -->
+            <!-- Neraca Hero Card -->
             <div class="rounded-3xl p-5 lg:p-6 bg-gradient-to-br from-forest via-forest to-forest-dark text-white shadow-lg relative overflow-hidden">
               <div class="flex items-center justify-between mb-1">
-                <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-200/80">Neraca Keluarga</span>
+                <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-200/80">${isPrivate ? 'Neraca Pribadi Anda' : 'Neraca Keluarga'}</span>
                 <button type="button" onclick="toggleGlobalBalancePrivacy()" class="p-1.5 rounded-xl bg-white/10 hover:bg-white/20 transition" title="Sembunyikan/Tampilkan Saldo">
                   <i data-lucide="${devicePrefs.hideBalances ? 'eye-off' : 'eye'}" class="w-4 h-4 text-gold-light"></i>
                 </button>
@@ -1545,13 +1603,13 @@
               </div>
             </div>
 
-            <!-- Rekening & Dompet Overview (Masked Last 4 Digits + Eye Toggle + CC Limit) -->
+            <!-- Rekening & Dompet Overview -->
             <div class="card-surface rounded-3xl p-4 space-y-2.5">
               <div class="flex items-center justify-between">
                 <h3 class="text-xs font-extrabold uppercase tracking-wider text-gray-500 dark:text-gray-400">Rekening & Dompet</h3>
                 <button type="button" onclick="keuanganSubTab='rekening'; navigateTo('keuangan')" class="text-xs font-bold text-forest dark:text-emerald-400">Kelola</button>
               </div>
-              ${(appState.accounts || []).map(acc => {
+              ${visibleAccounts.length === 0 ? `<p class="text-xs text-gray-400 py-2">Belum ada dompet/rekening pribadi.</p>` : visibleAccounts.map(acc => {
                 const isRevealed = devicePrefs.revealedAccountIds.includes(acc.id);
                 const hasNum = !!(acc.accountNumber && acc.accountNumber.trim());
                 const isCC = isCreditCardType(acc.type);
@@ -1629,7 +1687,7 @@
 
             <!-- 8-Icon Quick Menu Grid -->
             <div class="card-surface rounded-3xl p-4">
-              <p class="text-[10px] font-extrabold uppercase tracking-wider text-gray-400 mb-3">Akses Cepat Keluarga</p>
+              <p class="text-[10px] font-extrabold uppercase tracking-wider text-gray-400 mb-3">${isPrivate ? 'Akses Cepat Anda' : 'Akses Cepat Keluarga'}</p>
               <div class="grid grid-cols-4 gap-2.5">
                 ${shortcuts.map(sc => `
                   <button type="button" onclick="${sc.action}" class="flex flex-col items-center justify-center p-2.5 rounded-2xl hover:bg-cream dark:hover:bg-black/25 active:scale-95 transition text-center">
@@ -1772,7 +1830,7 @@
           berandaChartInstance = null;
         }
         const currentMonth = new Date().toISOString().slice(0, 7);
-        const expenses = (appState.transactions || []).filter(t => t.type === 'expense' && (t.date || '').startsWith(currentMonth));
+        const expenses = getVisibleTransactions().filter(t => t.type === 'expense' && (t.date || '').startsWith(currentMonth));
         const grouped = {};
         expenses.forEach(tx => {
           const cat = (appState.categories || []).find(c => c.id === tx.categoryId);
@@ -1813,7 +1871,7 @@
     }
 
     /* =========================================================================
-       9. VIEW 2: KEUANGAN (UNIFIED WALLET & POS FILTER ENGINE + ALL SECTIONS)
+       9. VIEW 2: KEUANGAN (UNIFIED WALLET & POS FILTER ENGINE + PRIVATE ISOLATION)
        ========================================================================= */
     function getAccountOwnerId(accId) {
       const acc = (appState.accounts || []).find(a => a.id === accId);
@@ -1822,39 +1880,43 @@
     }
 
     function getFilteredFinanceContext() {
-      const allAccounts = appState.accounts || [];
-      const allTransactions = appState.transactions || [];
-      const allBills = appState.bills || [];
-      const allScheduled = appState.scheduledTransactions || [];
+      const isPrivate = isRestrictedPrivateMode();
+      const activeUid = devicePrefs.activeUserId;
+      const allAccounts = getVisibleAccounts();
+      const allTransactions = getVisibleTransactions();
+      const allBills = getVisibleBills();
+      const allScheduled = getVisibleScheduled();
       const currentMonth = new Date().toISOString().slice(0, 7);
+
+      const effectiveOwnerFilter = (isPrivate && keuanganOwnerFilter !== 'all' && keuanganOwnerFilter !== activeUid && keuanganOwnerFilter !== 'shared')
+        ? 'all'
+        : keuanganOwnerFilter;
 
       // 1. Filter Rekening / Wallet berdasarkan pilihan Wallet & Pos Pemilik
       const matchingAccounts = allAccounts.filter(acc => {
         if (keuanganWalletFilter !== 'all' && acc.id !== keuanganWalletFilter) return false;
         const owner = acc.ownerId || 'shared';
-        if (keuanganOwnerFilter !== 'all' && owner !== keuanganOwnerFilter) return false;
+        if (effectiveOwnerFilter !== 'all' && owner !== effectiveOwnerFilter) return false;
         return true;
       });
       const matchingAccountIds = new Set(matchingAccounts.map(a => a.id));
 
       // Helper pencocokan transaksi terhadap Wallet & Pos Pemilik
-      const selectedUserObj = (appState.users || []).find(u => u.id === keuanganOwnerFilter);
+      const selectedUserObj = (appState.users || []).find(u => u.id === effectiveOwnerFilter);
       const selectedUserNameLower = selectedUserObj ? selectedUserObj.name.trim().toLowerCase() : '';
 
       const matchesTxWalletAndPos = (tx) => {
-        // Filter Wallet
         if (keuanganWalletFilter !== 'all') {
           if (tx.accountId !== keuanganWalletFilter && tx.toAccountId !== keuanganWalletFilter) return false;
         }
-        // Filter Pos Pemilik
-        if (keuanganOwnerFilter !== 'all') {
+        if (effectiveOwnerFilter !== 'all') {
           const srcOwner = getAccountOwnerId(tx.accountId);
           const dstOwner = tx.toAccountId ? getAccountOwnerId(tx.toAccountId) : null;
           const txExplicitOwner = tx.ownerId || tx.userId || '';
           const txCreatorLower = (tx.createdBy || '').trim().toLowerCase();
 
-          const matchByAccountOwner = (srcOwner === keuanganOwnerFilter) || (dstOwner === keuanganOwnerFilter);
-          const matchByTxOwner = (txExplicitOwner === keuanganOwnerFilter);
+          const matchByAccountOwner = (srcOwner === effectiveOwnerFilter) || (dstOwner === effectiveOwnerFilter);
+          const matchByTxOwner = (txExplicitOwner === effectiveOwnerFilter);
           const matchByCreatorName = (selectedUserNameLower && txCreatorLower === selectedUserNameLower);
 
           if (!matchByAccountOwner && !matchByTxOwner && !matchByCreatorName) return false;
@@ -1862,13 +1924,9 @@
         return true;
       };
 
-      // 2. Transaksi sesuai Wallet & Pos (semua bulan)
       const matchingAllTimeTransactions = allTransactions.filter(matchesTxWalletAndPos);
-
-      // 3. Transaksi Bulan Ini (untuk ringkasan pemasukan, pengeluaran & progres anggaran)
       const matchingMonthTransactions = matchingAllTimeTransactions.filter(tx => (tx.date || '').startsWith(currentMonth));
 
-      // 4. Transaksi untuk daftar riwayat (memperhatikan filter bulan & jenis)
       const matchingHistoryTransactions = matchingAllTimeTransactions
         .filter(tx => {
           if (keuanganMonthFilter === 'current' && !(tx.date || '').startsWith(currentMonth)) return false;
@@ -1877,20 +1935,18 @@
         })
         .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
 
-      // 5. Tagihan & Transaksi Terjadwal sesuai Wallet & Pos
       const matchingBills = allBills.filter(b => {
         if (keuanganWalletFilter !== 'all' && b.accountId !== keuanganWalletFilter) return false;
-        if (keuanganOwnerFilter !== 'all' && getAccountOwnerId(b.accountId) !== keuanganOwnerFilter) return false;
+        if (effectiveOwnerFilter !== 'all' && getAccountOwnerId(b.accountId) !== effectiveOwnerFilter) return false;
         return true;
       }).sort((a, b) => (a.dueDate || '').localeCompare(b.dueDate || ''));
 
       const matchingScheduled = allScheduled.filter(s => {
         if (keuanganWalletFilter !== 'all' && s.accountId !== keuanganWalletFilter) return false;
-        if (keuanganOwnerFilter !== 'all' && getAccountOwnerId(s.accountId) !== keuanganOwnerFilter) return false;
+        if (effectiveOwnerFilter !== 'all' && getAccountOwnerId(s.accountId) !== effectiveOwnerFilter) return false;
         return true;
       }).sort((a, b) => (a.nextDate || '').localeCompare(b.nextDate || ''));
 
-      // 6. Hitung Agregat Saldo (Tunai/Bank/E-Wallet), Utang Kartu Kredit, Pemasukan, Pengeluaran
       const filteredCashAccounts = matchingAccounts.filter(a => !isCreditCardType(a.type));
       const filteredCreditCards = matchingAccounts.filter(a => isCreditCardType(a.type));
       const filteredBalance = filteredCashAccounts.reduce((sum, a) => sum + (Number(a.balance) || 0), 0);
@@ -1903,19 +1959,18 @@
         .filter(t => t.type === 'expense')
         .reduce((s, t) => s + (Number(t.amount) || 0), 0);
 
-      // Label indikator filter aktif
       const activeWalletObj = allAccounts.find(a => a.id === keuanganWalletFilter);
       const walletLabel = keuanganWalletFilter === 'all'
-        ? 'Semua Wallet'
+        ? (isPrivate ? 'Semua Wallet Anda' : 'Semua Wallet')
         : (activeWalletObj ? activeWalletObj.name : 'Wallet Terpilih');
 
-      const posLabel = keuanganOwnerFilter === 'all'
-        ? 'Semua Pos'
-        : keuanganOwnerFilter === 'shared'
+      const posLabel = effectiveOwnerFilter === 'all'
+        ? (isPrivate ? 'Ruang Pribadi' : 'Semua Pos')
+        : effectiveOwnerFilter === 'shared'
           ? 'Pos Bersama'
           : (selectedUserObj ? `Pos ${selectedUserObj.name}` : 'Pos Terpilih');
 
-      const isAnyFilterActive = keuanganWalletFilter !== 'all' || keuanganOwnerFilter !== 'all' || keuanganTypeFilter !== 'all' || keuanganMonthFilter !== 'all';
+      const isAnyFilterActive = keuanganWalletFilter !== 'all' || effectiveOwnerFilter !== 'all' || keuanganTypeFilter !== 'all' || keuanganMonthFilter !== 'all';
 
       return {
         currentMonth,
@@ -1948,10 +2003,22 @@
 
     function renderKeuanganView() {
       const ctx = getFilteredFinanceContext();
-      const hasSharedAccounts = (appState.accounts || []).some(a => (a.ownerId || 'shared') === 'shared');
+      const isPrivate = isRestrictedPrivateMode();
+      const visibleAccounts = getVisibleAccounts();
+      const visibleUsers = isPrivate ? [getActiveUser()].filter(Boolean) : (appState.users || []);
+      const hasSharedAccounts = visibleAccounts.some(a => (a.ownerId || 'shared') === 'shared');
 
       return `
         <div class="space-y-4 animate-in">
+          ${isPrivate ? `
+            <div class="px-4 py-2.5 rounded-2xl bg-forest-soft dark:bg-emerald-950/40 border border-forest/20 flex items-center justify-between gap-2 text-xs">
+              <div class="flex items-center gap-2 text-forest dark:text-emerald-300 font-bold">
+                <i data-lucide="shield-check" class="w-4 h-4 shrink-0"></i>
+                <span>Mode Ruang Pribadi Aktif — Hanya menampilkan dompet & catatan milik Anda.</span>
+              </div>
+            </div>
+          ` : ''}
+
           <div class="card-surface rounded-3xl p-4 space-y-3">
             <div class="flex flex-wrap items-center justify-between gap-2">
               <div>
@@ -1999,12 +2066,12 @@
             <!-- Filter Wallet & Pos Pemilik -->
             <div class="grid grid-cols-2 gap-2 pt-1">
               <select onchange="keuanganWalletFilter=this.value; renderApp()" class="px-3 py-2 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700 text-xs font-bold">
-                <option value="all" ${keuanganWalletFilter === 'all' ? 'selected' : ''}>Semua Wallet</option>
-                ${(appState.accounts || []).map(a => `<option value="${a.id}" ${keuanganWalletFilter === a.id ? 'selected' : ''}>${escapeHtml(a.name)}</option>`).join('')}
+                <option value="all" ${keuanganWalletFilter === 'all' ? 'selected' : ''}>${isPrivate ? 'Semua Wallet Anda' : 'Semua Wallet'}</option>
+                ${visibleAccounts.map(a => `<option value="${a.id}" ${keuanganWalletFilter === a.id ? 'selected' : ''}>${escapeHtml(a.name)}</option>`).join('')}
               </select>
               <select onchange="keuanganOwnerFilter=this.value; renderApp()" class="px-3 py-2 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700 text-xs font-bold">
-                <option value="all" ${keuanganOwnerFilter === 'all' ? 'selected' : ''}>Semua Pos</option>
-                ${(appState.users || []).map(u => `<option value="${u.id}" ${keuanganOwnerFilter === u.id ? 'selected' : ''}>Pos ${escapeHtml(u.name)}</option>`).join('')}
+                <option value="all" ${keuanganOwnerFilter === 'all' ? 'selected' : ''}>${isPrivate ? 'Semua Akses Anda' : 'Semua Pos'}</option>
+                ${visibleUsers.map(u => `<option value="${u.id}" ${keuanganOwnerFilter === u.id ? 'selected' : ''}>Pos ${escapeHtml(u.name)}</option>`).join('')}
                 ${hasSharedAccounts ? `<option value="shared" ${keuanganOwnerFilter === 'shared' ? 'selected' : ''}>Pos Bersama</option>` : ''}
               </select>
             </div>
@@ -2225,7 +2292,7 @@
     }
 
     function renderAccountsSection(ctx = null) {
-      const accounts = (ctx && currentRoute === 'keuangan') ? ctx.matchingAccounts : (appState.accounts || []);
+      const accounts = (ctx && currentRoute === 'keuangan') ? ctx.matchingAccounts : getVisibleAccounts();
       return `
         <div class="space-y-3">
           <div class="flex items-center justify-between">
@@ -2310,7 +2377,6 @@
                 </div>
 
                 ${isCC ? `
-                  <!-- Credit Card / PayLater Plafon & Utilization Panel -->
                   <div class="p-3 rounded-2xl bg-amber-50/60 dark:bg-amber-950/25 border border-amber-200/70 dark:border-amber-800/40 space-y-2">
                     <div class="flex items-center justify-between text-xs">
                       <div>
@@ -2371,9 +2437,12 @@
       const todayStr = new Date().toISOString().split('T')[0];
 
       const monthPrefix = `${year}-${String(month + 1).padStart(2, '0')}`;
-      const monthBills = (appState.bills || []).filter(b => (b.dueDate || '').startsWith(monthPrefix));
-      const monthTasks = (appState.tasks || []).filter(t => (t.dueDate || '').startsWith(monthPrefix));
-      const monthExpenses = (appState.transactions || []).filter(t => t.type === 'expense' && (t.date || '').startsWith(monthPrefix));
+      const visibleBills = getVisibleBills();
+      const visibleTasks = getVisibleTasks();
+      const visibleTxs = getVisibleTransactions();
+      const monthBills = visibleBills.filter(b => (b.dueDate || '').startsWith(monthPrefix));
+      const monthTasks = visibleTasks.filter(t => (t.dueDate || '').startsWith(monthPrefix));
+      const monthExpenses = visibleTxs.filter(t => t.type === 'expense' && (t.date || '').startsWith(monthPrefix));
 
       let cells = '';
       for (let i = 0; i < firstDay; i++) {
@@ -2405,9 +2474,9 @@
         `;
       }
 
-      const dayBills = (appState.bills || []).filter(b => b.dueDate === selectedCalendarDate);
-      const dayTasks = (appState.tasks || []).filter(t => t.dueDate === selectedCalendarDate);
-      const dayTxs = (appState.transactions || []).filter(t => t.date === selectedCalendarDate);
+      const dayBills = visibleBills.filter(b => b.dueDate === selectedCalendarDate);
+      const dayTasks = visibleTasks.filter(t => t.dueDate === selectedCalendarDate);
+      const dayTxs = visibleTxs.filter(t => t.date === selectedCalendarDate);
 
       return `
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start animate-in">
@@ -2661,7 +2730,7 @@
     }
 
     function renderRumahTugasTab() {
-      const tasks = appState.tasks || [];
+      const tasks = getVisibleTasks();
       return `
         <div class="space-y-3">
           <div class="flex items-center justify-between">
@@ -2696,11 +2765,11 @@
     }
 
     function renderRumahCatatanTab() {
-      const notes = appState.notes || [];
+      const notes = getVisibleNotes();
       return `
         <div class="space-y-3">
           <div class="flex items-center justify-between">
-            <h3 class="text-xs font-extrabold uppercase tracking-wider text-gray-500">Catatan Keluarga (${notes.length})</h3>
+            <h3 class="text-xs font-extrabold uppercase tracking-wider text-gray-500">Catatan (${notes.length})</h3>
             <button type="button" onclick="openNoteModal()" class="px-3 py-1.5 rounded-xl bg-forest text-white text-xs font-bold flex items-center gap-1">
               <i data-lucide="plus" class="w-3.5 h-3.5"></i> Catatan Baru
             </button>
@@ -2738,7 +2807,7 @@
         { id: 'tema', label: 'Tampilan & Perangkat', icon: 'sliders-horizontal' },
         { id: 'kategori', label: 'Kategori Keuangan', icon: 'tags' },
         { id: 'rekening', label: 'Rekening & Dompet', icon: 'landmark' },
-        { id: 'anggota', label: 'Anggota & Sandi', icon: 'users' },
+        { id: 'anggota', label: 'Anggota & Privasi', icon: 'users' },
         { id: 'akun', label: 'Akun & Export Excel', icon: 'database-backup' },
         { id: 'install', label: 'Pasang di HP', icon: 'smartphone' }
       ];
@@ -2763,7 +2832,7 @@
                 </div>
                 <div class="min-w-0">
                   <p class="text-[11px] font-semibold text-gray-500 dark:text-gray-400 truncate">${escapeHtml(appState.familyName)}</p>
-                  <p class="text-base font-extrabold text-forest dark:text-emerald-400 truncate">${escapeHtml(activeUser.name)} (${escapeHtml(activeUser.role)})</p>
+                  <p class="text-base font-extrabold text-forest dark:text-emerald-400 truncate">${escapeHtml(activeUser.name)} (${escapeHtml(isRestrictedPrivateMode() ? 'Ruang Pribadi' : activeUser.role)})</p>
                 </div>
               </div>
               <button type="button" onclick="openProfileSwitcher()" class="px-3 py-2 rounded-2xl bg-forest-soft dark:bg-emerald-950/60 text-forest dark:text-emerald-300 text-xs font-bold shrink-0">
@@ -2884,35 +2953,53 @@
 
     function renderSettingAnggotaSection() {
       const admin = isAdminUser();
+      const isPrivate = isRestrictedPrivateMode();
+      const displayUsers = isPrivate ? [getActiveUser()].filter(Boolean) : appState.users;
       return `
         <div class="card-surface rounded-3xl p-4 space-y-3">
           <div class="flex items-center justify-between">
             <div>
-              <h3 class="text-xs font-extrabold uppercase tracking-wider text-gray-500">Profil & Sandi Anggota</h3>
-              <p class="text-[10px] text-gray-400">${admin ? 'Admin dapat mengelola profil & sandi tiap anggota.' : 'Hanya Admin yang dapat menambah/mengubah sandi anggota.'}</p>
+              <h3 class="text-xs font-extrabold uppercase tracking-wider text-gray-500">Profil, Privasi & Sandi Anggota</h3>
+              <p class="text-[10px] text-gray-400">${admin ? 'Admin dapat mengatur Mode Ruang Pribadi agar anggota tidak melihat data satu sama lain.' : 'Pengaturan profil & privasi dikelola oleh Admin keluarga.'}</p>
             </div>
             ${admin ? `<button type="button" onclick="openMemberModal()" class="px-3 py-1.5 rounded-xl bg-forest text-white text-xs font-bold">+ Anggota</button>` : ''}
           </div>
 
           <div class="space-y-2">
-            ${appState.users.map(u => `
-              <div class="flex items-center justify-between p-3 rounded-2xl bg-cream dark:bg-black/25">
-                <div class="flex items-center gap-2.5">
-                  <div class="w-9 h-9 rounded-xl text-white font-bold text-xs flex items-center justify-center" style="background-color: ${escapeHtml(u.avatarColor || '#214E2A')}">
+            ${displayUsers.map(u => `
+              <div class="flex items-center justify-between p-3 rounded-2xl bg-cream dark:bg-black/25 gap-2">
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <div class="w-9 h-9 rounded-xl text-white font-bold text-xs flex items-center justify-center shrink-0" style="background-color: ${escapeHtml(u.avatarColor || '#214E2A')}">
                     ${escapeHtml(u.name.charAt(0).toUpperCase())}
                   </div>
-                  <div>
-                    <p class="text-xs font-bold">${escapeHtml(u.name)} ${u.id === devicePrefs.activeUserId ? '<span class="text-[10px] text-forest dark:text-emerald-400">(Anda)</span>' : ''}</p>
-                    <p class="text-[10px] text-gray-500">${escapeHtml(u.role)} • Sandi: ${u.password ? '••••' : 'Tanpa Sandi'}</p>
+                  <div class="min-w-0">
+                    <div class="flex flex-wrap items-center gap-1.5">
+                      <p class="text-xs font-bold">${escapeHtml(u.name)} ${u.id === devicePrefs.activeUserId ? '<span class="text-[10px] text-forest dark:text-emerald-400">(Anda)</span>' : ''}</p>
+                      ${u.role !== 'Admin' && u.privateMode ? `
+                        <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 text-[9px] font-extrabold">
+                          Ruang Pribadi
+                        </span>
+                      ` : ''}
+                    </div>
+                    <p class="text-[10px] text-gray-500 truncate">
+                      ${escapeHtml(u.role)} • Sandi: ${u.password ? '••••' : 'Tanpa Sandi'}
+                      ${u.role !== 'Admin' && u.privateMode ? ` • Dompet Bersama: ${u.allowSharedView !== false ? 'Terlihat' : 'Disembunyikan'}` : ''}
+                    </p>
                   </div>
                 </div>
                 ${admin ? `
-                  <div class="flex items-center gap-1">
-                    <button type="button" onclick="openMemberModal('${u.id}')" class="p-1.5 rounded-xl bg-white dark:bg-[#1B201D] text-gray-600">
+                  <div class="flex items-center gap-1 shrink-0">
+                    ${u.role !== 'Admin' ? `
+                      <button type="button" onclick="quickToggleMemberPrivacy('${u.id}')" title="${u.privateMode ? 'Nonaktifkan Ruang Pribadi' : 'Aktifkan Ruang Pribadi'}"
+                        class="p-1.5 rounded-xl ${u.privateMode ? 'bg-amber-100 text-amber-800' : 'bg-white dark:bg-[#1B201D] text-gray-400'}">
+                        <i data-lucide="${u.privateMode ? 'lock' : 'unlock'}" class="w-3.5 h-3.5"></i>
+                      </button>
+                    ` : ''}
+                    <button type="button" onclick="openMemberModal('${u.id}')" class="p-1.5 rounded-xl bg-white dark:bg-[#1B201D] text-gray-600" title="Edit Profil & Privasi">
                       <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
                     </button>
                     ${appState.users.length > 1 ? `
-                      <button type="button" onclick="deleteMember('${u.id}')" class="p-1.5 rounded-xl bg-white dark:bg-[#1B201D] text-red-500">
+                      <button type="button" onclick="deleteMember('${u.id}')" class="p-1.5 rounded-xl bg-white dark:bg-[#1B201D] text-red-500" title="Hapus Anggota">
                         <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                       </button>
                     ` : ''}
@@ -3058,11 +3145,12 @@
     function openTransactionModal(defaultType = 'expense') {
       const today = new Date().toISOString().split('T')[0];
       const filteredCats = appState.categories.filter(c => c.type === defaultType);
+      const visibleAccounts = getVisibleAccounts();
       const preferredAcc = (keuanganWalletFilter !== 'all'
-        ? appState.accounts.find(a => a.id === keuanganWalletFilter)
+        ? visibleAccounts.find(a => a.id === keuanganWalletFilter)
         : (keuanganOwnerFilter !== 'all'
-          ? appState.accounts.find(a => (a.ownerId || 'shared') === keuanganOwnerFilter)
-          : null)) || appState.accounts[0];
+          ? visibleAccounts.find(a => (a.ownerId || 'shared') === keuanganOwnerFilter)
+          : null)) || visibleAccounts[0];
 
       openModal("Catat Transaksi", `
         <form onsubmit="saveTransaction(event)" class="space-y-3 text-xs">
@@ -3089,7 +3177,7 @@
             <div>
               <label class="block font-semibold mb-1">Rekening</label>
               <select id="tx-account" class="w-full px-3 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700">
-                ${appState.accounts.map(a => `<option value="${a.id}" ${preferredAcc && preferredAcc.id === a.id ? 'selected' : ''}>${escapeHtml(a.name)}</option>`).join('')}
+                ${visibleAccounts.map(a => `<option value="${a.id}" ${preferredAcc && preferredAcc.id === a.id ? 'selected' : ''}>${escapeHtml(a.name)}</option>`).join('')}
               </select>
             </div>
             <div>
@@ -3158,7 +3246,6 @@
       const acc = appState.accounts.find(a => a.id === accountId);
       if (acc) {
         if (isCreditCardType(acc.type)) {
-          // Untuk Kartu Kredit / PayLater: pengeluaran menambah tagihan terpakai, pemasukan/refund mengurangi tagihan terpakai
           acc.balance = Math.max(0, (Number(acc.balance) || 0) + (type === 'expense' ? amount : -amount));
           syncAllLinkedCreditCardBills();
         } else {
@@ -3174,18 +3261,19 @@
 
     function openTransferModal() {
       const today = new Date().toISOString().split('T')[0];
+      const visibleAccounts = getVisibleAccounts();
       openModal("Transfer Antar Rekening", `
         <form onsubmit="saveTransfer(event)" class="space-y-3 text-xs">
           <div>
             <label class="block font-semibold mb-1">Dari Rekening</label>
             <select id="trf-from" class="w-full px-3 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700">
-              ${appState.accounts.map(a => `<option value="${a.id}">${escapeHtml(a.name)} (${formatRupiah(a.balance)})</option>`).join('')}
+              ${visibleAccounts.map(a => `<option value="${a.id}">${escapeHtml(a.name)} (${formatRupiah(a.balance)})</option>`).join('')}
             </select>
           </div>
           <div>
             <label class="block font-semibold mb-1">Ke Rekening Tujuan</label>
             <select id="trf-to" class="w-full px-3 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700">
-              ${appState.accounts.map((a, idx) => `<option value="${a.id}" ${idx === 1 ? 'selected' : ''}>${escapeHtml(a.name)}</option>`).join('')}
+              ${visibleAccounts.map((a, idx) => `<option value="${a.id}" ${idx === 1 ? 'selected' : ''}>${escapeHtml(a.name)}</option>`).join('')}
             </select>
           </div>
           <div class="grid grid-cols-2 gap-2.5">
@@ -3217,7 +3305,6 @@
       const toAcc = appState.accounts.find(a => a.id === toId);
       if (fromAcc) {
         if (isCreditCardType(fromAcc.type)) {
-          // Tarik tunai / transfer keluar dari Kartu Kredit menambah tagihan terpakai
           fromAcc.balance = Math.max(0, (Number(fromAcc.balance) || 0) + amount);
         } else {
           fromAcc.balance = (Number(fromAcc.balance) || 0) - amount;
@@ -3225,7 +3312,6 @@
       }
       if (toAcc) {
         if (isCreditCardType(toAcc.type)) {
-          // Transfer masuk ke Kartu Kredit / PayLater = Pembayaran Tagihan (mengurangi tagihan terpakai & memulihkan limit)
           toAcc.balance = Math.max(0, (Number(toAcc.balance) || 0) - amount);
         } else {
           toAcc.balance = (Number(toAcc.balance) || 0) + amount;
@@ -3317,7 +3403,7 @@
             <div>
               <label class="block font-semibold mb-1">Rekening Pembayar</label>
               <select id="bill-account" class="w-full px-3 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700">
-                ${appState.accounts.map(a => `<option value="${a.id}" ${existing && existing.accountId === a.id ? 'selected' : ''}>${escapeHtml(a.name)}</option>`).join('')}
+                ${getVisibleAccounts().map(a => `<option value="${a.id}" ${existing && existing.accountId === a.id ? 'selected' : ''}>${escapeHtml(a.name)}</option>`).join('')}
               </select>
             </div>
           </div>
@@ -3434,7 +3520,6 @@
       const bill = appState.bills.find(b => b.id === billId);
       if (!bill) return;
 
-      // Jika tagihan terhubung dengan Kartu Kredit / PayLater, arahkan ke modal pembayaran kartu agar memilih rekening sumber dana
       if (bill.linkedAccountId) {
         const linkedCard = appState.accounts.find(a => a.id === bill.linkedAccountId);
         if (linkedCard && isCreditCardType(linkedCard.type)) {
@@ -3475,6 +3560,7 @@
       persistHouseholdState();
       renderApp();
     }
+
     function toggleAccountModalCCFields() {
       const typeSel = document.getElementById('acc-type');
       const ccFields = document.getElementById('cc-dynamic-fields');
@@ -3490,7 +3576,11 @@
 
     function openAccountModal(editAccId = null) {
       const acc = editAccId ? appState.accounts.find(a => a.id === editAccId) : null;
-      const defaultOwner = acc ? (acc.ownerId || 'shared') : (keuanganOwnerFilter !== 'all' ? keuanganOwnerFilter : (appState.users[0]?.id || 'shared'));
+      const isPrivate = isRestrictedPrivateMode();
+      const activeUid = devicePrefs.activeUserId;
+      const defaultOwner = isPrivate
+        ? activeUid
+        : (acc ? (acc.ownerId || 'shared') : (keuanganOwnerFilter !== 'all' ? keuanganOwnerFilter : (appState.users[0]?.id || 'shared')));
       const isCC = acc ? isCreditCardType(acc.type) : false;
 
       openModal(acc ? "Edit Rekening / Kartu" : "Tambah Rekening / Dompet / Kartu", `
@@ -3510,8 +3600,12 @@
             <div>
               <label class="block font-semibold mb-1">Pos Pemilik</label>
               <select id="acc-owner" class="w-full px-3 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700">
-                ${appState.users.map(u => `<option value="${u.id}" ${defaultOwner === u.id ? 'selected' : ''}>Pos ${escapeHtml(u.name)}</option>`).join('')}
-                <option value="shared" ${defaultOwner === 'shared' ? 'selected' : ''}>Pos Bersama</option>
+                ${isPrivate ? `
+                  <option value="${activeUid}" selected>Pos ${escapeHtml((getActiveUser() || {}).name || 'Pribadi')}</option>
+                ` : `
+                  ${appState.users.map(u => `<option value="${u.id}" ${defaultOwner === u.id ? 'selected' : ''}>Pos ${escapeHtml(u.name)}</option>`).join('')}
+                  <option value="shared" ${defaultOwner === 'shared' ? 'selected' : ''}>Pos Bersama</option>
+                `}
               </select>
             </div>
           </div>
@@ -3564,7 +3658,7 @@
       e.preventDefault();
       const name = document.getElementById('acc-name').value.trim();
       const type = document.getElementById('acc-type').value;
-      const ownerId = document.getElementById('acc-owner').value;
+      const ownerId = isRestrictedPrivateMode() ? devicePrefs.activeUserId : document.getElementById('acc-owner').value;
       const accountNumber = document.getElementById('acc-number').value.replace(/\s+/g, '');
       const balance = parseDots(document.getElementById('acc-balance').value);
       const isCC = isCreditCardType(type);
@@ -3594,7 +3688,6 @@
         appState.accounts.push(accObj);
       }
 
-      // Sinkronkan ke Tagihan Rutin & Transaksi Terjadwal jika Kartu Kredit / PayLater dicentang
       if (accObj && isCC) {
         const existingBillIdx = appState.bills.findIndex(b => b.linkedAccountId === accObj.id);
         if (syncBill) {
@@ -3645,7 +3738,7 @@
       const card = appState.accounts.find(a => a.id === cardId);
       if (!card) return;
       const cc = getCreditCardMetrics(card);
-      const sourceAccounts = appState.accounts.filter(a => !isCreditCardType(a.type));
+      const sourceAccounts = getVisibleAccounts().filter(a => !isCreditCardType(a.type));
       const today = new Date().toISOString().split('T')[0];
 
       if (!sourceAccounts.length) {
@@ -3738,7 +3831,7 @@
     }
 
     function deleteAccount(accId) {
-      if (appState.accounts.length <= 1) {
+      if (getVisibleAccounts().length <= 1) {
         showToast("Minimal harus ada 1 rekening aktif", "warning");
         return;
       }
@@ -3814,6 +3907,163 @@
       renderApp();
     }
 
+    function deleteInventoryItem(invId) {
+      appState.inventory = appState.inventory.filter(i => i.id !== invId);
+      persistHouseholdState();
+      renderApp();
+      showToast("Item stok dihapus");
+    }
+
+    function addLowStockItemToChecklist(invId, silent = false) {
+      const inv = appState.inventory.find(i => i.id === invId);
+      if (!inv) return;
+      const existing = appState.shoppingChecklist.find(c => !c.checked && c.name.toLowerCase() === inv.name.toLowerCase());
+      if (existing) {
+        if (!silent) showToast(`"${inv.name}" sudah ada di checklist belanja`);
+        return;
+      }
+      const needQty = Math.max(1, (Number(inv.minQty) - Number(inv.qty)) + 1);
+      appState.shoppingChecklist.unshift({
+        id: 'shp_' + Date.now() + Math.random().toString(36).slice(2, 5),
+        name: inv.name,
+        qty: needQty,
+        unit: inv.unit || 'pcs',
+        estPrice: 0,
+        checked: false,
+        fromInventoryId: inv.id
+      });
+      if (!silent) {
+        persistHouseholdState();
+        renderApp();
+        showToast(`"${inv.name}" ditambahkan ke checklist belanja!`);
+      }
+    }
+
+    function addAllLowStockToChecklist() {
+      const lowItems = getLowStockItems();
+      let addedCount = 0;
+      lowItems.forEach(inv => {
+        const exists = appState.shoppingChecklist.some(c => !c.checked && c.name.toLowerCase() === inv.name.toLowerCase());
+        if (!exists) {
+          addLowStockItemToChecklist(inv.id, true);
+          addedCount++;
+        }
+      });
+      persistHouseholdState();
+      renderApp();
+      showToast(addedCount > 0 ? `${addedCount} barang menipis masuk ke checklist belanja!` : "Semua barang menipis sudah ada di checklist.");
+    }
+
+    function handleQuickAddShoppingItem(e) {
+      e.preventDefault();
+      const nameInput = document.getElementById('quick-shop-name');
+      const qtyInput = document.getElementById('quick-shop-qty');
+      const name = nameInput.value.trim();
+      const qty = Math.max(1, Number(qtyInput.value) || 1);
+      if (!name) return;
+
+      const matchedInv = appState.inventory.find(i => i.name.toLowerCase() === name.toLowerCase());
+      appState.shoppingChecklist.unshift({
+        id: 'shp_' + Date.now(),
+        name,
+        qty,
+        unit: matchedInv ? matchedInv.unit : 'pcs',
+        estPrice: 0,
+        checked: false,
+        fromInventoryId: matchedInv ? matchedInv.id : ''
+      });
+      nameInput.value = '';
+      qtyInput.value = 1;
+      persistHouseholdState();
+      renderApp();
+    }
+
+    function toggleShoppingCheck(shpId) {
+      const item = appState.shoppingChecklist.find(s => s.id === shpId);
+      if (!item) return;
+      item.checked = !item.checked;
+      persistHouseholdState();
+      renderApp();
+    }
+
+    function deleteShoppingItem(shpId) {
+      appState.shoppingChecklist = appState.shoppingChecklist.filter(s => s.id !== shpId);
+      persistHouseholdState();
+      renderApp();
+    }
+
+    function openCompleteShoppingModal() {
+      const checkedItems = appState.shoppingChecklist.filter(i => i.checked);
+      if (!checkedItems.length) return;
+      const visibleAccounts = getVisibleAccounts();
+      openModal(`Selesai Belanja (${checkedItems.length} Item)`, `
+        <form onsubmit="completeShoppingPurchase(event)" class="space-y-3 text-xs">
+          <div class="p-3 rounded-2xl bg-forest-soft/70 dark:bg-emerald-950/40 text-forest dark:text-emerald-200">
+            <p class="font-bold">Restock Otomatis ke Stok Rumah:</p>
+            <p class="text-[11px] mt-0.5">Barang yang terhubung dengan Stok Rumah akan otomatis bertambah jumlahnya setelah Anda konfirmasi.</p>
+          </div>
+          <div>
+            <label class="block font-semibold mb-1">Total Belanja Aktual (Rp)</label>
+            <input type="text" inputmode="numeric" id="shop-actual-total" required oninput="handleCurrencyInput(this)" placeholder="250.000"
+              class="w-full px-3.5 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700 font-bold" />
+          </div>
+          <div>
+            <label class="block font-semibold mb-1">Bayar Menggunakan Rekening</label>
+            <select id="shop-account" class="w-full px-3 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700">
+              ${visibleAccounts.map(a => `<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('')}
+            </select>
+          </div>
+          <button type="submit" class="w-full py-3 rounded-2xl bg-forest text-white font-bold shadow-md">Catat Pengeluaran & Restock</button>
+        </form>
+      `);
+    }
+
+    function completeShoppingPurchase(e) {
+      e.preventDefault();
+      const total = parseDots(document.getElementById('shop-actual-total').value);
+      const accountId = document.getElementById('shop-account').value;
+      const checkedItems = appState.shoppingChecklist.filter(i => i.checked);
+      const today = new Date().toISOString().split('T')[0];
+
+      checkedItems.forEach(shp => {
+        const inv = shp.fromInventoryId
+          ? appState.inventory.find(i => i.id === shp.fromInventoryId)
+          : appState.inventory.find(i => i.name.toLowerCase() === shp.name.toLowerCase());
+        if (inv) {
+          inv.qty = (Number(inv.qty) || 0) + (Number(shp.qty) || 1);
+        }
+      });
+
+      if (total > 0) {
+        const defaultCat = appState.categories.find(c => c.type === 'expense');
+        appState.transactions.unshift({
+          id: 'tx_' + Date.now(),
+          type: 'expense',
+          title: `Belanja Kebutuhan (${checkedItems.length} item)`,
+          amount: total,
+          categoryId: defaultCat ? defaultCat.id : '',
+          accountId,
+          date: today,
+          userId: devicePrefs.activeUserId || 'u_admin'
+        });
+        const acc = appState.accounts.find(a => a.id === accountId);
+        if (acc) {
+          if (isCreditCardType(acc.type)) {
+            acc.balance = Math.max(0, (Number(acc.balance) || 0) + total);
+            syncAllLinkedCreditCardBills();
+          } else {
+            acc.balance = (Number(acc.balance) || 0) - total;
+          }
+        }
+      }
+
+      appState.shoppingChecklist = appState.shoppingChecklist.filter(i => !i.checked);
+      persistHouseholdState();
+      closeModal();
+      renderApp();
+      showToast("Belanja selesai & stok rumah otomatis diperbarui!");
+    }
+
     function deleteBill(billId) {
       appState.bills = appState.bills.filter(b => b.id !== billId);
       appState.scheduledTransactions = appState.scheduledTransactions.filter(s => s.linkedBillId !== billId);
@@ -3847,27 +4097,25 @@
           </div>
           <div class="grid grid-cols-2 gap-2.5">
             <div>
+              <label class="block font-semibold mb-1">Tanggal Berikutnya</label>
+              <input type="date" id="sch-date" value="${today}" required class="w-full px-3.5 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700" />
+            </div>
+            <div>
               <label class="block font-semibold mb-1">Frekuensi</label>
               <select id="sch-freq" class="w-full px-3 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700">
                 <option value="Bulanan">Bulanan</option>
                 <option value="Mingguan">Mingguan</option>
                 <option value="Tahunan">Tahunan</option>
-                <option value="Sekali">Sekali</option>
               </select>
-            </div>
-            <div>
-              <label class="block font-semibold mb-1">Tanggal Berikutnya</label>
-              <input type="date" id="sch-date" required value="${today}"
-                class="w-full px-3.5 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700" />
             </div>
           </div>
           <div>
             <label class="block font-semibold mb-1">Rekening</label>
             <select id="sch-account" class="w-full px-3 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700">
-              ${appState.accounts.map(a => `<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('')}
+              ${getVisibleAccounts().map(a => `<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('')}
             </select>
           </div>
-          <button type="submit" class="w-full py-3 rounded-2xl bg-forest text-white font-bold shadow-md">Simpan Jadwal</button>
+          <button type="submit" class="w-full py-3 rounded-2xl bg-forest text-white font-bold">Simpan Jadwal</button>
         </form>
       `);
     }
@@ -3877,46 +4125,35 @@
       const title = document.getElementById('sch-title').value.trim();
       const type = document.getElementById('sch-type').value;
       const amount = parseDots(document.getElementById('sch-amount').value);
-      const frequency = document.getElementById('sch-freq').value;
       const nextDate = document.getElementById('sch-date').value;
+      const frequency = document.getElementById('sch-freq').value;
       const accountId = document.getElementById('sch-account').value;
-      if (!amount) return;
-
       const defaultCat = appState.categories.find(c => c.type === type);
+
       appState.scheduledTransactions.push({
         id: 'sch_' + Date.now(),
-        title,
-        type,
-        amount,
+        title, type, amount, nextDate, frequency, accountId,
         categoryId: defaultCat ? defaultCat.id : '',
-        accountId,
-        nextDate,
-        frequency,
         linkedBillId: '',
         active: true
       });
       persistHouseholdState();
       closeModal();
       renderApp();
-      showToast("Transaksi terjadwal ditambahkan!");
+      showToast("Jadwal transaksi disimpan!");
     }
 
     function executeScheduledNow(schId) {
       const sch = appState.scheduledTransactions.find(s => s.id === schId);
       if (!sch) return;
-      if (sch.linkedBillId) {
-        payBillNow(sch.linkedBillId);
-        return;
-      }
-
       const today = new Date().toISOString().split('T')[0];
-      const amount = Number(sch.amount) || 0;
+
       appState.transactions.unshift({
         id: 'tx_' + Date.now(),
         type: sch.type,
-        title: `[Terjadwal] ${sch.title}`,
-        amount,
-        categoryId: sch.categoryId || '',
+        title: sch.title,
+        amount: Number(sch.amount),
+        categoryId: sch.categoryId,
         accountId: sch.accountId,
         date: today,
         userId: devicePrefs.activeUserId || 'u_admin'
@@ -3925,17 +4162,24 @@
       const acc = appState.accounts.find(a => a.id === sch.accountId);
       if (acc) {
         if (isCreditCardType(acc.type)) {
-          acc.balance = Math.max(0, (Number(acc.balance) || 0) + (sch.type === 'expense' ? amount : -amount));
+          acc.balance = Math.max(0, (Number(acc.balance) || 0) + (sch.type === 'expense' ? Number(sch.amount) : -Number(sch.amount)));
           syncAllLinkedCreditCardBills();
         } else {
-          acc.balance = (Number(acc.balance) || 0) + (sch.type === 'income' ? amount : -amount);
+          acc.balance = (Number(acc.balance) || 0) + (sch.type === 'income' ? Number(sch.amount) : -Number(sch.amount));
         }
       }
 
       if (sch.frequency && sch.frequency !== 'Sekali') {
         sch.nextDate = addPeriodToDate(sch.nextDate, sch.frequency);
-      } else {
-        appState.scheduledTransactions = appState.scheduledTransactions.filter(s => s.id !== schId);
+      }
+
+      if (sch.linkedBillId) {
+        const bill = appState.bills.find(b => b.id === sch.linkedBillId);
+        if (bill) {
+          bill.lastPaidDate = today;
+          if (bill.recurring && bill.recurring !== 'Sekali') bill.dueDate = sch.nextDate;
+          else bill.paid = true;
+        }
       }
 
       persistHouseholdState();
@@ -3947,149 +4191,13 @@
       appState.scheduledTransactions = appState.scheduledTransactions.filter(s => s.id !== schId);
       persistHouseholdState();
       renderApp();
-      showToast("Transaksi terjadwal dihapus");
-    }
-
-    function deleteInventoryItem(invId) {
-      appState.inventory = appState.inventory.filter(i => i.id !== invId);
-      persistHouseholdState();
-      renderApp();
-    }
-
-    function addLowStockItemToChecklist(invId, silent = false) {
-      const item = appState.inventory.find(i => i.id === invId);
-      if (!item) return;
-      const exists = (appState.shoppingChecklist || []).some(c => !c.checked && c.name.toLowerCase() === item.name.toLowerCase());
-      if (exists) {
-        if (!silent) showToast(`${item.name} sudah ada di checklist belanja`);
-        return;
-      }
-      const neededQty = Math.max(1, (Number(item.minQty) - Number(item.qty)) + 1);
-      appState.shoppingChecklist.unshift({
-        id: 'shp_' + Date.now() + Math.random().toString(36).slice(2, 5),
-        name: item.name,
-        qty: neededQty,
-        unit: item.unit || 'pcs',
-        estPrice: 0,
-        checked: false,
-        fromInventoryId: item.id
-      });
-      if (!silent) {
-        persistHouseholdState();
-        renderApp();
-        showToast(`"${item.name}" ditambahkan ke Checklist Belanja!`);
-      }
-    }
-
-    function addAllLowStockToChecklist() {
-      const low = getLowStockItems();
-      let added = 0;
-      low.forEach(item => {
-        const exists = (appState.shoppingChecklist || []).some(c => !c.checked && c.name.toLowerCase() === item.name.toLowerCase());
-        if (!exists) {
-          addLowStockItemToChecklist(item.id, true);
-          added++;
-        }
-      });
-      persistHouseholdState();
-      rumahSubTab = 'checklist';
-      renderApp();
-      showToast(added > 0 ? `${added} barang menipis dimasukkan ke Checklist Belanja!` : "Semua barang menipis sudah ada di checklist.");
-    }
-
-    function handleQuickAddShoppingItem(e) {
-      e.preventDefault();
-      const nameInput = document.getElementById('quick-shop-name');
-      const qtyInput = document.getElementById('quick-shop-qty');
-      const name = nameInput.value.trim();
-      if (!name) return;
-      appState.shoppingChecklist.unshift({
-        id: 'shp_' + Date.now(),
-        name,
-        qty: Number(qtyInput.value) || 1,
-        unit: 'pcs',
-        estPrice: 0,
-        checked: false,
-        fromInventoryId: ''
-      });
-      nameInput.value = '';
-      qtyInput.value = '1';
-      persistHouseholdState();
-      renderApp();
-    }
-
-    function toggleShoppingCheck(shopId) {
-      const item = appState.shoppingChecklist.find(s => s.id === shopId);
-      if (!item) return;
-      item.checked = !item.checked;
-      persistHouseholdState();
-      renderApp();
-    }
-
-    function deleteShoppingItem(shopId) {
-      appState.shoppingChecklist = appState.shoppingChecklist.filter(s => s.id !== shopId);
-      persistHouseholdState();
-      renderApp();
-    }
-
-    function openCompleteShoppingModal() {
-      const checked = appState.shoppingChecklist.filter(s => s.checked);
-      openModal(`Selesaikan Belanja (${checked.length} Item)`, `
-        <form onsubmit="finalizeShoppingCheckout(event)" class="space-y-3 text-xs">
-          <p class="text-gray-500">Item yang dicentang akan otomatis menambah stok rumah (jika terhubung) dan dihapus dari daftar belanja.</p>
-          <div>
-            <label class="block font-semibold mb-1">Total Belanja Aktual (Rp) - Opsional</label>
-            <input type="text" inputmode="numeric" id="shop-total-spend" oninput="handleCurrencyInput(this)" placeholder="0 (kosongkan jika tidak catat pengeluaran)"
-              class="w-full px-3.5 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700 font-bold" />
-          </div>
-          <div>
-            <label class="block font-semibold mb-1">Potong Saldo Rekening</label>
-            <select id="shop-account" class="w-full px-3 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700">
-              ${appState.accounts.map(a => `<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('')}
-            </select>
-          </div>
-          <button type="submit" class="w-full py-3 rounded-2xl bg-forest text-white font-bold">Konfirmasi & Update Stok</button>
-        </form>
-      `);
-    }
-
-    function finalizeShoppingCheckout(e) {
-      e.preventDefault();
-      const totalSpend = parseDots(document.getElementById('shop-total-spend').value);
-      const accountId = document.getElementById('shop-account').value;
-      const checked = appState.shoppingChecklist.filter(s => s.checked);
-
-      checked.forEach(c => {
-        const inv = appState.inventory.find(i => i.id === c.fromInventoryId || i.name.toLowerCase() === c.name.toLowerCase());
-        if (inv) inv.qty = (Number(inv.qty) || 0) + (Number(c.qty) || 1);
-      });
-
-      appState.shoppingChecklist = appState.shoppingChecklist.filter(s => !s.checked);
-
-      if (totalSpend > 0) {
-        const belanjaCat = appState.categories.find(c => c.id === 'cat_belanja') || appState.categories.find(c => c.type === 'expense');
-        appState.transactions.unshift({
-          id: 'tx_' + Date.now(),
-          type: 'expense',
-          title: `Belanja Kebutuhan (${checked.length} item)`,
-          amount: totalSpend,
-          categoryId: belanjaCat ? belanjaCat.id : '',
-          accountId,
-          date: new Date().toISOString().split('T')[0],
-          userId: devicePrefs.activeUserId || 'u_admin'
-        });
-        const acc = appState.accounts.find(a => a.id === accountId);
-        if (acc) acc.balance = (Number(acc.balance) || 0) - totalSpend;
-      }
-
-      persistHouseholdState();
-      closeModal();
-      renderApp();
-      showToast("Belanja selesai & stok rumah diperbarui!");
+      showToast("Jadwal dihapus");
     }
 
     function openTaskModal() {
       const today = new Date().toISOString().split('T')[0];
+      const isPrivate = isRestrictedPrivateMode();
+      const assigneeOptions = isPrivate ? [getActiveUser()].filter(Boolean) : appState.users;
       openModal("Tambah Tugas Keluarga", `
         <form onsubmit="saveTask(event)" class="space-y-3 text-xs">
           <div>
@@ -4100,11 +4208,11 @@
             <div>
               <label class="block font-semibold mb-1">Penanggung Jawab</label>
               <select id="tsk-assignee" class="w-full px-3 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700">
-                ${appState.users.map(u => `<option value="${u.id}">${escapeHtml(u.name)}</option>`).join('')}
+                ${assigneeOptions.map(u => `<option value="${u.id}">${escapeHtml(u.name)}</option>`).join('')}
               </select>
             </div>
             <div>
-              <label class="block font-semibold mb-1">Target Tanggal</label>
+              <label class="block font-semibold mb-1">Tanggal Target</label>
               <input type="date" id="tsk-due" value="${today}" required class="w-full px-3.5 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700" />
             </div>
           </div>
@@ -4137,21 +4245,21 @@
     }
 
     function deleteTask(tskId) {
-      appState.tasks = appState.tasks.filter(t => t.id !== tskId);
+      appState.tasks = appState.tasks.filter(x => x.id !== tskId);
       persistHouseholdState();
       renderApp();
     }
 
     function openNoteModal() {
-      openModal("Catatan Keluarga Baru", `
+      openModal("Catatan Baru", `
         <form onsubmit="saveNote(event)" class="space-y-3 text-xs">
           <div>
             <label class="block font-semibold mb-1">Judul Catatan</label>
-            <input type="text" id="note-title" required placeholder="Contoh: Nomor Tukang Galon & Gas" class="w-full px-3.5 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700" />
+            <input type="text" id="not-title" required placeholder="Contoh: Nomor Darurat / Meteran Listrik" class="w-full px-3.5 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700" />
           </div>
           <div>
             <label class="block font-semibold mb-1">Isi Catatan</label>
-            <textarea id="note-content" rows="4" required placeholder="Tulis informasi penting untuk keluarga..." class="w-full px-3.5 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700"></textarea>
+            <textarea id="not-content" rows="4" required placeholder="Tulis catatan di sini..." class="w-full px-3.5 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700"></textarea>
           </div>
           <button type="submit" class="w-full py-3 rounded-2xl bg-forest text-white font-bold">Simpan Catatan</button>
         </form>
@@ -4162,8 +4270,8 @@
       e.preventDefault();
       appState.notes.unshift({
         id: 'not_' + Date.now(),
-        title: document.getElementById('note-title').value.trim(),
-        content: document.getElementById('note-content').value.trim(),
+        title: document.getElementById('not-title').value.trim(),
+        content: document.getElementById('not-content').value.trim(),
         updatedAt: new Date().toISOString().split('T')[0],
         authorId: devicePrefs.activeUserId || 'u_admin'
       });
@@ -4173,8 +4281,8 @@
       showToast("Catatan disimpan!");
     }
 
-    function deleteNote(noteId) {
-      appState.notes = appState.notes.filter(n => n.id !== noteId);
+    function deleteNote(notId) {
+      appState.notes = appState.notes.filter(n => n.id !== notId);
       persistHouseholdState();
       renderApp();
     }
@@ -4184,7 +4292,7 @@
         <form onsubmit="saveCategory(event)" class="space-y-3 text-xs">
           <div>
             <label class="block font-semibold mb-1">Nama Kategori</label>
-            <input type="text" id="cat-name" required placeholder="Contoh: Investasi / Sedekah" class="w-full px-3.5 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700" />
+            <input type="text" id="cat-name" required placeholder="Contoh: Cicilan Rumah" class="w-full px-3.5 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700" />
           </div>
           <div class="grid grid-cols-2 gap-2.5">
             <div>
@@ -4195,8 +4303,8 @@
               </select>
             </div>
             <div>
-              <label class="block font-semibold mb-1">Batas Anggaran (Rp)</label>
-              <input type="text" inputmode="numeric" id="cat-budget" oninput="handleCurrencyInput(this)" placeholder="0 (Opsional)" class="w-full px-3 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700 font-bold" />
+              <label class="block font-semibold mb-1">Anggaran Bulanan (Rp)</label>
+              <input type="text" inputmode="numeric" id="cat-budget" oninput="handleCurrencyInput(this)" value="0" class="w-full px-3.5 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700 font-bold" />
             </div>
           </div>
           <button type="submit" class="w-full py-3 rounded-2xl bg-forest text-white font-bold">Simpan Kategori</button>
@@ -4210,8 +4318,8 @@
         id: 'cat_' + Date.now(),
         name: document.getElementById('cat-name').value.trim(),
         type: document.getElementById('cat-type').value,
-        budget: parseDots(document.getElementById('cat-budget').value),
-        icon: 'tag'
+        icon: 'tag',
+        budget: parseDots(document.getElementById('cat-budget').value)
       });
       persistHouseholdState();
       closeModal();
@@ -4225,13 +4333,45 @@
       renderApp();
     }
 
+    function toggleMemberModalPrivacyFields() {
+      const roleSel = document.getElementById('mem-role');
+      const privBox = document.getElementById('mem-privacy-box');
+      const privCheck = document.getElementById('mem-private-mode');
+      const sharedRow = document.getElementById('mem-shared-row');
+      if (!roleSel || !privBox) return;
+      const isNonAdmin = roleSel.value !== 'Admin';
+      privBox.classList.toggle('hidden', !isNonAdmin);
+      if (sharedRow && privCheck) {
+        sharedRow.classList.toggle('hidden', !privCheck.checked);
+      }
+    }
+
+    function quickToggleMemberPrivacy(userId) {
+      if (!isAdminUser()) return;
+      const u = appState.users.find(x => x.id === userId);
+      if (!u || u.role === 'Admin') return;
+      u.privateMode = !u.privateMode;
+      if (u.privateMode && typeof u.allowSharedView === 'undefined') {
+        u.allowSharedView = true;
+      }
+      persistHouseholdState();
+      renderApp();
+      showToast(u.privateMode
+        ? `Ruang Pribadi diaktifkan untuk ${u.name} (data anggota lain tersembunyi)`
+        : `Ruang Pribadi ${u.name} dinonaktifkan`);
+    }
+
     function openMemberModal(editUserId = null) {
       if (!isAdminUser()) {
         showToast("Hanya Admin yang dapat mengelola anggota", "error");
         return;
       }
       const u = editUserId ? appState.users.find(x => x.id === editUserId) : null;
-      openModal(u ? "Edit Profil Anggota" : "Tambah Anggota Keluarga", `
+      const isNonAdmin = !u || u.role !== 'Admin';
+      const isPriv = !!(u && u.privateMode);
+      const allowShared = !u || u.allowSharedView !== false;
+
+      openModal(u ? "Edit Profil & Privasi Anggota" : "Tambah Anggota Keluarga", `
         <form onsubmit="saveMember(event, '${editUserId || ''}')" class="space-y-3 text-xs">
           <div>
             <label class="block font-semibold mb-1">Nama Panggilan</label>
@@ -4240,8 +4380,8 @@
           <div class="grid grid-cols-2 gap-2.5">
             <div>
               <label class="block font-semibold mb-1">Peran</label>
-              <select id="mem-role" class="w-full px-3 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700">
-                <option value="Admin" ${u && u.role === 'Admin' ? 'selected' : ''}>Admin</option>
+              <select id="mem-role" onchange="toggleMemberModalPrivacyFields()" class="w-full px-3 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700">
+                <option value="Admin" ${u && u.role === 'Admin' ? 'selected' : ''}>Admin (Lihat Semua)</option>
                 <option value="Anggota" ${!u || u.role === 'Anggota' ? 'selected' : ''}>Anggota</option>
               </select>
             </div>
@@ -4252,8 +4392,24 @@
           </div>
           <div>
             <label class="block font-semibold mb-1">Kata Sandi Profil (Individu)</label>
-            <input type="text" id="mem-pass" value="${u ? escapeHtml(u.password || '') : '1234'}" placeholder="Kosongkan jika tanpa sandi" class="w-full px-3.5 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700" />
+            <input type="text" id="mem-pass" value="${u ? escapeHtml(u.password || '') : '1234'}" placeholder="Disarankan diisi agar profil tidak dibuka orang lain" class="w-full px-3.5 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700" />
           </div>
+
+          <div id="mem-privacy-box" class="${isNonAdmin ? '' : 'hidden'} p-3.5 rounded-2xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 space-y-2.5">
+            <label class="flex items-start gap-2.5 cursor-pointer">
+              <input type="checkbox" id="mem-private-mode" onchange="toggleMemberModalPrivacyFields()" ${isPriv ? 'checked' : ''} class="w-4 h-4 mt-0.5 accent-forest" />
+              <div>
+                <p class="font-bold text-amber-950 dark:text-amber-200">Aktifkan Mode Ruang Pribadi (Isolasi Data)</p>
+                <p class="text-[10px] text-amber-800/80 dark:text-amber-300/80">Profil ini tidak dapat melihat saldo, rekening, transaksi, maupun catatan milik anggota lain (terlihat seperti aplikasi pribadi), namun Admin tetap bisa memantau semuanya.</p>
+              </div>
+            </label>
+
+            <label id="mem-shared-row" class="${isPriv ? '' : 'hidden'} flex items-center gap-2.5 pl-6 pt-1 border-t border-amber-200/70 dark:border-amber-800/40 cursor-pointer">
+              <input type="checkbox" id="mem-allow-shared" ${allowShared ? 'checked' : ''} class="w-3.5 h-3.5 accent-forest" />
+              <span class="text-[11px] font-semibold text-amber-900 dark:text-amber-200">Izinkan melihat Dompet / Pos Bersama keluarga</span>
+            </label>
+          </div>
+
           <button type="submit" class="w-full py-3 rounded-2xl bg-forest text-white font-bold">Simpan Profil</button>
         </form>
       `);
@@ -4266,6 +4422,8 @@
       const role = document.getElementById('mem-role').value;
       const avatarColor = document.getElementById('mem-color').value;
       const password = document.getElementById('mem-pass').value;
+      const privateMode = role !== 'Admin' ? !!document.getElementById('mem-private-mode').checked : false;
+      const allowSharedView = role !== 'Admin' ? !!document.getElementById('mem-allow-shared').checked : true;
 
       if (editUserId) {
         const u = appState.users.find(x => x.id === editUserId);
@@ -4274,109 +4432,150 @@
           u.role = role;
           u.avatarColor = avatarColor;
           u.password = password;
+          u.privateMode = privateMode;
+          u.allowSharedView = allowSharedView;
         }
       } else {
+        const newUserId = 'u_' + Date.now();
         appState.users.push({
-          id: 'u_' + Date.now(),
-          name, role, avatarColor, password
+          id: newUserId,
+          name, role, avatarColor, password,
+          privateMode, allowSharedView
         });
+        if (privateMode) {
+          appState.accounts.push({
+            id: 'acc_' + Date.now(),
+            name: `Dompet ${name}`,
+            type: 'Tunai',
+            accountNumber: '',
+            balance: 0,
+            ownerId: newUserId
+          });
+        }
       }
       persistHouseholdState();
       closeModal();
       renderApp();
-      showToast("Profil anggota disimpan!");
+      showToast("Profil & pengaturan privasi anggota disimpan!");
     }
 
     function deleteMember(userId) {
       if (!isAdminUser() || appState.users.length <= 1) return;
       appState.users = appState.users.filter(u => u.id !== userId);
+      if (devicePrefs.activeUserId === userId) {
+        devicePrefs.activeUserId = appState.users[0].id;
+        saveDevicePrefs();
+      }
       persistHouseholdState();
       renderApp();
-      showToast("Anggota dihapus");
+      showToast("Profil anggota dihapus");
     }
 
     /* =========================================================================
-       14. MULTI-SHEET EXCEL (.XLSX) EXPORT VIA SHEETJS
+       14. EXPORT EXCEL (.XLSX)
        ========================================================================= */
     function exportToExcel() {
-      if (typeof XLSX === 'undefined') {
-        showToast("Library Excel sedang dimuat atau sedang offline.", "warning");
-        return;
-      }
       try {
+        if (typeof XLSX === 'undefined') {
+          showToast("Library Excel sedang dimuat, coba sesaat lagi.", "warning");
+          return;
+        }
         const wb = XLSX.utils.book_new();
 
-        const txRows = (appState.transactions || []).map(t => ({
-          Tanggal: t.date,
-          Jenis: t.type === 'income' ? 'Pemasukan' : t.type === 'transfer' ? 'Transfer' : 'Pengeluaran',
-          Judul: t.title,
-          Sub_Klasifikasi: t.subClass || '-',
-          Nominal: Number(t.amount) || 0,
-          Rekening: (appState.accounts.find(a => a.id === t.accountId) || {}).name || '-',
-          Kategori: (appState.categories.find(c => c.id === t.categoryId) || {}).name || '-'
-        }));
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(txRows.length ? txRows : [{ Info: 'Kosong' }]), "Transaksi");
+        const txRows = getVisibleTransactions().map(t => {
+          const cat = (appState.categories || []).find(c => c.id === t.categoryId);
+          const acc = (appState.accounts || []).find(a => a.id === t.accountId);
+          const usr = (appState.users || []).find(u => u.id === t.userId);
+          return {
+            Tanggal: t.date,
+            Judul: t.title,
+            Sub_Klasifikasi: t.subClass || '-',
+            Jenis: t.type === 'income' ? 'Pemasukan' : t.type === 'transfer' ? 'Transfer' : 'Pengeluaran',
+            Kategori: cat ? cat.name : '-',
+            Rekening: acc ? acc.name : '-',
+            Nominal_Rp: Number(t.amount) || 0,
+            Pencatat: usr ? usr.name : '-'
+          };
+        });
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(txRows.length ? txRows : [{ Info: "Belum ada transaksi" }]), "Transaksi");
 
-        const accRows = (appState.accounts || []).map(a => ({
-          Nama_Rekening: a.name,
-          Jenis: a.type,
-          Nomor_Rekening: a.accountNumber || '-',
-          Saldo: Number(a.balance) || 0
-        }));
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(accRows.length ? accRows : [{ Info: 'Kosong' }]), "Rekening");
+        const accRows = getVisibleAccounts().map(a => {
+          const isCC = isCreditCardType(a.type);
+          const cc = isCC ? getCreditCardMetrics(a) : null;
+          return {
+            Nama_Rekening: a.name,
+            Jenis: a.type,
+            Nomor_Rekening_Kartu: a.accountNumber || '-',
+            Saldo_Atau_Tagihan_Terpakai_Rp: Number(a.balance) || 0,
+            Plafon_Kredit_Rp: isCC ? cc.limit : '-',
+            Sisa_Limit_Rp: isCC ? cc.available : '-',
+            Tanggal_Jatuh_Tempo: isCC ? (a.billingDueDay || 25) : '-'
+          };
+        });
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(accRows.length ? accRows : [{ Info: "Belum ada rekening" }]), "Rekening");
 
-        const billRows = (appState.bills || []).map(b => ({
+        const billRows = getVisibleBills().map(b => ({
           Tagihan: b.title,
-          Nominal: Number(b.amount) || 0,
-          Periode: b.recurring || 'Sekali',
+          Nominal_Rp: Number(b.amount) || 0,
           Jatuh_Tempo: b.dueDate,
-          Terhubung_Terjadwal: b.syncScheduled ? 'Ya' : 'Tidak',
-          Catatan: b.note || '-'
+          Periode: b.recurring || 'Sekali',
+          Status: b.paid ? 'Lunas' : 'Aktif'
         }));
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(billRows.length ? billRows : [{ Info: 'Kosong' }]), "Tagihan");
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(billRows.length ? billRows : [{ Info: "Belum ada tagihan" }]), "Tagihan");
 
         const invRows = (appState.inventory || []).map(i => ({
-          Barang: i.name,
+          Nama_Barang: i.name,
           Kategori: i.category,
-          Stok_Saat_Ini: i.qty,
+          Stok: i.qty,
           Batas_Minimal: i.minQty,
           Satuan: i.unit
         }));
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(invRows.length ? invRows : [{ Info: 'Kosong' }]), "Stok_Rumah");
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(invRows.length ? invRows : [{ Info: "Belum ada stok" }]), "Stok_Rumah");
 
-        const fileName = `RumahKu_${(appState.familyName || 'Keluarga').replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.xlsx`;
-        XLSX.writeFile(wb, fileName);
-        showToast("File Excel berhasil diunduh!");
+        const safeName = (appState.familyName || 'RumahKu').replace(/[^a-zA-Z0-9]/g, '_');
+        const dateTag = new Date().toISOString().split('T')[0];
+        XLSX.writeFile(wb, `Laporan_${safeName}_${dateTag}.xlsx`);
+        showToast("File Excel (.xlsx) berhasil diunduh!");
       } catch (err) {
-        showToast("Gagal membuat file Excel", "error");
+        showToast("Gagal membuat file Excel: " + err.message, "error");
       }
     }
 
     /* =========================================================================
-       15. BOOTSTRAP ON WINDOW LOAD
+       15. BOOTSTRAP ON LOAD
        ========================================================================= */
-    window.onload = function () {
+    function initRumahKuApp() {
       setupDynamicPWAManifestAndSW();
       loadDevicePrefs();
-      safeRefreshIcons();
 
       try {
-        const savedSessionRaw = localStorage.getItem(SESSION_KEY);
-        if (savedSessionRaw) {
-          currentSession = JSON.parse(savedSessionRaw);
-          const mirrorRaw = localStorage.getItem(LOCAL_DATA_PREFIX + currentSession.accountId);
-          if (mirrorRaw) {
-            mergeIncomingState(JSON.parse(mirrorRaw));
-          }
-          startFirestoreListener();
-          bootUIAfterSession();
-          return;
+        const rawSession = localStorage.getItem(SESSION_KEY);
+        if (rawSession) {
+          currentSession = JSON.parse(rawSession);
         }
-      } catch (e) {}
+      } catch (e) {
+        currentSession = null;
+      }
 
-      document.getElementById('auth-screen').classList.remove('hidden');
+      if (currentSession && currentSession.accountId) {
+        const localData = localStorage.getItem(LOCAL_DATA_PREFIX + currentSession.accountId);
+        if (localData) {
+          try { mergeIncomingState(JSON.parse(localData)); } catch (e) {}
+        }
+        startFirestoreListener();
+        bootUIAfterSession();
+      } else {
+        document.getElementById('auth-screen').classList.remove('hidden');
+      }
+
       safeRefreshIcons();
-    };
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initRumahKuApp);
+    } else {
+      initRumahKuApp();
+    }
   </script>
 </body>
 </html>
