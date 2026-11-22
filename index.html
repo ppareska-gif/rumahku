@@ -727,6 +727,7 @@
     let keuanganWalletFilter = 'all';
     let keuanganOwnerFilter = 'all';
     let keuanganTypeFilter = 'all';
+    let keuanganMonthFilter = 'all';
     let selectedCalendarDate = new Date().toISOString().split('T')[0];
     let calendarMonthOffset = 0;
     let berandaChartInstance = null;
@@ -741,6 +742,60 @@
       else if (period === 'Bulanan') d.setMonth(d.getMonth() + 1);
       else if (period === 'Tahunan') d.setFullYear(d.getFullYear() + 1);
       return d.toISOString().split('T')[0];
+    }
+
+    function isCreditCardType(type) {
+      return type === 'Kartu Kredit / PayLater' || type === 'Kartu Kredit' || type === 'PayLater';
+    }
+
+    function getNextDueDateFromDay(dueDay) {
+      const day = Math.min(31, Math.max(1, parseInt(dueDay, 10) || 25));
+      const now = new Date();
+      let year = now.getFullYear();
+      let month = now.getMonth();
+      const maxDayCurrent = new Date(year, month + 1, 0).getDate();
+      let candidate = new Date(year, month, Math.min(day, maxDayCurrent));
+      const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      if (candidate < todayMidnight) {
+        month += 1;
+        const maxDayNext = new Date(year, month + 1, 0).getDate();
+        candidate = new Date(year, month, Math.min(day, maxDayNext));
+      }
+      const yyyy = candidate.getFullYear();
+      const mm = String(candidate.getMonth() + 1).padStart(2, '0');
+      const dd = String(candidate.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    function getCreditCardMetrics(acc) {
+      const limit = Math.max(0, Number(acc.creditLimit) || 0);
+      const used = Math.max(0, Number(acc.balance) || 0);
+      const available = Math.max(0, limit - used);
+      const pct = limit > 0 ? Math.min(100, Math.round((used / limit) * 100)) : 0;
+      return { limit, used, available, pct };
+    }
+
+    function syncAllLinkedCreditCardBills() {
+      if (!appState || !Array.isArray(appState.accounts) || !Array.isArray(appState.bills)) return;
+      appState.accounts.forEach(acc => {
+        if (!isCreditCardType(acc.type)) return;
+        const used = Math.max(0, Number(acc.balance) || 0);
+        appState.bills.forEach(bill => {
+          if (bill.linkedAccountId === acc.id) {
+            bill.amount = used;
+            bill.title = `Tagihan ${acc.name}`;
+            if (acc.billingDueDay) {
+              const currentDueDay = parseInt((bill.dueDate || '').split('-')[2] || '0', 10);
+              if (!bill.dueDate || currentDueDay !== Number(acc.billingDueDay)) {
+                bill.dueDate = getNextDueDateFromDay(acc.billingDueDay);
+              }
+            }
+            if (bill.syncScheduled) {
+              syncBillToScheduledList(bill);
+            }
+          }
+        });
+      });
     }
 
     function createDefaultHouseholdState(familyName = "Keluarga Harmoni", adminName = "Ayah", adminPass = "1234") {
@@ -759,7 +814,7 @@
         accounts: [
           { id: 'acc_bca', name: 'BCA Keluarga', type: 'Bank', accountNumber: '542109884821', balance: 12500000, ownerId: 'u_admin' },
           { id: 'acc_mandiri', name: 'Mandiri Tabungan', type: 'Bank', accountNumber: '1370019289034', balance: 8250000, ownerId: 'u_ibu' },
-          { id: 'acc_dompet', name: 'Dompet Tunai Rumah', type: 'Tunai', accountNumber: '', balance: 1350000, ownerId: 'u_admin' }
+          { id: 'acc_dompet', name: 'Dompet Tunai Rumah', type: 'Tunai', accountNumber: '', balance: 1350000, ownerId: 'shared' }
         ],
         categories: [
           { id: 'cat_gaji', name: 'Gaji & Tunjangan', type: 'income', icon: 'briefcase', budget: 0 },
@@ -1428,26 +1483,24 @@
     }
 
     function renderBerandaView() {
-      const totalBalance = (appState.accounts || []).reduce((sum, a) => sum + (Number(a.balance) || 0), 0);
+      const cashAccounts = (appState.accounts || []).filter(a => !isCreditCardType(a.type));
+      const creditCards = (appState.accounts || []).filter(a => isCreditCardType(a.type));
+      const totalBalance = cashAccounts.reduce((sum, a) => sum + (Number(a.balance) || 0), 0);
+      const totalCardDebt = creditCards.reduce((sum, a) => sum + Math.max(0, Number(a.balance) || 0), 0);
       const currentMonth = new Date().toISOString().slice(0, 7);
       const monthTx = (appState.transactions || []).filter(t => (t.date || '').startsWith(currentMonth));
       const monthIncome = monthTx.filter(t => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0);
       const monthExpense = monthTx.filter(t => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0);
 
+      // Hindari penghitungan ganda antara utang kartu kredit & tagihan yang sudah terhubung ke kartu
+      const nonCardBills = (appState.bills || []).filter(b => !b.paid && !b.linkedAccountId);
+      const totalUnpaidAmount = nonCardBills.reduce((s, b) => s + (Number(b.amount) || 0), 0) + totalCardDebt;
       const unpaidBills = (appState.bills || []).filter(b => !b.paid);
-      const totalUnpaidAmount = unpaidBills.reduce((s, b) => s + (Number(b.amount) || 0), 0);
       const netWorth = totalBalance - totalUnpaidAmount;
       const lowStock = getLowStockItems();
       const uncheckedShop = (appState.shoppingChecklist || []).filter(s => !s.checked);
       const pendingTasks = (appState.tasks || []).filter(t => !t.done);
       const recentTx = [...(appState.transactions || [])].sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, 5);
-
-      const ownerTotals = (appState.users || []).map(u => {
-        const sum = (appState.accounts || [])
-          .filter(a => a.ownerId === u.id)
-          .reduce((s, a) => s + (Number(a.balance) || 0), 0);
-        return { user: u, total: sum };
-      });
 
       const shortcuts = [
         { label: 'Transaksi', icon: 'arrow-left-right', color: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300', action: "keuanganSubTab='transaksi'; navigateTo('keuangan')" },
@@ -1485,27 +1538,14 @@
                 </div>
                 <div class="bg-white/10 rounded-2xl px-3 py-2">
                   <div class="flex items-center gap-1 text-[11px] text-amber-200">
-                    <i data-lucide="receipt" class="w-3.5 h-3.5"></i> Tagihan Aktif
+                    <i data-lucide="receipt" class="w-3.5 h-3.5"></i> Utang & Tagihan
                   </div>
                   <div class="text-xs sm:text-sm font-bold mt-0.5 tabular-nums">${formatRupiah(totalUnpaidAmount)}</div>
                 </div>
               </div>
-
-              <!-- Harta Per Pemilik -->
-              <div class="mt-3 pt-3 border-t border-white/15">
-                <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-200/75 mb-2">Harta Per Pemilik</p>
-                <div class="grid grid-cols-2 gap-1.5 text-[11px]">
-                  ${ownerTotals.map(o => `
-                    <div class="flex items-center justify-between bg-black/15 rounded-xl px-2.5 py-1.5">
-                      <span class="truncate text-emerald-100">${escapeHtml(o.user.name)}</span>
-                      <span class="font-bold text-white ml-1 tabular-nums">${formatRupiah(o.total)}</span>
-                    </div>
-                  `).join('')}
-                </div>
-              </div>
             </div>
 
-            <!-- Rekening & Dompet Overview (Masked Last 4 Digits + Eye Toggle) -->
+            <!-- Rekening & Dompet Overview (Masked Last 4 Digits + Eye Toggle + CC Limit) -->
             <div class="card-surface rounded-3xl p-4 space-y-2.5">
               <div class="flex items-center justify-between">
                 <h3 class="text-xs font-extrabold uppercase tracking-wider text-gray-500 dark:text-gray-400">Rekening & Dompet</h3>
@@ -1514,20 +1554,45 @@
               ${(appState.accounts || []).map(acc => {
                 const isRevealed = devicePrefs.revealedAccountIds.includes(acc.id);
                 const hasNum = !!(acc.accountNumber && acc.accountNumber.trim());
+                const isCC = isCreditCardType(acc.type);
+                const cc = isCC ? getCreditCardMetrics(acc) : null;
                 return `
-                  <div class="flex items-center justify-between p-2.5 rounded-2xl bg-cream/80 dark:bg-black/25 gap-2">
-                    <div class="min-w-0">
-                      <p class="text-xs font-bold truncate">${escapeHtml(acc.name)}</p>
-                      <div class="flex items-center gap-1.5 mt-0.5">
-                        <span class="text-[10px] font-mono text-gray-500">${escapeHtml(formatAccountNumberDisplay(acc))}</span>
-                        ${hasNum ? `
-                          <button type="button" onclick="toggleAccountNumberVisibility('${acc.id}')" class="text-gray-400 hover:text-forest">
-                            <i data-lucide="${isRevealed ? 'eye-off' : 'eye'}" class="w-3 h-3"></i>
-                          </button>
-                        ` : ''}
+                  <div class="p-2.5 rounded-2xl bg-cream/80 dark:bg-black/25 space-y-1.5">
+                    <div class="flex items-center justify-between gap-2">
+                      <div class="min-w-0">
+                        <div class="flex items-center gap-1.5">
+                          <p class="text-xs font-bold truncate">${escapeHtml(acc.name)}</p>
+                          ${isCC ? `<span class="px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 text-[9px] font-bold shrink-0">Kredit/PayLater</span>` : ''}
+                        </div>
+                        <div class="flex items-center gap-1.5 mt-0.5">
+                          <span class="text-[10px] font-mono text-gray-500">${escapeHtml(formatAccountNumberDisplay(acc))}</span>
+                          ${hasNum ? `
+                            <button type="button" onclick="toggleAccountNumberVisibility('${acc.id}')" class="text-gray-400 hover:text-forest">
+                              <i data-lucide="${isRevealed ? 'eye-off' : 'eye'}" class="w-3 h-3"></i>
+                            </button>
+                          ` : ''}
+                        </div>
+                      </div>
+                      <div class="text-right shrink-0">
+                        ${isCC ? `
+                          <p class="text-[9px] text-gray-400 uppercase font-bold">Tagihan Terpakai</p>
+                          <span class="text-xs font-extrabold text-rose-600 dark:text-rose-400 tabular-nums">${formatRupiah(cc.used)}</span>
+                        ` : `
+                          <span class="text-xs font-extrabold text-forest dark:text-emerald-400 tabular-nums">${formatRupiah(acc.balance)}</span>
+                        `}
                       </div>
                     </div>
-                    <span class="text-xs font-extrabold text-forest dark:text-emerald-400 shrink-0 tabular-nums">${formatRupiah(acc.balance)}</span>
+                    ${isCC ? `
+                      <div class="pt-1 border-t border-gray-200/60 dark:border-gray-800 space-y-1">
+                        <div class="flex items-center justify-between text-[10px]">
+                          <span class="text-gray-500">Sisa Limit: <strong class="text-forest dark:text-emerald-400 tabular-nums">${formatRupiah(cc.available)}</strong></span>
+                          <span class="text-gray-400">Tgl ${acc.billingDueDay || 25}</span>
+                        </div>
+                        <div class="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                          <div class="h-full ${cc.pct > 85 ? 'bg-rose-500' : cc.pct >= 60 ? 'bg-amber-500' : 'bg-emerald-600'}" style="width:${cc.pct}%"></div>
+                        </div>
+                      </div>
+                    ` : ''}
                   </div>
                 `;
               }).join('')}
@@ -1748,18 +1813,152 @@
     }
 
     /* =========================================================================
-       9. VIEW 2: KEUANGAN (WALLET & OWNER FILTERS, TRANSAKSI, TAGIHAN, TERJADWAL, REKENING)
+       9. VIEW 2: KEUANGAN (UNIFIED WALLET & POS FILTER ENGINE + ALL SECTIONS)
        ========================================================================= */
+    function getAccountOwnerId(accId) {
+      const acc = (appState.accounts || []).find(a => a.id === accId);
+      if (!acc) return 'shared';
+      return acc.ownerId || 'shared';
+    }
+
+    function getFilteredFinanceContext() {
+      const allAccounts = appState.accounts || [];
+      const allTransactions = appState.transactions || [];
+      const allBills = appState.bills || [];
+      const allScheduled = appState.scheduledTransactions || [];
+      const currentMonth = new Date().toISOString().slice(0, 7);
+
+      // 1. Filter Rekening / Wallet berdasarkan pilihan Wallet & Pos Pemilik
+      const matchingAccounts = allAccounts.filter(acc => {
+        if (keuanganWalletFilter !== 'all' && acc.id !== keuanganWalletFilter) return false;
+        const owner = acc.ownerId || 'shared';
+        if (keuanganOwnerFilter !== 'all' && owner !== keuanganOwnerFilter) return false;
+        return true;
+      });
+      const matchingAccountIds = new Set(matchingAccounts.map(a => a.id));
+
+      // Helper pencocokan transaksi terhadap Wallet & Pos Pemilik
+      const selectedUserObj = (appState.users || []).find(u => u.id === keuanganOwnerFilter);
+      const selectedUserNameLower = selectedUserObj ? selectedUserObj.name.trim().toLowerCase() : '';
+
+      const matchesTxWalletAndPos = (tx) => {
+        // Filter Wallet
+        if (keuanganWalletFilter !== 'all') {
+          if (tx.accountId !== keuanganWalletFilter && tx.toAccountId !== keuanganWalletFilter) return false;
+        }
+        // Filter Pos Pemilik
+        if (keuanganOwnerFilter !== 'all') {
+          const srcOwner = getAccountOwnerId(tx.accountId);
+          const dstOwner = tx.toAccountId ? getAccountOwnerId(tx.toAccountId) : null;
+          const txExplicitOwner = tx.ownerId || tx.userId || '';
+          const txCreatorLower = (tx.createdBy || '').trim().toLowerCase();
+
+          const matchByAccountOwner = (srcOwner === keuanganOwnerFilter) || (dstOwner === keuanganOwnerFilter);
+          const matchByTxOwner = (txExplicitOwner === keuanganOwnerFilter);
+          const matchByCreatorName = (selectedUserNameLower && txCreatorLower === selectedUserNameLower);
+
+          if (!matchByAccountOwner && !matchByTxOwner && !matchByCreatorName) return false;
+        }
+        return true;
+      };
+
+      // 2. Transaksi sesuai Wallet & Pos (semua bulan)
+      const matchingAllTimeTransactions = allTransactions.filter(matchesTxWalletAndPos);
+
+      // 3. Transaksi Bulan Ini (untuk ringkasan pemasukan, pengeluaran & progres anggaran)
+      const matchingMonthTransactions = matchingAllTimeTransactions.filter(tx => (tx.date || '').startsWith(currentMonth));
+
+      // 4. Transaksi untuk daftar riwayat (memperhatikan filter bulan & jenis)
+      const matchingHistoryTransactions = matchingAllTimeTransactions
+        .filter(tx => {
+          if (keuanganMonthFilter === 'current' && !(tx.date || '').startsWith(currentMonth)) return false;
+          if (keuanganTypeFilter !== 'all' && tx.type !== keuanganTypeFilter) return false;
+          return true;
+        })
+        .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+
+      // 5. Tagihan & Transaksi Terjadwal sesuai Wallet & Pos
+      const matchingBills = allBills.filter(b => {
+        if (keuanganWalletFilter !== 'all' && b.accountId !== keuanganWalletFilter) return false;
+        if (keuanganOwnerFilter !== 'all' && getAccountOwnerId(b.accountId) !== keuanganOwnerFilter) return false;
+        return true;
+      }).sort((a, b) => (a.dueDate || '').localeCompare(b.dueDate || ''));
+
+      const matchingScheduled = allScheduled.filter(s => {
+        if (keuanganWalletFilter !== 'all' && s.accountId !== keuanganWalletFilter) return false;
+        if (keuanganOwnerFilter !== 'all' && getAccountOwnerId(s.accountId) !== keuanganOwnerFilter) return false;
+        return true;
+      }).sort((a, b) => (a.nextDate || '').localeCompare(b.nextDate || ''));
+
+      // 6. Hitung Agregat Saldo (Tunai/Bank/E-Wallet), Utang Kartu Kredit, Pemasukan, Pengeluaran
+      const filteredCashAccounts = matchingAccounts.filter(a => !isCreditCardType(a.type));
+      const filteredCreditCards = matchingAccounts.filter(a => isCreditCardType(a.type));
+      const filteredBalance = filteredCashAccounts.reduce((sum, a) => sum + (Number(a.balance) || 0), 0);
+      const filteredCardDebt = filteredCreditCards.reduce((sum, a) => sum + Math.max(0, Number(a.balance) || 0), 0);
+      const filteredCardAvailable = filteredCreditCards.reduce((sum, a) => sum + getCreditCardMetrics(a).available, 0);
+      const filteredMonthIncome = matchingMonthTransactions
+        .filter(t => t.type === 'income')
+        .reduce((s, t) => s + (Number(t.amount) || 0), 0);
+      const filteredMonthExpense = matchingMonthTransactions
+        .filter(t => t.type === 'expense')
+        .reduce((s, t) => s + (Number(t.amount) || 0), 0);
+
+      // Label indikator filter aktif
+      const activeWalletObj = allAccounts.find(a => a.id === keuanganWalletFilter);
+      const walletLabel = keuanganWalletFilter === 'all'
+        ? 'Semua Wallet'
+        : (activeWalletObj ? activeWalletObj.name : 'Wallet Terpilih');
+
+      const posLabel = keuanganOwnerFilter === 'all'
+        ? 'Semua Pos'
+        : keuanganOwnerFilter === 'shared'
+          ? 'Pos Bersama'
+          : (selectedUserObj ? `Pos ${selectedUserObj.name}` : 'Pos Terpilih');
+
+      const isAnyFilterActive = keuanganWalletFilter !== 'all' || keuanganOwnerFilter !== 'all' || keuanganTypeFilter !== 'all' || keuanganMonthFilter !== 'all';
+
+      return {
+        currentMonth,
+        matchingAccounts,
+        matchingAccountIds,
+        matchingAllTimeTransactions,
+        matchingMonthTransactions,
+        matchingHistoryTransactions,
+        matchingBills,
+        matchingScheduled,
+        filteredBalance,
+        filteredCardDebt,
+        filteredCardAvailable,
+        hasFilteredCreditCards: filteredCreditCards.length > 0,
+        filteredMonthIncome,
+        filteredMonthExpense,
+        walletLabel,
+        posLabel,
+        isAnyFilterActive
+      };
+    }
+
+    function resetKeuanganFilters() {
+      keuanganWalletFilter = 'all';
+      keuanganOwnerFilter = 'all';
+      keuanganTypeFilter = 'all';
+      keuanganMonthFilter = 'all';
+      renderApp();
+    }
+
     function renderKeuanganView() {
-      const totalBalance = (appState.accounts || []).reduce((sum, a) => sum + (Number(a.balance) || 0), 0);
+      const ctx = getFilteredFinanceContext();
+      const hasSharedAccounts = (appState.accounts || []).some(a => (a.ownerId || 'shared') === 'shared');
 
       return `
         <div class="space-y-4 animate-in">
           <div class="card-surface rounded-3xl p-4 space-y-3">
             <div class="flex flex-wrap items-center justify-between gap-2">
               <div>
-                <p class="text-[11px] font-semibold text-gray-500 dark:text-gray-400">Total Saldo Semua Rekening</p>
-                <p class="text-xl lg:text-2xl font-extrabold text-forest dark:text-emerald-400 mt-0.5 tabular-nums">${formatRupiah(totalBalance)}</p>
+                <p class="text-[11px] font-semibold text-gray-500 dark:text-gray-400">
+                  Saldo Aktif (${escapeHtml(ctx.posLabel)} • ${escapeHtml(ctx.walletLabel)})
+                </p>
+                <p class="text-xl lg:text-2xl font-extrabold text-forest dark:text-emerald-400 mt-0.5 tabular-nums">${formatRupiah(ctx.filteredBalance)}</p>
               </div>
               <div class="flex items-center gap-2">
                 <button type="button" onclick="toggleGlobalBalancePrivacy()" class="p-2.5 rounded-2xl bg-cream dark:bg-black/30 text-gray-600 dark:text-gray-300" title="Sembunyikan Saldo">
@@ -1779,127 +1978,94 @@
               </div>
             </div>
 
-            <!-- Horizontal Filter Pills (Wallet & Owner) -->
-            <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-1">
-              <button type="button" onclick="keuanganWalletFilter='all'; renderApp()"
-                class="px-3 py-1.5 rounded-full text-[11px] font-bold shrink-0 transition ${keuanganWalletFilter === 'all' ? 'bg-forest text-white' : 'bg-cream dark:bg-black/30 text-gray-600 dark:text-gray-300'}">
-                Semua Wallet
-              </button>
-              ${(appState.accounts || []).map(a => `
-                <button type="button" onclick="keuanganWalletFilter='${a.id}'; renderApp()"
-                  class="px-3 py-1.5 rounded-full text-[11px] font-bold shrink-0 transition ${keuanganWalletFilter === a.id ? 'bg-forest text-white' : 'bg-cream dark:bg-black/30 text-gray-600 dark:text-gray-300'}">
-                  ${escapeHtml(a.name)}
-                </button>
-              `).join('')}
+            <!-- Ringkasan Pemasukan & Pengeluaran Bulan Ini Sesuai Filter -->
+            <div class="grid grid-cols-2 ${ctx.hasFilteredCreditCards ? 'sm:grid-cols-3' : ''} gap-2.5 pt-1">
+              <div class="p-2.5 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 flex items-center justify-between">
+                <span class="text-[11px] font-semibold text-emerald-800 dark:text-emerald-300">Masuk Bulan Ini</span>
+                <span class="text-xs font-extrabold text-emerald-600 tabular-nums">+${formatRupiah(ctx.filteredMonthIncome)}</span>
+              </div>
+              <div class="p-2.5 rounded-2xl bg-red-50/70 dark:bg-red-950/30 flex items-center justify-between">
+                <span class="text-[11px] font-semibold text-red-800 dark:text-red-300">Keluar Bulan Ini</span>
+                <span class="text-xs font-extrabold text-red-500 tabular-nums">-${formatRupiah(ctx.filteredMonthExpense)}</span>
+              </div>
+              ${ctx.hasFilteredCreditCards ? `
+                <div class="col-span-2 sm:col-span-1 p-2.5 rounded-2xl bg-amber-50/80 dark:bg-amber-950/30 flex items-center justify-between">
+                  <span class="text-[11px] font-semibold text-amber-800 dark:text-amber-300">Tagihan Kredit/PayLater</span>
+                  <span class="text-xs font-extrabold text-rose-600 dark:text-rose-400 tabular-nums">${formatRupiah(ctx.filteredCardDebt)}</span>
+                </div>
+              ` : ''}
             </div>
 
-            <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-              <button type="button" onclick="keuanganOwnerFilter='all'; renderApp()"
-                class="px-3 py-1 rounded-full text-[10px] font-bold shrink-0 transition ${keuanganOwnerFilter === 'all' ? 'bg-gold text-gray-900' : 'bg-sand dark:bg-black/20 text-gray-500'}">
-                Semua Pos
-              </button>
-              ${(appState.users || []).map(u => `
-                <button type="button" onclick="keuanganOwnerFilter='${u.id}'; renderApp()"
-                  class="px-3 py-1 rounded-full text-[10px] font-bold shrink-0 transition ${keuanganOwnerFilter === u.id ? 'bg-gold text-gray-900' : 'bg-sand dark:bg-black/20 text-gray-500'}">
-                  Pos ${escapeHtml(u.name)}
-                </button>
-              `).join('')}
+            <!-- Filter Wallet & Pos Pemilik -->
+            <div class="grid grid-cols-2 gap-2 pt-1">
+              <select onchange="keuanganWalletFilter=this.value; renderApp()" class="px-3 py-2 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700 text-xs font-bold">
+                <option value="all" ${keuanganWalletFilter === 'all' ? 'selected' : ''}>Semua Wallet</option>
+                ${(appState.accounts || []).map(a => `<option value="${a.id}" ${keuanganWalletFilter === a.id ? 'selected' : ''}>${escapeHtml(a.name)}</option>`).join('')}
+              </select>
+              <select onchange="keuanganOwnerFilter=this.value; renderApp()" class="px-3 py-2 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700 text-xs font-bold">
+                <option value="all" ${keuanganOwnerFilter === 'all' ? 'selected' : ''}>Semua Pos</option>
+                ${(appState.users || []).map(u => `<option value="${u.id}" ${keuanganOwnerFilter === u.id ? 'selected' : ''}>Pos ${escapeHtml(u.name)}</option>`).join('')}
+                ${hasSharedAccounts ? `<option value="shared" ${keuanganOwnerFilter === 'shared' ? 'selected' : ''}>Pos Bersama</option>` : ''}
+              </select>
             </div>
           </div>
 
-          <!-- Mobile Sub-Tabs (<768px) -->
-          <div class="md:hidden grid grid-cols-4 gap-1.5 p-1 bg-sand dark:bg-black/30 rounded-2xl">
-            ${[
-              { id: 'transaksi', label: 'Transaksi' },
-              { id: 'tagihan', label: 'Tagihan' },
-              { id: 'terjadwal', label: 'Terjadwal' },
-              { id: 'rekening', label: 'Rekening' }
-            ].map(tab => `
-              <button type="button" onclick="keuanganSubTab='${tab.id}'; renderApp()"
-                class="py-2 text-[11px] font-bold rounded-xl transition ${keuanganSubTab === tab.id ? 'bg-forest text-white shadow-sm' : 'text-gray-600 dark:text-gray-300'}">
-                ${tab.label}
-              </button>
-            `).join('')}
+          <!-- Sub-Tab Keuangan -->
+          <div class="grid grid-cols-4 gap-1.5 p-1 bg-sand dark:bg-black/30 rounded-2xl">
+            <button type="button" onclick="keuanganSubTab='transaksi'; renderApp()"
+              class="py-2 text-[11px] font-bold rounded-xl transition ${keuanganSubTab === 'transaksi' ? 'bg-forest text-white shadow-sm' : 'text-gray-600 dark:text-gray-300'}">
+              Riwayat
+            </button>
+            <button type="button" onclick="keuanganSubTab='tagihan'; renderApp()"
+              class="py-2 text-[11px] font-bold rounded-xl transition ${keuanganSubTab === 'tagihan' ? 'bg-forest text-white shadow-sm' : 'text-gray-600 dark:text-gray-300'}">
+              Tagihan
+            </button>
+            <button type="button" onclick="keuanganSubTab='terjadwal'; renderApp()"
+              class="py-2 text-[11px] font-bold rounded-xl transition ${keuanganSubTab === 'terjadwal' ? 'bg-forest text-white shadow-sm' : 'text-gray-600 dark:text-gray-300'}">
+              Terjadwal
+            </button>
+            <button type="button" onclick="keuanganSubTab='rekening'; renderApp()"
+              class="py-2 text-[11px] font-bold rounded-xl transition ${keuanganSubTab === 'rekening' ? 'bg-forest text-white shadow-sm' : 'text-gray-600 dark:text-gray-300'}">
+              Rekening
+            </button>
           </div>
 
-          <!-- Mobile Single-Column View -->
-          <div class="md:hidden">
-            ${keuanganSubTab === 'transaksi' ? renderKeuanganTransaksiTab() : ''}
-            ${keuanganSubTab === 'tagihan' ? renderKeuanganTagihanTab() : ''}
-            ${keuanganSubTab === 'terjadwal' ? renderKeuanganTerjadwalTab() : ''}
-            ${keuanganSubTab === 'rekening' ? renderAccountsSection() : ''}
-          </div>
-
-          <!-- Tablet & Desktop PC 2-Column Master-Detail Split (>=768px) -->
-          <div class="hidden md:grid md:grid-cols-12 gap-5 items-start">
-            <div class="md:col-span-7 space-y-4">
-              ${renderKeuanganTransaksiTab()}
-              ${renderAccountsSection()}
-            </div>
-            <div class="md:col-span-5 space-y-4">
-              ${renderKeuanganTagihanTab()}
-              ${renderKeuanganTerjadwalTab()}
-            </div>
-          </div>
+          ${keuanganSubTab === 'transaksi' ? renderKeuanganTransaksiTab(ctx) : ''}
+          ${keuanganSubTab === 'tagihan' ? renderKeuanganTagihanTab(ctx) : ''}
+          ${keuanganSubTab === 'terjadwal' ? renderKeuanganTerjadwalTab(ctx) : ''}
+          ${keuanganSubTab === 'rekening' ? renderAccountsSection(ctx) : ''}
         </div>
       `;
     }
 
-    function renderKeuanganTransaksiTab() {
-      const list = [...(appState.transactions || [])]
-        .filter(tx => {
-          if (keuanganWalletFilter !== 'all' && tx.accountId !== keuanganWalletFilter && tx.toAccountId !== keuanganWalletFilter) return false;
-          if (keuanganOwnerFilter !== 'all' && tx.userId !== keuanganOwnerFilter) return false;
-          if (keuanganTypeFilter !== 'all' && tx.type !== keuanganTypeFilter) return false;
-          return true;
-        })
-        .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
-
-      const currentMonth = new Date().toISOString().slice(0, 7);
-      const budgetCats = (appState.categories || []).filter(c => c.type === 'expense' && Number(c.budget) > 0);
-
+    function renderKeuanganTransaksiTab(ctx = getFilteredFinanceContext()) {
+      const list = ctx.matchingHistoryTransactions;
       return `
         <div class="card-surface rounded-3xl p-4 space-y-3">
-          ${budgetCats.length > 0 ? `
-            <div class="pb-3 border-b border-gray-100 dark:border-gray-800 space-y-2">
-              <p class="text-[10px] font-extrabold uppercase tracking-wider text-gray-400">Anggaran Kategori Bulan Ini</p>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                ${budgetCats.map(cat => {
-                  const spent = (appState.transactions || [])
-                    .filter(t => t.type === 'expense' && t.categoryId === cat.id && (t.date || '').startsWith(currentMonth))
-                    .reduce((s, t) => s + (Number(t.amount) || 0), 0);
-                  const pct = Math.min(100, Math.round((spent / Number(cat.budget)) * 100));
-                  return `
-                    <div class="p-2.5 rounded-2xl bg-cream/70 dark:bg-black/25">
-                      <div class="flex justify-between text-[11px] font-bold mb-1">
-                        <span class="truncate">${escapeHtml(cat.name)}</span>
-                        <span class="${pct >= 90 ? 'text-red-600' : 'text-forest dark:text-emerald-400'}">${pct}%</span>
-                      </div>
-                      <div class="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                        <div class="h-full ${pct >= 90 ? 'bg-red-500' : 'bg-forest'}" style="width:${pct}%"></div>
-                      </div>
-                      <p class="text-[10px] text-gray-400 mt-1 tabular-nums">${formatRupiah(spent)} / ${formatRupiah(cat.budget)}</p>
-                    </div>
-                  `;
-                }).join('')}
-              </div>
-            </div>
-          ` : ''}
-
           <div class="flex flex-wrap items-center justify-between gap-2">
             <h3 class="text-xs font-extrabold uppercase tracking-wider text-gray-500">Riwayat Transaksi (${list.length})</h3>
             <div class="flex items-center gap-1.5">
-              ${['all', 'expense', 'income'].map(tp => `
-                <button type="button" onclick="keuanganTypeFilter='${tp}'; renderApp()"
-                  class="px-2.5 py-1 rounded-lg text-[10px] font-bold ${keuanganTypeFilter === tp ? 'bg-forest text-white' : 'bg-cream dark:bg-black/30 text-gray-500'}">
-                  ${tp === 'all' ? 'Semua' : tp === 'expense' ? 'Keluar' : 'Masuk'}
-                </button>
-              `).join('')}
-              <button type="button" onclick="openTransactionModal()" class="ml-1 text-xs font-bold text-forest dark:text-emerald-400">+ Tambah</button>
+              <select onchange="keuanganMonthFilter=this.value; renderApp()" class="px-2.5 py-1.5 rounded-xl bg-cream dark:bg-black/30 text-[11px] font-bold">
+                <option value="all" ${keuanganMonthFilter === 'all' ? 'selected' : ''}>Semua Waktu</option>
+                <option value="current" ${keuanganMonthFilter === 'current' ? 'selected' : ''}>Bulan Ini</option>
+              </select>
+              <select onchange="keuanganTypeFilter=this.value; renderApp()" class="px-2.5 py-1.5 rounded-xl bg-cream dark:bg-black/30 text-[11px] font-bold">
+                <option value="all" ${keuanganTypeFilter === 'all' ? 'selected' : ''}>Semua Jenis</option>
+                <option value="expense" ${keuanganTypeFilter === 'expense' ? 'selected' : ''}>Pengeluaran</option>
+                <option value="income" ${keuanganTypeFilter === 'income' ? 'selected' : ''}>Pemasukan</option>
+                <option value="transfer" ${keuanganTypeFilter === 'transfer' ? 'selected' : ''}>Transfer</option>
+              </select>
             </div>
           </div>
 
-          ${list.length === 0 ? `<p class="text-xs text-gray-400 py-4 text-center">Belum ada transaksi sesuai filter ini.</p>` : `
+          ${list.length === 0 ? `
+            <div class="text-center py-6 text-xs text-gray-400 space-y-2">
+              <p>Belum ada transaksi yang sesuai dengan filter.</p>
+              ${ctx.isAnyFilterActive ? `
+                <button type="button" onclick="resetKeuanganFilters()" class="px-3 py-1.5 rounded-xl bg-forest text-white text-xs font-bold">Reset Filter</button>
+              ` : ''}
+            </div>
+          ` : `
             <div class="space-y-2.5">
               ${list.map(tx => {
                 const cat = (appState.categories || []).find(c => c.id === tx.categoryId);
@@ -1935,12 +2101,12 @@
       `;
     }
 
-    function renderKeuanganTagihanTab() {
-      const bills = [...(appState.bills || [])].sort((a, b) => (a.dueDate || '').localeCompare(b.dueDate || ''));
+    function renderKeuanganTagihanTab(ctx = getFilteredFinanceContext()) {
+      const bills = ctx.matchingBills;
       return `
         <div class="space-y-3">
           <div class="flex items-center justify-between">
-            <h3 class="text-xs font-extrabold uppercase tracking-wider text-gray-500">Tagihan & Rutinitas</h3>
+            <h3 class="text-xs font-extrabold uppercase tracking-wider text-gray-500">Tagihan & Rutinitas (${bills.length})</h3>
             <button type="button" onclick="openBillModal()" class="px-3 py-1.5 rounded-xl bg-forest text-white text-xs font-bold flex items-center gap-1">
               <i data-lucide="plus" class="w-3.5 h-3.5"></i> Tagihan Baru
             </button>
@@ -1948,7 +2114,7 @@
 
           ${bills.length === 0 ? `
             <div class="card-surface rounded-3xl p-6 text-center text-xs text-gray-400">
-              Belum ada tagihan terdaftar. Klik "+ Tagihan Baru" untuk membuat tagihan bulanan/rutin.
+              Tidak ada tagihan pada filter <strong>${escapeHtml(ctx.posLabel)}</strong> &bull; <strong>${escapeHtml(ctx.walletLabel)}</strong>.
             </div>
           ` : bills.map(b => {
             const acc = (appState.accounts || []).find(a => a.id === b.accountId);
@@ -2016,8 +2182,8 @@
       `;
     }
 
-    function renderKeuanganTerjadwalTab() {
-      const list = appState.scheduledTransactions || [];
+    function renderKeuanganTerjadwalTab(ctx = getFilteredFinanceContext()) {
+      const list = ctx.matchingScheduled;
       return `
         <div class="space-y-3">
           <div class="flex items-center justify-between">
@@ -2028,7 +2194,7 @@
           </div>
           ${list.length === 0 ? `
             <div class="card-surface rounded-3xl p-6 text-center text-xs text-gray-400">
-              Belum ada transaksi terjadwal. Anda juga dapat menghubungkan tagihan rutin ke jadwal otomatis.
+              Tidak ada transaksi terjadwal pada filter <strong>${escapeHtml(ctx.posLabel)}</strong> &bull; <strong>${escapeHtml(ctx.walletLabel)}</strong>.
             </div>
           ` : list.map(s => {
             const acc = (appState.accounts || []).find(a => a.id === s.accountId);
@@ -2058,8 +2224,8 @@
       `;
     }
 
-    function renderAccountsSection() {
-      const accounts = appState.accounts || [];
+    function renderAccountsSection(ctx = null) {
+      const accounts = (ctx && currentRoute === 'keuangan') ? ctx.matchingAccounts : (appState.accounts || []);
       return `
         <div class="space-y-3">
           <div class="flex items-center justify-between">
@@ -2069,26 +2235,47 @@
             </button>
           </div>
 
-          ${accounts.map(acc => {
+          ${accounts.length === 0 ? `
+            <div class="card-surface rounded-3xl p-6 text-center text-xs text-gray-400 space-y-2">
+              <p>Tidak ada rekening/wallet yang sesuai dengan filter saat ini.</p>
+              ${ctx && ctx.isAnyFilterActive ? `
+                <button type="button" onclick="resetKeuanganFilters()" class="px-3.5 py-1.5 rounded-xl bg-forest text-white text-xs font-bold">
+                  Reset Filter
+                </button>
+              ` : ''}
+            </div>
+          ` : accounts.map(acc => {
             const owner = (appState.users || []).find(u => u.id === acc.ownerId);
             const hasNum = !!(acc.accountNumber && acc.accountNumber.trim());
             const isRevealed = devicePrefs.revealedAccountIds.includes(acc.id);
+            const isCC = isCreditCardType(acc.type);
+            const cc = isCC ? getCreditCardMetrics(acc) : null;
+            const barColor = cc ? (cc.pct > 85 ? 'bg-rose-500' : cc.pct >= 60 ? 'bg-amber-500' : 'bg-emerald-600') : '';
+            const iconName = isCC ? 'credit-card' : acc.type === 'Tunai' ? 'banknote' : acc.type === 'E-Wallet' ? 'smartphone' : 'landmark';
+
             return `
-              <div class="card-surface rounded-3xl p-4 space-y-2.5">
+              <div class="card-surface rounded-3xl p-4 space-y-2.5 ${isCC ? 'border-amber-300/60 dark:border-amber-800/50' : ''}">
                 <div class="flex items-start justify-between gap-2">
                   <div class="flex items-center gap-3 min-w-0">
-                    <div class="w-10 h-10 rounded-2xl bg-forest-soft dark:bg-emerald-950/60 text-forest dark:text-emerald-400 flex items-center justify-center shrink-0">
-                      <i data-lucide="${acc.type === 'Tunai' ? 'banknote' : acc.type === 'E-Wallet' ? 'smartphone' : 'landmark'}" class="w-5 h-5"></i>
+                    <div class="w-10 h-10 rounded-2xl ${isCC ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300' : 'bg-forest-soft dark:bg-emerald-950/60 text-forest dark:text-emerald-400'} flex items-center justify-center shrink-0">
+                      <i data-lucide="${iconName}" class="w-5 h-5"></i>
                     </div>
                     <div class="min-w-0">
-                      <div class="flex items-center gap-1.5">
+                      <div class="flex flex-wrap items-center gap-1.5">
                         <h4 class="text-sm font-extrabold truncate">${escapeHtml(acc.name)}</h4>
-                        <span class="px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-[10px] font-semibold text-gray-500">${escapeHtml(acc.type)}</span>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${isCC ? 'bg-gold-soft text-amber-900 dark:bg-amber-950 dark:text-amber-300' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'}">
+                          ${escapeHtml(acc.type)}
+                        </span>
+                        ${isCC ? `
+                          <span class="px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 text-[10px] font-bold">
+                            Jatuh Tempo Tgl ${acc.billingDueDay || 25}
+                          </span>
+                        ` : ''}
                       </div>
-                      <p class="text-[11px] text-gray-500">Pemegang: ${owner ? escapeHtml(owner.name) : 'Keluarga'}</p>
+                      <p class="text-[11px] text-gray-500 mt-0.5">Pos Pemilik: ${owner ? escapeHtml(owner.name) : 'Bersama'}</p>
                     </div>
                   </div>
-                  <div class="flex items-center gap-1">
+                  <div class="flex items-center gap-1 shrink-0">
                     <button type="button" onclick="openAccountModal('${acc.id}')" class="p-1.5 rounded-xl bg-cream dark:bg-black/30 text-gray-500 hover:text-forest" title="Edit Rekening">
                       <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
                     </button>
@@ -2101,7 +2288,7 @@
                 <!-- Masked / Unmasked Account Number Bar -->
                 <div class="flex items-center justify-between px-3 py-2 rounded-2xl bg-cream dark:bg-black/30 border border-gray-100 dark:border-gray-800">
                   <div class="flex items-center gap-2 min-w-0">
-                    <span class="text-[10px] font-semibold text-gray-400 uppercase">No. Rek:</span>
+                    <span class="text-[10px] font-semibold text-gray-400 uppercase">${isCC ? 'No. Kartu:' : 'No. Rek:'}</span>
                     <span class="text-xs font-mono font-bold tracking-wider text-gray-800 dark:text-gray-200 truncate">
                       ${escapeHtml(formatAccountNumberDisplay(acc))}
                     </span>
@@ -2109,12 +2296,12 @@
                   ${hasNum ? `
                     <div class="flex items-center gap-1.5 shrink-0">
                       <button type="button" onclick="toggleAccountNumberVisibility('${acc.id}')"
-                        title="${isRevealed ? 'Sembunyikan Nomor Rekening' : 'Tampilkan Nomor Lengkap'}"
+                        title="${isRevealed ? 'Sembunyikan Nomor' : 'Tampilkan Nomor Lengkap'}"
                         class="p-1.5 rounded-lg bg-white dark:bg-[#1B201D] text-gray-600 dark:text-gray-300 shadow-2xs">
                         <i data-lucide="${isRevealed ? 'eye-off' : 'eye'}" class="w-3.5 h-3.5"></i>
                       </button>
-                      <button type="button" onclick="copyTextToClipboard('${escapeHtml(acc.accountNumber)}', 'Nomor rekening ${escapeHtml(acc.name)}')"
-                        title="Salin Nomor Rekening"
+                      <button type="button" onclick="copyTextToClipboard('${escapeHtml(acc.accountNumber)}', 'Nomor ${escapeHtml(acc.name)}')"
+                        title="Salin Nomor"
                         class="p-1.5 rounded-lg bg-white dark:bg-[#1B201D] text-forest dark:text-emerald-400 shadow-2xs">
                         <i data-lucide="copy" class="w-3.5 h-3.5"></i>
                       </button>
@@ -2122,10 +2309,47 @@
                   ` : ''}
                 </div>
 
-                <div class="flex items-center justify-between pt-1">
-                  <span class="text-[11px] text-gray-400">Saldo Tersedia</span>
-                  <span class="text-sm font-extrabold text-forest dark:text-emerald-400 tabular-nums">${formatRupiah(acc.balance)}</span>
-                </div>
+                ${isCC ? `
+                  <!-- Credit Card / PayLater Plafon & Utilization Panel -->
+                  <div class="p-3 rounded-2xl bg-amber-50/60 dark:bg-amber-950/25 border border-amber-200/70 dark:border-amber-800/40 space-y-2">
+                    <div class="flex items-center justify-between text-xs">
+                      <div>
+                        <span class="text-[10px] font-semibold text-gray-500 block">Tagihan Terpakai</span>
+                        <span class="text-sm font-extrabold text-rose-600 dark:text-rose-400 tabular-nums">${formatRupiah(cc.used)}</span>
+                      </div>
+                      <div class="text-right">
+                        <span class="text-[10px] font-semibold text-gray-500 block">Sisa Limit Tersedia</span>
+                        <span class="text-sm font-extrabold text-forest dark:text-emerald-400 tabular-nums">${formatRupiah(cc.available)}</span>
+                      </div>
+                    </div>
+
+                    <div class="space-y-1">
+                      <div class="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                        <div class="h-full ${barColor} transition-all" style="width:${cc.pct}%"></div>
+                      </div>
+                      <div class="flex items-center justify-between text-[10px] text-gray-500">
+                        <span>Terpakai ${cc.pct}%</span>
+                        <span>Plafon: <strong class="tabular-nums">${formatRupiah(cc.limit)}</strong></span>
+                      </div>
+                    </div>
+
+                    <div class="pt-1 flex items-center justify-between gap-2">
+                      <span class="text-[10px] text-gray-500">
+                        ${acc.syncBill ? 'Terhubung ke Tagihan Rutin' : 'Tagihan manual'}
+                      </span>
+                      <button type="button" onclick="openPayCreditCardModal('${acc.id}')"
+                        class="px-3.5 py-1.5 rounded-xl bg-forest hover:bg-forest-light text-white text-[11px] font-bold shadow-xs flex items-center gap-1.5">
+                        <i data-lucide="wallet-cards" class="w-3.5 h-3.5 text-gold-light"></i>
+                        <span>Bayar Tagihan Kartu</span>
+                      </button>
+                    </div>
+                  </div>
+                ` : `
+                  <div class="flex items-center justify-between pt-1">
+                    <span class="text-[11px] text-gray-400">Saldo Tersedia</span>
+                    <span class="text-sm font-extrabold text-forest dark:text-emerald-400 tabular-nums">${formatRupiah(acc.balance)}</span>
+                  </div>
+                `}
               </div>
             `;
           }).join('')}
@@ -2834,6 +3058,12 @@
     function openTransactionModal(defaultType = 'expense') {
       const today = new Date().toISOString().split('T')[0];
       const filteredCats = appState.categories.filter(c => c.type === defaultType);
+      const preferredAcc = (keuanganWalletFilter !== 'all'
+        ? appState.accounts.find(a => a.id === keuanganWalletFilter)
+        : (keuanganOwnerFilter !== 'all'
+          ? appState.accounts.find(a => (a.ownerId || 'shared') === keuanganOwnerFilter)
+          : null)) || appState.accounts[0];
+
       openModal("Catat Transaksi", `
         <form onsubmit="saveTransaction(event)" class="space-y-3 text-xs">
           <div class="grid grid-cols-2 gap-2">
@@ -2859,7 +3089,7 @@
             <div>
               <label class="block font-semibold mb-1">Rekening</label>
               <select id="tx-account" class="w-full px-3 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700">
-                ${appState.accounts.map(a => `<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('')}
+                ${appState.accounts.map(a => `<option value="${a.id}" ${preferredAcc && preferredAcc.id === a.id ? 'selected' : ''}>${escapeHtml(a.name)}</option>`).join('')}
               </select>
             </div>
             <div>
@@ -2915,15 +3145,25 @@
       const date = document.getElementById('tx-date').value;
 
       if (!amount) return;
+      const activeUser = getActiveUser();
+      const accOwnerId = getAccountOwnerId(accountId);
       appState.transactions.unshift({
         id: 'tx_' + Date.now(),
         type, title, subClass, amount, accountId, categoryId, date,
-        userId: devicePrefs.activeUserId || 'u_admin'
+        ownerId: accOwnerId,
+        userId: devicePrefs.activeUserId || 'u_admin',
+        createdBy: activeUser ? activeUser.name : ''
       });
 
       const acc = appState.accounts.find(a => a.id === accountId);
       if (acc) {
-        acc.balance = (Number(acc.balance) || 0) + (type === 'income' ? amount : -amount);
+        if (isCreditCardType(acc.type)) {
+          // Untuk Kartu Kredit / PayLater: pengeluaran menambah tagihan terpakai, pemasukan/refund mengurangi tagihan terpakai
+          acc.balance = Math.max(0, (Number(acc.balance) || 0) + (type === 'expense' ? amount : -amount));
+          syncAllLinkedCreditCardBills();
+        } else {
+          acc.balance = (Number(acc.balance) || 0) + (type === 'income' ? amount : -amount);
+        }
       }
 
       persistHouseholdState();
@@ -2975,13 +3215,28 @@
       }
       const fromAcc = appState.accounts.find(a => a.id === fromId);
       const toAcc = appState.accounts.find(a => a.id === toId);
-      if (fromAcc) fromAcc.balance = (Number(fromAcc.balance) || 0) - amount;
-      if (toAcc) toAcc.balance = (Number(toAcc.balance) || 0) + amount;
+      if (fromAcc) {
+        if (isCreditCardType(fromAcc.type)) {
+          // Tarik tunai / transfer keluar dari Kartu Kredit menambah tagihan terpakai
+          fromAcc.balance = Math.max(0, (Number(fromAcc.balance) || 0) + amount);
+        } else {
+          fromAcc.balance = (Number(fromAcc.balance) || 0) - amount;
+        }
+      }
+      if (toAcc) {
+        if (isCreditCardType(toAcc.type)) {
+          // Transfer masuk ke Kartu Kredit / PayLater = Pembayaran Tagihan (mengurangi tagihan terpakai & memulihkan limit)
+          toAcc.balance = Math.max(0, (Number(toAcc.balance) || 0) - amount);
+        } else {
+          toAcc.balance = (Number(toAcc.balance) || 0) + amount;
+        }
+      }
+      syncAllLinkedCreditCardBills();
 
       appState.transactions.unshift({
         id: 'tx_' + Date.now(),
         type: 'transfer',
-        title: `Transfer: ${fromAcc ? fromAcc.name : ''} → ${toAcc ? toAcc.name : ''}`,
+        title: `${toAcc && isCreditCardType(toAcc.type) ? 'Bayar Tagihan Kartu' : 'Transfer'}: ${fromAcc ? fromAcc.name : ''} → ${toAcc ? toAcc.name : ''}`,
         amount,
         accountId: fromId,
         toAccountId: toId,
@@ -2992,7 +3247,7 @@
       persistHouseholdState();
       closeModal();
       renderApp();
-      showToast("Transfer antar rekening berhasil!");
+      showToast(toAcc && isCreditCardType(toAcc.type) ? "Tagihan kartu dibayar & limit dipulihkan!" : "Transfer antar rekening berhasil!");
     }
 
     function deleteTransaction(txId) {
@@ -3002,11 +3257,22 @@
       const acc = appState.accounts.find(a => a.id === tx.accountId);
       if (tx.type === 'transfer') {
         const toAcc = appState.accounts.find(a => a.id === tx.toAccountId);
-        if (acc) acc.balance = (Number(acc.balance) || 0) + Number(tx.amount);
-        if (toAcc) toAcc.balance = (Number(toAcc.balance) || 0) - Number(tx.amount);
+        if (acc) {
+          if (isCreditCardType(acc.type)) acc.balance = Math.max(0, (Number(acc.balance) || 0) - Number(tx.amount));
+          else acc.balance = (Number(acc.balance) || 0) + Number(tx.amount);
+        }
+        if (toAcc) {
+          if (isCreditCardType(toAcc.type)) toAcc.balance = Math.max(0, (Number(toAcc.balance) || 0) + Number(tx.amount));
+          else toAcc.balance = (Number(toAcc.balance) || 0) - Number(tx.amount);
+        }
       } else if (acc) {
-        acc.balance = (Number(acc.balance) || 0) - (tx.type === 'income' ? tx.amount : -tx.amount);
+        if (isCreditCardType(acc.type)) {
+          acc.balance = Math.max(0, (Number(acc.balance) || 0) - (tx.type === 'expense' ? Number(tx.amount) : -Number(tx.amount)));
+        } else {
+          acc.balance = (Number(acc.balance) || 0) - (tx.type === 'income' ? tx.amount : -tx.amount);
+        }
       }
+      syncAllLinkedCreditCardBills();
       appState.transactions.splice(idx, 1);
       persistHouseholdState();
       renderApp();
@@ -3167,6 +3433,16 @@
     function payBillNow(billId) {
       const bill = appState.bills.find(b => b.id === billId);
       if (!bill) return;
+
+      // Jika tagihan terhubung dengan Kartu Kredit / PayLater, arahkan ke modal pembayaran kartu agar memilih rekening sumber dana
+      if (bill.linkedAccountId) {
+        const linkedCard = appState.accounts.find(a => a.id === bill.linkedAccountId);
+        if (linkedCard && isCreditCardType(linkedCard.type)) {
+          openPayCreditCardModal(linkedCard.id, bill.id);
+          return;
+        }
+      }
+
       const today = new Date().toISOString().split('T')[0];
 
       appState.transactions.unshift({
@@ -3199,147 +3475,82 @@
       persistHouseholdState();
       renderApp();
     }
+    function toggleAccountModalCCFields() {
+      const typeSel = document.getElementById('acc-type');
+      const ccFields = document.getElementById('cc-dynamic-fields');
+      const balLabel = document.getElementById('acc-balance-label');
+      const numLabel = document.getElementById('acc-number-label');
+      if (!typeSel || !ccFields || !balLabel) return;
 
-    function deleteBill(billId) {
-      appState.bills = appState.bills.filter(b => b.id !== billId);
-      appState.scheduledTransactions = appState.scheduledTransactions.filter(s => s.linkedBillId !== billId);
-      persistHouseholdState();
-      renderApp();
-      showToast("Tagihan dihapus");
-    }
-
-    function openScheduledModal() {
-      const today = new Date().toISOString().split('T')[0];
-      openModal("Tambah Transaksi Terjadwal", `
-        <form onsubmit="saveScheduled(event)" class="space-y-3 text-xs">
-          <div>
-            <label class="block font-semibold mb-1">Judul Jadwal</label>
-            <input type="text" id="sch-title" required placeholder="Contoh: Tabungan Rutin Anak" class="w-full px-3.5 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700" />
-          </div>
-          <div class="grid grid-cols-2 gap-2.5">
-            <div>
-              <label class="block font-semibold mb-1">Jenis</label>
-              <select id="sch-type" class="w-full px-3 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700">
-                <option value="expense">Pengeluaran</option>
-                <option value="income">Pemasukan</option>
-              </select>
-            </div>
-            <div>
-              <label class="block font-semibold mb-1">Frekuensi</label>
-              <select id="sch-freq" class="w-full px-3 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700">
-                <option value="Bulanan">Bulanan</option>
-                <option value="Mingguan">Mingguan</option>
-                <option value="Tahunan">Tahunan</option>
-              </select>
-            </div>
-          </div>
-          <div>
-            <label class="block font-semibold mb-1">Nominal (Rp)</label>
-            <input type="text" inputmode="numeric" id="sch-amount" required oninput="handleCurrencyInput(this)" placeholder="500.000" class="w-full px-3.5 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700 font-bold" />
-          </div>
-          <div class="grid grid-cols-2 gap-2.5">
-            <div>
-              <label class="block font-semibold mb-1">Tanggal Mulai</label>
-              <input type="date" id="sch-date" value="${today}" required class="w-full px-3.5 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700" />
-            </div>
-            <div>
-              <label class="block font-semibold mb-1">Rekening</label>
-              <select id="sch-account" class="w-full px-3 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700">
-                ${appState.accounts.map(a => `<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('')}
-              </select>
-            </div>
-          </div>
-          <button type="submit" class="w-full py-3 rounded-2xl bg-forest text-white font-bold">Simpan Jadwal</button>
-        </form>
-      `);
-    }
-
-    function saveScheduled(e) {
-      e.preventDefault();
-      appState.scheduledTransactions.push({
-        id: 'sch_' + Date.now(),
-        title: document.getElementById('sch-title').value.trim(),
-        type: document.getElementById('sch-type').value,
-        frequency: document.getElementById('sch-freq').value,
-        amount: parseDots(document.getElementById('sch-amount').value),
-        nextDate: document.getElementById('sch-date').value,
-        accountId: document.getElementById('sch-account').value,
-        categoryId: appState.categories[0]?.id || '',
-        linkedBillId: '',
-        active: true
-      });
-      persistHouseholdState();
-      closeModal();
-      renderApp();
-      showToast("Transaksi terjadwal disimpan!");
-    }
-
-    function executeScheduledNow(schId) {
-      const sch = appState.scheduledTransactions.find(s => s.id === schId);
-      if (!sch) return;
-      if (sch.linkedBillId) {
-        payBillNow(sch.linkedBillId);
-        return;
-      }
-      const today = new Date().toISOString().split('T')[0];
-      appState.transactions.unshift({
-        id: 'tx_' + Date.now(),
-        type: sch.type,
-        title: sch.title,
-        amount: Number(sch.amount),
-        categoryId: sch.categoryId,
-        accountId: sch.accountId,
-        date: today,
-        userId: devicePrefs.activeUserId || 'u_admin'
-      });
-      const acc = appState.accounts.find(a => a.id === sch.accountId);
-      if (acc) {
-        acc.balance = (Number(acc.balance) || 0) + (sch.type === 'income' ? Number(sch.amount) : -Number(sch.amount));
-      }
-      sch.nextDate = addPeriodToDate(sch.nextDate, sch.frequency || 'Bulanan');
-      persistHouseholdState();
-      renderApp();
-      showToast("Transaksi terjadwal dijalankan!");
-    }
-
-    function deleteScheduled(schId) {
-      appState.scheduledTransactions = appState.scheduledTransactions.filter(s => s.id !== schId);
-      persistHouseholdState();
-      renderApp();
-      showToast("Jadwal dihapus");
+      const isCC = isCreditCardType(typeSel.value);
+      ccFields.classList.toggle('hidden', !isCC);
+      balLabel.textContent = isCC ? 'Tagihan Terpakai Saat Ini (Rp)' : 'Saldo Saat Ini (Rp)';
+      if (numLabel) numLabel.textContent = isCC ? 'Nomor Kartu / Akun PayLater' : 'Nomor Rekening / Kartu Lengkap';
     }
 
     function openAccountModal(editAccId = null) {
       const acc = editAccId ? appState.accounts.find(a => a.id === editAccId) : null;
-      openModal(acc ? "Edit Rekening" : "Tambah Rekening / Dompet", `
+      const defaultOwner = acc ? (acc.ownerId || 'shared') : (keuanganOwnerFilter !== 'all' ? keuanganOwnerFilter : (appState.users[0]?.id || 'shared'));
+      const isCC = acc ? isCreditCardType(acc.type) : false;
+
+      openModal(acc ? "Edit Rekening / Kartu" : "Tambah Rekening / Dompet / Kartu", `
         <form onsubmit="saveAccount(event, '${editAccId || ''}')" class="space-y-3 text-xs">
           <div>
-            <label class="block font-semibold mb-1">Nama Bank / Dompet</label>
-            <input type="text" id="acc-name" required value="${acc ? escapeHtml(acc.name) : ''}" placeholder="Contoh: BCA Utama / GoPay"
+            <label class="block font-semibold mb-1">Nama Bank / Dompet / Kartu</label>
+            <input type="text" id="acc-name" required value="${acc ? escapeHtml(acc.name) : ''}" placeholder="Contoh: BCA Utama / Mandiri CC / GoPayLater"
               class="w-full px-3.5 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700" />
           </div>
           <div class="grid grid-cols-2 gap-2.5">
             <div>
-              <label class="block font-semibold mb-1">Jenis</label>
-              <select id="acc-type" class="w-full px-3 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700">
-                ${['Bank', 'E-Wallet', 'Tunai'].map(t => `<option value="${t}" ${acc && acc.type === t ? 'selected' : ''}>${t}</option>`).join('')}
+              <label class="block font-semibold mb-1">Jenis Wallet</label>
+              <select id="acc-type" onchange="toggleAccountModalCCFields()" class="w-full px-3 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700 font-semibold">
+                ${['Bank', 'E-Wallet', 'Tunai', 'Kartu Kredit / PayLater'].map(t => `<option value="${t}" ${acc && acc.type === t ? 'selected' : ''}>${t}</option>`).join('')}
               </select>
             </div>
             <div>
-              <label class="block font-semibold mb-1">Pemegang</label>
+              <label class="block font-semibold mb-1">Pos Pemilik</label>
               <select id="acc-owner" class="w-full px-3 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700">
-                ${appState.users.map(u => `<option value="${u.id}" ${acc && acc.ownerId === u.id ? 'selected' : ''}>${escapeHtml(u.name)}</option>`).join('')}
+                ${appState.users.map(u => `<option value="${u.id}" ${defaultOwner === u.id ? 'selected' : ''}>Pos ${escapeHtml(u.name)}</option>`).join('')}
+                <option value="shared" ${defaultOwner === 'shared' ? 'selected' : ''}>Pos Bersama</option>
               </select>
             </div>
           </div>
+
+          <!-- Dynamic Fields Khusus Kartu Kredit / PayLater -->
+          <div id="cc-dynamic-fields" class="${isCC ? '' : 'hidden'} p-3.5 rounded-2xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 space-y-3">
+            <div class="grid grid-cols-2 gap-2.5">
+              <div>
+                <label class="block font-bold text-amber-900 dark:text-amber-200 mb-1">Plafon / Limit Kredit (Rp)</label>
+                <input type="text" inputmode="numeric" id="acc-credit-limit" oninput="handleCurrencyInput(this)"
+                  value="${acc && acc.creditLimit ? formatDots(acc.creditLimit) : '15.000.000'}"
+                  placeholder="15.000.000"
+                  class="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#1B201D] border border-amber-300/70 dark:border-amber-700 font-bold" />
+              </div>
+              <div>
+                <label class="block font-bold text-amber-900 dark:text-amber-200 mb-1">Jatuh Tempo (Tgl 1–31)</label>
+                <input type="number" id="acc-due-day" min="1" max="31"
+                  value="${acc && acc.billingDueDay ? acc.billingDueDay : 25}"
+                  class="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#1B201D] border border-amber-300/70 dark:border-amber-700 font-bold text-center" />
+              </div>
+            </div>
+
+            <label class="flex items-start gap-2.5 cursor-pointer pt-0.5">
+              <input type="checkbox" id="acc-sync-bill" ${!acc || acc.syncBill !== false ? 'checked' : ''} class="w-4 h-4 mt-0.5 accent-forest" />
+              <div>
+                <p class="font-bold text-amber-950 dark:text-amber-200">Hubungkan ke Tagihan Rutin & Terjadwal Bulanan</p>
+                <p class="text-[10px] text-amber-800/80 dark:text-amber-300/80">Nominal tagihan otomatis mengikuti pemakaian kartu & jatuh tempo tiap tanggal pilihan.</p>
+              </div>
+            </label>
+          </div>
+
           <div>
-            <label class="block font-semibold mb-1">Nomor Rekening / Kartu Lengkap</label>
-            <input type="text" inputmode="numeric" id="acc-number" value="${acc ? escapeHtml(acc.accountNumber || '') : ''}" placeholder="Masukkan nomor rekening lengkap (mis: 542109887412)"
+            <label id="acc-number-label" class="block font-semibold mb-1">${isCC ? 'Nomor Kartu / Akun PayLater' : 'Nomor Rekening / Kartu Lengkap'}</label>
+            <input type="text" inputmode="numeric" id="acc-number" value="${acc ? escapeHtml(acc.accountNumber || '') : ''}" placeholder="Masukkan nomor lengkap (mis: 451209887412)"
               class="w-full px-3.5 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700 font-mono" />
             <p class="text-[10px] text-gray-400 mt-1">Secara bawaan hanya 4 digit terakhir yang terlihat demi privasi, dan dapat dibuka dengan ikon mata.</p>
           </div>
           <div>
-            <label class="block font-semibold mb-1">Saldo Saat Ini (Rp)</label>
+            <label id="acc-balance-label" class="block font-semibold mb-1">${isCC ? 'Tagihan Terpakai Saat Ini (Rp)' : 'Saldo Saat Ini (Rp)'}</label>
             <input type="text" inputmode="numeric" id="acc-balance" required oninput="handleCurrencyInput(this)"
               value="${acc ? formatDots(acc.balance) : '0'}"
               class="w-full px-3.5 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700 font-bold" />
@@ -3356,26 +3567,174 @@
       const ownerId = document.getElementById('acc-owner').value;
       const accountNumber = document.getElementById('acc-number').value.replace(/\s+/g, '');
       const balance = parseDots(document.getElementById('acc-balance').value);
+      const isCC = isCreditCardType(type);
+      const creditLimit = isCC ? parseDots(document.getElementById('acc-credit-limit').value) : 0;
+      const billingDueDay = isCC ? Math.min(31, Math.max(1, parseInt(document.getElementById('acc-due-day').value, 10) || 25)) : null;
+      const syncBill = isCC ? document.getElementById('acc-sync-bill').checked : false;
 
+      let accObj;
       if (editAccId) {
-        const acc = appState.accounts.find(a => a.id === editAccId);
-        if (acc) {
-          acc.name = name;
-          acc.type = type;
-          acc.ownerId = ownerId;
-          acc.accountNumber = accountNumber;
-          acc.balance = balance;
+        accObj = appState.accounts.find(a => a.id === editAccId);
+        if (accObj) {
+          accObj.name = name;
+          accObj.type = type;
+          accObj.ownerId = ownerId;
+          accObj.accountNumber = accountNumber;
+          accObj.balance = balance;
+          accObj.creditLimit = creditLimit;
+          accObj.billingDueDay = billingDueDay;
+          accObj.syncBill = syncBill;
         }
       } else {
-        appState.accounts.push({
+        accObj = {
           id: 'acc_' + Date.now(),
-          name, type, ownerId, accountNumber, balance
-        });
+          name, type, ownerId, accountNumber, balance,
+          creditLimit, billingDueDay, syncBill
+        };
+        appState.accounts.push(accObj);
       }
+
+      // Sinkronkan ke Tagihan Rutin & Transaksi Terjadwal jika Kartu Kredit / PayLater dicentang
+      if (accObj && isCC) {
+        const existingBillIdx = appState.bills.findIndex(b => b.linkedAccountId === accObj.id);
+        if (syncBill) {
+          const defaultCat = appState.categories.find(c => c.id === 'cat_tagihan') || appState.categories.find(c => c.type === 'expense');
+          const dueDate = getNextDueDateFromDay(billingDueDay);
+          if (existingBillIdx >= 0) {
+            const b = appState.bills[existingBillIdx];
+            b.title = `Tagihan ${accObj.name}`;
+            b.amount = Math.max(0, Number(accObj.balance) || 0);
+            b.dueDate = dueDate;
+            b.recurring = 'Bulanan';
+            b.accountId = accObj.id;
+            b.syncScheduled = true;
+            syncBillToScheduledList(b);
+          } else {
+            const newBill = {
+              id: 'bill_cc_' + Date.now(),
+              title: `Tagihan ${accObj.name}`,
+              amount: Math.max(0, Number(accObj.balance) || 0),
+              dueDate,
+              categoryId: defaultCat ? defaultCat.id : '',
+              accountId: accObj.id,
+              linkedAccountId: accObj.id,
+              recurring: 'Bulanan',
+              syncScheduled: true,
+              scheduledId: '',
+              paid: false,
+              lastPaidDate: '',
+              note: `Plafon ${formatDots(creditLimit)} • Jatuh tempo tgl ${billingDueDay}`
+            };
+            appState.bills.push(newBill);
+            syncBillToScheduledList(newBill);
+          }
+        } else if (existingBillIdx >= 0) {
+          const removedId = appState.bills[existingBillIdx].id;
+          appState.bills.splice(existingBillIdx, 1);
+          appState.scheduledTransactions = appState.scheduledTransactions.filter(s => s.linkedBillId !== removedId);
+        }
+      }
+
       persistHouseholdState();
       closeModal();
       renderApp();
-      showToast("Data rekening disimpan!");
+      showToast(isCC ? "Kartu Kredit / PayLater disimpan & dihubungkan ke tagihan!" : "Data rekening disimpan!");
+    }
+
+    function openPayCreditCardModal(cardId, linkedBillId = '') {
+      const card = appState.accounts.find(a => a.id === cardId);
+      if (!card) return;
+      const cc = getCreditCardMetrics(card);
+      const sourceAccounts = appState.accounts.filter(a => !isCreditCardType(a.type));
+      const today = new Date().toISOString().split('T')[0];
+
+      if (!sourceAccounts.length) {
+        showToast("Tambahkan rekening Bank/Tunai/E-Wallet terlebih dahulu sebagai sumber pembayaran.", "warning");
+        return;
+      }
+
+      openModal(`Bayar Tagihan ${card.name}`, `
+        <form onsubmit="processCreditCardPayment(event, '${card.id}', '${linkedBillId}')" class="space-y-3 text-xs">
+          <div class="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 space-y-1">
+            <div class="flex justify-between">
+              <span class="text-gray-600 dark:text-gray-300">Tagihan Terpakai:</span>
+              <strong class="text-rose-600 dark:text-rose-400 tabular-nums">${formatRupiah(cc.used)}</strong>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-600 dark:text-gray-300">Sisa Limit Saat Ini:</span>
+              <strong class="text-forest dark:text-emerald-400 tabular-nums">${formatRupiah(cc.available)}</strong>
+            </div>
+          </div>
+
+          <div>
+            <label class="block font-semibold mb-1">Bayar Dari Rekening Sumber</label>
+            <select id="cc-pay-source" class="w-full px-3 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700">
+              ${sourceAccounts.map(a => `<option value="${a.id}">${escapeHtml(a.name)} (${formatRupiah(a.balance)})</option>`).join('')}
+            </select>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="block font-semibold mb-1">Nominal Bayar (Rp)</label>
+              <input type="text" inputmode="numeric" id="cc-pay-amount" required oninput="handleCurrencyInput(this)"
+                value="${formatDots(cc.used)}"
+                class="w-full px-3.5 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700 font-bold" />
+            </div>
+            <div>
+              <label class="block font-semibold mb-1">Tanggal Bayar</label>
+              <input type="date" id="cc-pay-date" value="${today}" required
+                class="w-full px-3.5 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700" />
+            </div>
+          </div>
+
+          <button type="submit" class="w-full py-3 rounded-2xl bg-forest text-white font-bold shadow-md">
+            Konfirmasi Pembayaran & Pulihkan Limit
+          </button>
+        </form>
+      `);
+    }
+
+    function processCreditCardPayment(e, cardId, linkedBillId = '') {
+      e.preventDefault();
+      const card = appState.accounts.find(a => a.id === cardId);
+      const sourceId = document.getElementById('cc-pay-source').value;
+      const sourceAcc = appState.accounts.find(a => a.id === sourceId);
+      const amount = parseDots(document.getElementById('cc-pay-amount').value);
+      const date = document.getElementById('cc-pay-date').value;
+
+      if (!card || !sourceAcc || !amount) return;
+
+      sourceAcc.balance = (Number(sourceAcc.balance) || 0) - amount;
+      card.balance = Math.max(0, (Number(card.balance) || 0) - amount);
+
+      appState.transactions.unshift({
+        id: 'tx_' + Date.now(),
+        type: 'transfer',
+        title: `Bayar Tagihan Kartu: ${card.name}`,
+        amount,
+        accountId: sourceAcc.id,
+        toAccountId: card.id,
+        date,
+        userId: devicePrefs.activeUserId || 'u_admin'
+      });
+
+      const bill = linkedBillId
+        ? appState.bills.find(b => b.id === linkedBillId)
+        : appState.bills.find(b => b.linkedAccountId === card.id);
+
+      if (bill) {
+        bill.lastPaidDate = date;
+        bill.amount = Math.max(0, Number(card.balance) || 0);
+        if (bill.amount === 0) {
+          bill.dueDate = addPeriodToDate(bill.dueDate, 'Bulanan');
+        }
+        if (bill.syncScheduled) syncBillToScheduledList(bill);
+      }
+
+      persistHouseholdState();
+      closeModal();
+      renderApp();
+      showToast(`Pembayaran ${formatRupiah(amount)} ke ${card.name} berhasil! Limit otomatis pulih.`);
     }
 
     function deleteAccount(accId) {
@@ -3384,6 +3743,9 @@
         return;
       }
       appState.accounts = appState.accounts.filter(a => a.id !== accId);
+      const removedBills = appState.bills.filter(b => b.linkedAccountId === accId).map(b => b.id);
+      appState.bills = appState.bills.filter(b => b.linkedAccountId !== accId);
+      appState.scheduledTransactions = appState.scheduledTransactions.filter(s => !removedBills.includes(s.linkedBillId));
       persistHouseholdState();
       renderApp();
       showToast("Rekening dihapus");
@@ -3450,6 +3812,142 @@
       }
       persistHouseholdState();
       renderApp();
+    }
+
+    function deleteBill(billId) {
+      appState.bills = appState.bills.filter(b => b.id !== billId);
+      appState.scheduledTransactions = appState.scheduledTransactions.filter(s => s.linkedBillId !== billId);
+      persistHouseholdState();
+      renderApp();
+      showToast("Tagihan dihapus");
+    }
+
+    function openScheduledModal() {
+      const today = new Date().toISOString().split('T')[0];
+      openModal("Tambah Transaksi Terjadwal", `
+        <form onsubmit="saveScheduled(event)" class="space-y-3 text-xs">
+          <div>
+            <label class="block font-semibold mb-1">Judul Jadwal</label>
+            <input type="text" id="sch-title" required placeholder="Contoh: Gaji Bulanan / Iuran RT"
+              class="w-full px-3.5 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700" />
+          </div>
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="block font-semibold mb-1">Jenis</label>
+              <select id="sch-type" class="w-full px-3 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700">
+                <option value="expense">Pengeluaran</option>
+                <option value="income">Pemasukan</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-semibold mb-1">Nominal (Rp)</label>
+              <input type="text" inputmode="numeric" id="sch-amount" required oninput="handleCurrencyInput(this)" placeholder="250.000"
+                class="w-full px-3.5 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700 font-bold" />
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="block font-semibold mb-1">Frekuensi</label>
+              <select id="sch-freq" class="w-full px-3 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700">
+                <option value="Bulanan">Bulanan</option>
+                <option value="Mingguan">Mingguan</option>
+                <option value="Tahunan">Tahunan</option>
+                <option value="Sekali">Sekali</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-semibold mb-1">Tanggal Berikutnya</label>
+              <input type="date" id="sch-date" required value="${today}"
+                class="w-full px-3.5 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700" />
+            </div>
+          </div>
+          <div>
+            <label class="block font-semibold mb-1">Rekening</label>
+            <select id="sch-account" class="w-full px-3 py-2.5 rounded-xl bg-cream dark:bg-black/30 border border-gray-200 dark:border-gray-700">
+              ${appState.accounts.map(a => `<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('')}
+            </select>
+          </div>
+          <button type="submit" class="w-full py-3 rounded-2xl bg-forest text-white font-bold shadow-md">Simpan Jadwal</button>
+        </form>
+      `);
+    }
+
+    function saveScheduled(e) {
+      e.preventDefault();
+      const title = document.getElementById('sch-title').value.trim();
+      const type = document.getElementById('sch-type').value;
+      const amount = parseDots(document.getElementById('sch-amount').value);
+      const frequency = document.getElementById('sch-freq').value;
+      const nextDate = document.getElementById('sch-date').value;
+      const accountId = document.getElementById('sch-account').value;
+      if (!amount) return;
+
+      const defaultCat = appState.categories.find(c => c.type === type);
+      appState.scheduledTransactions.push({
+        id: 'sch_' + Date.now(),
+        title,
+        type,
+        amount,
+        categoryId: defaultCat ? defaultCat.id : '',
+        accountId,
+        nextDate,
+        frequency,
+        linkedBillId: '',
+        active: true
+      });
+      persistHouseholdState();
+      closeModal();
+      renderApp();
+      showToast("Transaksi terjadwal ditambahkan!");
+    }
+
+    function executeScheduledNow(schId) {
+      const sch = appState.scheduledTransactions.find(s => s.id === schId);
+      if (!sch) return;
+      if (sch.linkedBillId) {
+        payBillNow(sch.linkedBillId);
+        return;
+      }
+
+      const today = new Date().toISOString().split('T')[0];
+      const amount = Number(sch.amount) || 0;
+      appState.transactions.unshift({
+        id: 'tx_' + Date.now(),
+        type: sch.type,
+        title: `[Terjadwal] ${sch.title}`,
+        amount,
+        categoryId: sch.categoryId || '',
+        accountId: sch.accountId,
+        date: today,
+        userId: devicePrefs.activeUserId || 'u_admin'
+      });
+
+      const acc = appState.accounts.find(a => a.id === sch.accountId);
+      if (acc) {
+        if (isCreditCardType(acc.type)) {
+          acc.balance = Math.max(0, (Number(acc.balance) || 0) + (sch.type === 'expense' ? amount : -amount));
+          syncAllLinkedCreditCardBills();
+        } else {
+          acc.balance = (Number(acc.balance) || 0) + (sch.type === 'income' ? amount : -amount);
+        }
+      }
+
+      if (sch.frequency && sch.frequency !== 'Sekali') {
+        sch.nextDate = addPeriodToDate(sch.nextDate, sch.frequency);
+      } else {
+        appState.scheduledTransactions = appState.scheduledTransactions.filter(s => s.id !== schId);
+      }
+
+      persistHouseholdState();
+      renderApp();
+      showToast(`"${sch.title}" berhasil dijalankan!`);
+    }
+
+    function deleteScheduled(schId) {
+      appState.scheduledTransactions = appState.scheduledTransactions.filter(s => s.id !== schId);
+      persistHouseholdState();
+      renderApp();
+      showToast("Transaksi terjadwal dihapus");
     }
 
     function deleteInventoryItem(invId) {
